@@ -1,6 +1,22 @@
 # **Dexel: Survival Dungeon** 🎮
 
-Un intenso shooter roguelike en 2D pixel art donde la supervivencia depende de tu puntería y estrategia. Adéntrate en mazmorras procedurales llenas de enemigos IA y lucha por tu vida.
+Un intenso roguelike en 2D pixel donde la supervivencia depende de tu estrategia. Adéntrate en mazmorras procedurales llenas de enemigos IA y lucha por tu vida.
+
+## Índice
+- [**Dexel: Survival Dungeon** 🎮](#dexel-survival-dungeon-)
+  - [Índice](#índice)
+  - [🎯 **Características Principales**](#-características-principales)
+  - [🕹️ **Cómo Jugar**](#️-cómo-jugar)
+  - [🚀 **Instalación y Ejecución**](#-instalación-y-ejecución)
+    - [**Requisitos**](#requisitos)
+    - [**Instalación rápida**](#instalación-rápida)
+    - [**Descargar ejecutable**](#descargar-ejecutable)
+  - [🏗️ **Estructura del Proyecto**](#️-estructura-del-proyecto)
+  - [🎨 **Tecnologías Utilizadas**](#-tecnologías-utilizadas)
+  - [🤝 **Contribuir**](#-contribuir)
+  - [📋 **Roadmap**](#-roadmap)
+  - [📄 **Licencia**](#-licencia)
+  - [👨‍💻 **Desarrollador**](#-desarrollador)
 
 ## 🎯 **Características Principales**
 
@@ -100,9 +116,3 @@ Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) par
 **Tu Nombre** - [GitHub Profile](https://github.com/jmltundercode)
 
 ¿Preguntas o sugerencias? ¡Abre un issue o contáctame!
-
----
-
-**¿Listo para sobrevivir?** ⚔️🛡️
-
-*Dexel: Survival Dungeon - Donde cada decisión cuenta y cada bala importa.*
