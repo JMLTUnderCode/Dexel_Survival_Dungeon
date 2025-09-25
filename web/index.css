@@ -23,7 +23,7 @@ h1 {
 .download {
     margin-top: 2rem;
 }
-.download button {
+.download :any-link {
     display: inline-block;
     background: #4caf50;
     color: #fff;
@@ -34,7 +34,7 @@ h1 {
     transition: background 0.2s;
     cursor: pointer;
 }
-.download button:hover {
+.download a:hover {
     background: #388e3c;
 }
 .release {
