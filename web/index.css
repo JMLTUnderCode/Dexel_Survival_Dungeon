@@ -1,0 +1,44 @@
+ body {
+    background: #222;
+    color: #fff;
+    font-family: 'Segoe UI', Arial, sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    margin: 0;
+}
+.container {
+    background: #333;
+    padding: 2rem 3rem;
+    border-radius: 1rem;
+    box-shadow: 0 0 20px #0008;
+    text-align: center;
+}
+h1 {
+    font-size: 2.5rem;
+    margin-bottom: 1rem;
+}
+.download {
+    margin-top: 2rem;
+}
+.download button {
+    display: inline-block;
+    background: #4caf50;
+    color: #fff;
+    padding: 0.75rem 2rem;
+    border-radius: 0.5rem;
+    text-decoration: none;
+    font-size: 1.2rem;
+    transition: background 0.2s;
+    cursor: pointer;
+}
+.download button:hover {
+    background: #388e3c;
+}
+.coming-soon {
+    color: #aaa;
+    font-size: 1rem;
+    margin-top: 0.5rem;
+}
