@@ -33,7 +33,7 @@ Un intenso roguelike en 2D pixel donde la supervivencia depende de tu estrategia
 |---------|--------|
 | **WASD** | Movimiento del personaje |
 | **Mouse** | Apuntar y rotar personaje |
-| **Click izquierdo** | Disparar |
+| **Click izquierdo** | Atacar |
 | **R** | Recargar arma |
 | **ESC** | Pausa/Menú |
 
