@@ -10,14 +10,18 @@ jobs:
     runs-on: windows-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+
       - name: Install dependencies
         run: pip install -r requirements.txt
+        
       - name: Build executable
         run: pyinstaller --onefile src/main.py --name DexelSurvivalDungeon
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -28,14 +32,18 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+
       - name: Install dependencies
         run: pip install -r requirements.txt
+
       - name: Build executable
         run: pyinstaller --onefile src/main.py --name DexelSurvivalDungeon
+      
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
@@ -47,16 +55,19 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
       - name: Download Windows artifact
         uses: actions/download-artifact@v4
         with:
           name: DexelSurvivalDungeon-windows
           path: ./artifacts
+
       - name: Download Linux artifact
         uses: actions/download-artifact@v4
         with:
           name: DexelSurvivalDungeon-linux
           path: ./artifacts
+
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
@@ -71,16 +82,19 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: gh-pages
+
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.x'
+          
       - name: Actualizar enlaces y versión en la web
         run: |
-          python3 scripts/update_web_links.py \
+          python3 web/update_web_links.py \
             "${{ github.ref_name }}" \
             "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/DexelSurvivalDungeon.exe" \
             "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/DexelSurvivalDungeon"
+
       - name: Commit y push de la web actualizada
         run: |
           git config --global user.name "github-actions"
