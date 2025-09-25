@@ -71,6 +71,8 @@ jobs:
       - uses: actions/checkout@v4
         with:
           ref: gh-pages
+      - name: Fetch update_web_links.py from main
+        run: git checkout main -- scripts/update_web_links.py
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
