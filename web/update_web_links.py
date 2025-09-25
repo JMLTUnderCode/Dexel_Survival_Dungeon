@@ -1,3 +1,4 @@
+import os
 import sys
 import re
 
@@ -16,4 +17,4 @@ if __name__ == '__main__':
         print('Uso: python update_web_links.py <tag> <win_url> <linux_url>')
         sys.exit(1)
     tag, win_url, linux_url = sys.argv[1:]
-    update_html('./index.html', tag, win_url, linux_url)
+    update_html(os.path.join(os.path.dirname(__file__), 'index.html'), tag, win_url, linux_url)
