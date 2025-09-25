@@ -9,15 +9,25 @@
 <body>
     <div class="container">
         <h1>Dexel Survival Dungeon</h1>
-        <p>¡Bienvenido al juego! Pronto podrás descargar el ejecutable para Windows y Linux.</p>
+        <p>¡Bienvenido al juego! Descarga la última versión disponible para tu sistema operativo.</p>
         <div class="download">
-            <button>Descargar para Windows</button>
-            <div class="coming-soon">(Próximamente)</div>
+            <a id="win-link" href="#" download>Descargar para Windows</a>
+            <div class="release" id="win-version">Release N/A</div>
         </div>
         <div class="download">
-            <button>Descargar para Linux</button>
-            <div class="coming-soon">(Próximamente)</div>
+            <a id="linux-link" href="#" download>Descargar para Linux</a>
+            <div class="release" id="linux-version">Release N/A</div>
         </div>
+        <script>
+            // Estos valores serán reemplazados por el workflow
+            const releaseTag = 'N/A';
+            const winExe = '#';
+            const linuxExe = '#';
+            document.getElementById('win-link').href = winExe;
+            document.getElementById('linux-link').href = linuxExe;
+            document.getElementById('win-version').textContent = `Release ${releaseTag}`;
+            document.getElementById('linux-version').textContent = `Release ${releaseTag}`;
+        </script>
     </div>
 </body>
 </html>
