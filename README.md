@@ -54,6 +54,9 @@ pip install -r requirements.txt
 
 # Ejecutar el juego
 python src/main.py
+
+# Mediante el script directo
+./game
 ```
 
 ### **Descargar ejecutable**
