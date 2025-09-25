@@ -3,6 +3,7 @@ import sys
 
 # Configuración inicial
 GAME_TITLE = "Dexel Survival Dungeon"
+BACKGROUND_COLOR = (30, 30, 30)
 FPS = 60
 
 # Inicializar pygame
@@ -31,7 +32,7 @@ while True:
             pygame.quit()
             sys.exit()
 
-    screen.fill((30, 30, 30))
+    screen.fill(BACKGROUND_COLOR)
     screen.blit(text, text_rect)
     pygame.display.flip()
     clock.tick(FPS)
