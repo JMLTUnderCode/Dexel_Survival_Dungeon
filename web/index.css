@@ -23,7 +23,7 @@ h1 {
 .download {
     margin-top: 2rem;
 }
-.download :any-link {
+.download a {
     display: inline-block;
     background: #4caf50;
     color: #fff;
