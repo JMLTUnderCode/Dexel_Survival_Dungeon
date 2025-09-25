@@ -10,6 +10,30 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+
+      - name: Get latest release info
+        id: get_release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const latest = await github.rest.repos.getLatestRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo
+            });
+            core.setOutput('tag', latest.data.tag_name);
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.x'
+
+      - name: Update HTML with latest release
+        run: |
+          python3 web/update_web_links.py \
+            "${{ steps.get_release.outputs.tag }}" \
+            "https://github.com/${{ github.repository }}/releases/download/${{ steps.get_release.outputs.tag }}/DexelSurvivalDungeon.exe" \
+            "https://github.com/${{ github.repository }}/releases/download/${{ steps.get_release.outputs.tag }}/DexelSurvivalDungeon"
+
       - name: Deploy static site
         uses: peaceiris/actions-gh-pages@v4
         with:
