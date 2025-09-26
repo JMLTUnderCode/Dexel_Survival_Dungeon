@@ -60,7 +60,19 @@ python src/main.py
 ```
 
 ### **Descargar ejecutable**
-Ve a [Releases](https://github.com/JMLTUnderCode/Dexel_Survival_Dungeon/releases) y descarga la versión para tu sistema operativo.
+Ve a la [página oficial](https://jmltundercode.github.io/Dexel_Survival_Dungeon) y descarga el juego para tu sistema operativo preferido.
+
+### **Release**
+Para la generación de nuevas versiones 
+```sh
+git tag vx.y.z
+git push origin vx.y.z
+```
+Ej.
+```sh
+git tag v1.1.2
+git push origin v1.1.2
+```
 
 ## 🏗️ **Estructura del Proyecto**
 
@@ -102,13 +114,12 @@ dexel-survival-dungeon/
 
 ## 📋 **Roadmap**
 
-- [ ] Sistema básico de movimiento y disparo
+- [ ] Sistema básico de movimiento y ataque
 - [ ] IA enemiga básica (persecución y ataque)
-- [ ] Generación procedural de mazmorras
-- [ ] Sistema de armas y munición
 - [ ] Arte pixel art y animaciones
 - [ ] Sonidos y música
 - [ ] Sistema de progresión y puntuación
+- [ ] Generación procedural de mazmorras
 
 ## 📄 **Licencia**
 
@@ -116,6 +127,6 @@ Este proyecto está bajo la Licencia MIT - ver el archivo [LICENSE](LICENSE) par
 
 ## 👨‍💻 **Desarrollador**
 
-**Tu Nombre** - [GitHub Profile](https://github.com/jmltundercode)
+**Junior Miguel Lara Torres** - [GitHub Profile](https://github.com/jmltundercode)
 
 ¿Preguntas o sugerencias? ¡Abre un issue o contáctame!
