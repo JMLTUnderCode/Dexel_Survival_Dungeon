@@ -24,7 +24,7 @@ class KinematicArrive:
         self.time_to_target = time_to_target
         self.max_accel = max_accel
 
-    def get_steering(self) -> SteeringOutput:
+    def get_steering(self, dx=None, dy=None, dist=None) -> SteeringOutput:
         """
         Calcula el SteeringOutput necesario para que el character se acerque al target de forma suave.
         - Si está dentro de target_radius, se detiene completamente.
@@ -33,9 +33,11 @@ class KinematicArrive:
         - Limita la aceleración máxima para evitar cambios bruscos.
         """
         # 1. Calcular vector y distancia al objetivo
-        dx = self.target.position[0] - self.character.position[0]
-        dy = self.target.position[1] - self.character.position[1]
-        dist = math.hypot(dx, dy)
+        if dx is None or dy is None or dist is None:
+            dx = self.target.position[0] - self.character.position[0]
+            dy = self.target.position[1] - self.character.position[1]
+            dist = math.hypot(dx, dy)
+            
         if dist < self.target_radius:
             # 2. Si está dentro del radio objetivo, no moverse
             return SteeringOutput((0, 0), 0)

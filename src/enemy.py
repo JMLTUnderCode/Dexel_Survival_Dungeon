@@ -51,7 +51,7 @@ class Enemy(Kinematic):
             self.velocity = (0, 0)
             return
         # Calcular y aplicar el steering usando KinematicArrive
-        steering = self.arrive.get_steering()
+        steering = self.arrive.get_steering(dx, dy, dist)
         self.updateKinematic(steering, self.maxSpeed, dt)
 
     def draw(self, surface, camera_x, camera_z):
