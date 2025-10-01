@@ -3,6 +3,7 @@ import sys
 import os
 from pytmx.util_pygame import load_pygame
 from player import Player
+from enemy import Enemy
 
 # Configuración
 GAME_TITLE = "Dexel Survival Dungeon"
@@ -66,6 +67,15 @@ player = Player(
     map_height=map_height,
 )
 
+# --- Inicializar enemigo (bot que sigue al jugador) ---
+enemy = Enemy(
+    position=(map_width // 4, map_height // 4),  # Posición inicial distinta al jugador
+    player=player,
+    maxSpeed=240,
+    map_width=map_width,
+    map_height=map_height,
+)
+
 def main():
     running = True
 
@@ -88,14 +98,16 @@ def main():
         camera_x = max(0, min(camera_x, map_width - CAMERA_WIDTH))
         camera_z = max(0, min(camera_z, map_height - CAMERA_HEIGHT))
         
-        # --- Actualizar jugador ---
+        # --- Actualizar jugador y enemigo ---
         player.handle_input(camera_x, camera_z, dt) # Actualizar entrada de control
         player.check_changes(dt)                    # Actualizar estado del jugador
+        enemy.update(dt)                            # Actualizar enemigo
 
         # --- Dibujar ---
         screen.fill((30, 30, 30))
         draw_map(camera_x, camera_z)
         player.draw(screen, camera_x, camera_z)
+        enemy.draw(screen, camera_x, camera_z)
         pygame.display.flip()
 
     pygame.quit()
