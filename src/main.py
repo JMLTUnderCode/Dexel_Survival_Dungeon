@@ -20,7 +20,7 @@ screen = pygame.display.set_mode((CAMERA_WIDTH, CAMERA_HEIGHT))  # Crea la venta
 pygame.display.set_caption(GAME_TITLE)  # Establece el título de la ventana
 
 # --- Cargar el mapa TMX usando pytmx ---
-tmx_path = os.path.join(os.path.dirname(__file__), "maps/map.tmx")  # Ruta al archivo TMX del mapa
+tmx_path = os.path.join(os.path.dirname(__file__), "maps", "map.tmx")  # Ruta al archivo TMX del mapa
 # Carga el mapa de Tiled (formato TMX) y lo adapta para usar con pygame
 # tmx_data contiene todas las capas, tiles y objetos del mapa
 # Es importante que el archivo .tmx y los tilesets estén en la ruta correcta
