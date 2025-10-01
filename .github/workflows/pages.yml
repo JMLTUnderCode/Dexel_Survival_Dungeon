@@ -31,7 +31,7 @@ jobs:
         run: |
           python3 web/update_web_links.py \
             "${{ steps.get_release.outputs.tag }}" \
-            "https://github.com/${{ github.repository }}/releases/download/${{ steps.get_release.outputs.tag }}/DexelSurvivalDungeon.exe" \
+            "https://github.com/${{ github.repository }}/releases/download/${{ steps.get_release.outputs.tag }}/DexelSurvivalDungeon-windows.zip" \
             "https://github.com/${{ github.repository }}/releases/download/${{ steps.get_release.outputs.tag }}/DexelSurvivalDungeon"
 
       - name: Deploy static site
