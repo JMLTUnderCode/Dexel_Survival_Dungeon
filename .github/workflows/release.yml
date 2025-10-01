@@ -22,11 +22,22 @@ jobs:
       - name: Build executable
         run: pyinstaller --onefile src/main.py --name DexelSurvivalDungeon
 
+      - name: Prepare release folder
+        run: |
+          mkdir DexelSurvivalDungeon
+          copy dist\DexelSurvivalDungeon.exe DexelSurvivalDungeon\
+          xcopy src\maps DexelSurvivalDungeon\maps\ /E /I
+          xcopy src\knight DexelSurvivalDungeon\knight\ /E /I
+          REM Agrega aquí otros assets si es necesario
+
+      - name: Create zip package
+        run: powershell Compress-Archive -Path DexelSurvivalDungeon -DestinationPath DexelSurvivalDungeon-windows.zip
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: DexelSurvivalDungeon-windows
-          path: dist/DexelSurvivalDungeon.exe
+          path: DexelSurvivalDungeon-windows.zip
 
   build-linux:
     runs-on: ubuntu-latest
@@ -72,7 +83,7 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           files: |
-            artifacts/DexelSurvivalDungeon.exe
+            artifacts/DexelSurvivalDungeon-windows.zip
             artifacts/DexelSurvivalDungeon
 
   update-web:
