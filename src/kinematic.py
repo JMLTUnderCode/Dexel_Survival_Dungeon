@@ -20,7 +20,7 @@ class Kinematic:
         offset_x = self.size // 2
         offset_z = offset_x
         self.min_x = offset_x + self.size // 2
-        self.max_x = self.map_width - offset_z - self.size // 2
+        self.max_x = self.map_width - offset_x - self.size // 2
         self.min_z = offset_z + self.size // 2
         self.max_z = self.map_height - offset_z - self.size // 2
 
