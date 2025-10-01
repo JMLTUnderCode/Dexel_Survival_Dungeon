@@ -1,0 +1,118 @@
+import os
+import pygame
+import math
+from kinematic import Kinematic, SteeringOutput
+from attack_wave import AttackWave
+
+class Player(Kinematic):
+    def __init__(self, position, maxSpeed=200, map_width=800, map_height=600):
+        super().__init__(position=position, orientation=0.0, velocity=(0,0), rotation=0.0, map_width=map_width, map_height=map_height)
+        self.maxSpeed = maxSpeed      # Velocidad máxima en píxeles/seg
+        self.color = (200, 200, 255)  # Color para las ondas de ataque
+        self.attack_waves = []        # Lista de ondas de ataque activas
+        self._pending_steering = SteeringOutput() # Entrada de control pendiente
+
+        # Cargar sprite
+        knight_img_path = os.path.join(os.path.dirname(__file__), "knight", "Knight.png")
+        sprite_raw = pygame.image.load(knight_img_path).convert_alpha()
+        self.sprite = pygame.transform.scale(sprite_raw, (sprite_raw.get_width()*1.5, sprite_raw.get_height()*1.5))
+        self.size = self.sprite.get_width()  # actualizar tamaño lógico
+
+    def get_pos(self):
+        return self.position
+
+    def handle_event(self, event):
+        # Crear onda de ataque en la posición actual
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            self.attack_waves.append(AttackWave(self.position[0], self.position[1], color=self.color))
+
+    def handle_input(self, camera_x, camera_y, dt):
+        # --- Lógica de aceleración y fricción para el movimiento del jugador ---
+        # 1. Leer el estado del teclado para detectar las teclas WASD
+        keys = pygame.key.get_pressed()
+        accel = [0, 0]       # Vector de aceleración lineal (x, y)
+        accel_value = 600    # Magnitud de aceleración máxima (pixeles/seg^2)
+        friction = 800       # Magnitud de fricción (pixeles/seg^2) para frenado rápido
+        # 2. Determinar la dirección de la aceleración según las teclas presionadas
+        if keys[pygame.K_w]:
+            accel[1] -= 1  # Arriba
+        if keys[pygame.K_s]:
+            accel[1] += 1  # Abajo
+        if keys[pygame.K_a]:
+            accel[0] -= 1  # Izquierda
+        if keys[pygame.K_d]:
+            accel[0] += 1  # Derecha
+        # 3. Si hay input, normalizar el vector y escalarlo a la aceleración máxima
+        mag = math.hypot(accel[0], accel[1])
+        if mag > 0:
+            accel[0] = accel[0] / mag * accel_value
+            accel[1] = accel[1] / mag * accel_value
+        else:
+            # 4. Si no hay input, aplicar fricción para desacelerar suavemente
+            vx, vy = self.velocity
+            speed = math.hypot(vx, vy)
+            if speed > 0:
+                # Calcular fricción en dirección opuesta a la velocidad
+                fx = -vx / speed * friction
+                fy = -vy / speed * friction
+                # Si la fricción es mayor que la velocidad, detener completamente
+                if abs(fx * dt) > abs(vx): fx = -vx * dt
+                if abs(fy * dt) > abs(vy): fy = -vy * dt
+                accel[0] = fx
+                accel[1] = fy
+
+        # --- Lógica de rotación suave hacia el mouse mejorada ---
+        # 1. Obtener la posición del mouse en pantalla y la posición del jugador relativa a la cámara
+        mx, my = pygame.mouse.get_pos()
+        sx = self.position[0] - camera_x
+        sy = self.position[1] - camera_y
+        # 2. Calcular el ángulo objetivo (target_angle) entre el jugador y el mouse
+        target_angle = math.atan2(my - sy, mx - sx)
+        current_angle = self.orientation
+
+        # 3. Calcular la diferencia angular mínima entre la orientación actual y la deseada
+        #    Esto asegura que el giro siempre sea por el camino más corto (manejo de wrap-around)
+        delta = (target_angle - current_angle + math.pi) % (2 * math.pi) - math.pi
+        
+        # 4. Parámetros de control de rotación
+        max_angular_speed = 30.0  # Límite superior de velocidad angular (radianes/seg)
+        angular_accel = 100.0     # Límite superior de aceleración angular (radianes/seg^2)
+
+        # 5. Control proporcional-derivativo (PD) para suavizar y estabilizar la rotación
+        #    k_p: Ganancia proporcional (qué tan fuerte responde al error angular)
+        #    k_d: Ganancia derivativa (qué tan fuerte responde a la velocidad de giro actual)
+        k_p = 16.0
+        k_d = 6.0
+        # 6. Calcular la velocidad de rotación deseada usando PD y limitarla
+        desired_rot = max(-max_angular_speed, min(max_angular_speed, k_p * delta - k_d * self.rotation))
+        # 7. El steering angular es la diferencia entre la rotación deseada y la actual
+        angular = desired_rot - self.rotation
+
+        # 8. Limitar la aceleración angular para evitar cambios bruscos
+        if abs(angular) > angular_accel:
+            angular = math.copysign(angular_accel, angular)
+
+        self._pending_steering = SteeringOutput(linear=tuple(accel), angular=angular)
+
+    def check_changes(self, dt=1/60):
+        # Actualizar cinemática
+        self.updateKinematic(self._pending_steering, self.maxSpeed, dt)
+
+        # Actualizar y limpiar ondas de ataque
+        for wave in self.attack_waves:
+            wave.update()
+        self.attack_waves = [w for w in self.attack_waves if w.alive]
+    
+    def draw(self, surface, camera_x, camera_z):
+        sx = self.position[0] - camera_x
+        sz = self.position[1] - camera_z
+        
+        # Rotar sprite según orientación (en radianes, sentido antihorario)
+        deg = -math.degrees(self.orientation) - 90  # Corrige desfase de 90 grados
+        rotated = pygame.transform.rotate(self.sprite, deg)
+        rect = rotated.get_rect(center=(sx, sz))
+        surface.blit(rotated, rect)
+
+        # Dibujar ondas de ataque
+        for wave in self.attack_waves:
+            wave.draw(surface, camera_x, camera_z)
