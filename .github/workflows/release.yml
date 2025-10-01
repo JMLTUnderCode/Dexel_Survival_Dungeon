@@ -28,7 +28,6 @@ jobs:
           copy dist\DexelSurvivalDungeon.exe DexelSurvivalDungeon\
           xcopy src\maps DexelSurvivalDungeon\maps\ /E /I
           xcopy src\knight DexelSurvivalDungeon\knight\ /E /I
-          REM Agrega aquí otros assets si es necesario
 
       - name: Create zip package
         run: powershell Compress-Archive -Path DexelSurvivalDungeon -DestinationPath DexelSurvivalDungeon-windows.zip
