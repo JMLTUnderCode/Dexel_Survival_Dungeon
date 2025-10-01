@@ -89,8 +89,8 @@ def main():
         camera_z = max(0, min(camera_z, map_height - CAMERA_HEIGHT))
         
         # --- Actualizar jugador ---
-        player.handle_input(camera_x, camera_z) # Actualizar entrada de control
-        player.check_changes(dt)                # Actualizar estado del jugador
+        player.handle_input(camera_x, camera_z, dt) # Actualizar entrada de control
+        player.check_changes(dt)                    # Actualizar estado del jugador
 
         # --- Dibujar ---
         screen.fill((30, 30, 30))

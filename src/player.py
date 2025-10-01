@@ -26,7 +26,7 @@ class Player(Kinematic):
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             self.attack_waves.append(AttackWave(self.position[0], self.position[1], color=self.color))
 
-    def handle_input(self, camera_x, camera_y):
+    def handle_input(self, camera_x, camera_y, dt):
         # --- Lógica de aceleración y fricción para el movimiento del jugador ---
         # 1. Leer el estado del teclado para detectar las teclas WASD
         keys = pygame.key.get_pressed()
@@ -56,8 +56,8 @@ class Player(Kinematic):
                 fx = -vx / speed * friction
                 fy = -vy / speed * friction
                 # Si la fricción es mayor que la velocidad, detener completamente
-                if abs(fx * 1/60) > abs(vx): fx = -vx * 60
-                if abs(fy * 1/60) > abs(vy): fy = -vy * 60
+                if abs(fx * dt) > abs(vx): fx = -vx * dt
+                if abs(fy * dt) > abs(vy): fy = -vy * dt
                 accel[0] = fx
                 accel[1] = fy
 
