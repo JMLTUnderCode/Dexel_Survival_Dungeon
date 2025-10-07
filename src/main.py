@@ -1,84 +1,57 @@
 import pygame
 import sys
-import os
-from pytmx.util_pygame import load_pygame
 from player import Player
 from enemy import Enemy
-
-# Configuración
-GAME_TITLE = "Dexel Survival Dungeon"
-FPS = 60
-TILE_SIZE = 16
-ZOOM = 2
-RENDER_TILE_SIZE = TILE_SIZE * ZOOM  # 2x, cada tile se verá de 32x32
-CAMERA_WIDTH = 1200
-CAMERA_HEIGHT = 800
+from map import Map
+from configs import *
 
 # --- Inicializar pygame y ventana principal ---
 pygame.init()  # Inicializa todos los módulos de pygame
 screen = pygame.display.set_mode((CAMERA_WIDTH, CAMERA_HEIGHT))  # Crea la ventana principal del juego
 pygame.display.set_caption(GAME_TITLE)  # Establece el título de la ventana
 
-# --- Cargar el mapa TMX usando pytmx ---
-tmx_path = os.path.join(os.path.dirname(__file__), "maps", "map.tmx")  # Ruta al archivo TMX del mapa
-# Carga el mapa de Tiled (formato TMX) y lo adapta para usar con pygame
-# tmx_data contiene todas las capas, tiles y objetos del mapa
-# Es importante que el archivo .tmx y los tilesets estén en la ruta correcta
-# pytmx permite acceder a las capas, tiles y propiedades del mapa fácilmente
-# Ejemplo: tmx_data.width, tmx_data.height, tmx_data.visible_layers
-# Cada tile es una Surface de pygame
-# El mapa puede tener varias capas (background, colisiones, decoraciones, etc)
-tmx_data = load_pygame(tmx_path)
-
-# --- Calcular el tamaño del mapa en píxeles (ya escalado) ---
-map_width = tmx_data.width * RENDER_TILE_SIZE   # Ancho total del mapa en píxeles
-map_height = tmx_data.height * RENDER_TILE_SIZE # Alto total del mapa en píxeles
-
 clock = pygame.time.Clock()  # Reloj para controlar el framerate
 
-# --- Función para dibujar el mapa en pantalla ---
-def draw_map(camera_x, camera_z):
-    # Itera sobre todas las capas visibles del mapa
-    for layer in tmx_data.visible_layers:
-        if hasattr(layer, 'tiles'):
-            # Itera sobre todos los tiles de la capa
-            for x, z, tile in layer.tiles():
-                # tile puede ser una Surface o un GID
-                if isinstance(tile, pygame.Surface):
-                    tile_img = pygame.transform.scale(tile, (RENDER_TILE_SIZE, RENDER_TILE_SIZE))
-                else:
-                    tile_img = tmx_data.get_tile_image_by_gid(tile)
-                    if tile_img:
-                        tile_img = pygame.transform.scale(tile_img, (RENDER_TILE_SIZE, RENDER_TILE_SIZE))
-                # Si hay imagen de tile, calcular su posición en pantalla
-                if tile_img:
-                    sx = x * RENDER_TILE_SIZE - camera_x  # Posición X en pantalla (ajustada por la cámara)
-                    sz = z * RENDER_TILE_SIZE - camera_z  # Posición Y en pantalla (ajustada por la cámara)
-                    # Solo dibuja el tile si está dentro de la cámara/ventana
-                    if -RENDER_TILE_SIZE < sx < CAMERA_WIDTH and -RENDER_TILE_SIZE < sz < CAMERA_HEIGHT:
-                        screen.blit(tile_img, (sx, sz))
-
+# --- Cargar el mapa ---
+game_map = Map("map.tmx")
 
 # --- Inicializar jugador ---
 player = Player(
-    position=(map_width // 2, map_height // 2),
-    maxSpeed=250,
-    map_width=map_width,
-    map_height=map_height,
+    type="oldman",
+    position=(RENDER_TILE_SIZE*14, RENDER_TILE_SIZE*10),
+    maxSpeed=200,
+    map_width=game_map.width,
+    map_height=game_map.height,
+    collision_rects=game_map.collision_rects,
 )
 
 # --- Inicializar enemigo (bot que sigue al jugador) ---
-enemy = Enemy(
-    position=(map_width // 4, map_height // 4),  # Posición inicial distinta al jugador
-    player=player,
-    maxSpeed=240,
-    map_width=map_width,
-    map_height=map_height,
-)
+enemy_configs = [
+    {"type": "gargant-soldier", "target": player, "position": (RENDER_TILE_SIZE*3, RENDER_TILE_SIZE*3)},
+    {"type": "gargant-berserker", "target": player, "position": (RENDER_TILE_SIZE*42, RENDER_TILE_SIZE*7)},
+    {"type": "gargant-berserker", "target": player, "position": (RENDER_TILE_SIZE*36, RENDER_TILE_SIZE*19)},
+    {"type": "gargant-berserker", "target": player, "position": (RENDER_TILE_SIZE*42, RENDER_TILE_SIZE*19)},
+    {"type": "gargant-berserker", "target": player, "position": (RENDER_TILE_SIZE*54, RENDER_TILE_SIZE*19)},
+    {"type": "gargant-lord", "target": player, "position": (RENDER_TILE_SIZE*52, RENDER_TILE_SIZE*33)},
+    {"type": "gargant-lord", "target": player, "position": (RENDER_TILE_SIZE*14, RENDER_TILE_SIZE*33)},
+    {"type": "gargant-boss", "target": player, "position": (RENDER_TILE_SIZE*45, RENDER_TILE_SIZE*49)},
+]
+
+enemies = [
+    Enemy(
+        type=cfg["type"],
+        position=cfg["position"],
+        target=cfg["target"],
+        maxSpeed=190,
+        map_width=game_map.width,
+        map_height=game_map.height,
+        collision_rects=game_map.collision_rects,
+    )
+    for cfg in enemy_configs
+]
 
 def main():
     running = True
-
     while running:
         dt = clock.tick(FPS) / 1000.0  # segundos
 
@@ -95,19 +68,23 @@ def main():
         camera_x = px - CAMERA_WIDTH // 2
         camera_z = pz - CAMERA_HEIGHT // 2
         # Limitar cámara a los bordes del mapa
-        camera_x = max(0, min(camera_x, map_width - CAMERA_WIDTH))
-        camera_z = max(0, min(camera_z, map_height - CAMERA_HEIGHT))
+        camera_x = max(0, min(camera_x, game_map.width - CAMERA_WIDTH))
+        camera_z = max(0, min(camera_z, game_map.height - CAMERA_HEIGHT))
         
-        # --- Actualizar jugador y enemigo ---
-        player.handle_input(camera_x, camera_z, dt) # Actualizar entrada de control
-        player.check_changes(dt)                    # Actualizar estado del jugador
-        enemy.update(dt)                            # Actualizar enemigo
-
-        # --- Dibujar ---
         screen.fill((30, 30, 30))
-        draw_map(camera_x, camera_z)
+
+        game_map.draw(screen, camera_x, camera_z)
+
+        # --- Actualizar jugador
         player.draw(screen, camera_x, camera_z)
-        enemy.draw(screen, camera_x, camera_z)
+        player.handle_input(camera_x, camera_z, dt)
+        player.check_changes(dt)
+        
+        # --- Actualizar enemigo
+        for enemy in enemies:
+            enemy.update(dt)
+            enemy.draw(screen, camera_x, camera_z)
+
         pygame.display.flip()
 
     pygame.quit()
