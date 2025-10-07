@@ -109,7 +109,7 @@ class Player(Kinematic):
         if mag > 0:
             accel[0] = accel[0] / mag * accel_value
             accel[1] = accel[1] / mag * accel_value
-            self.set_state("move")
+            self.set_state(PLAYER_STATES.MOVE)
         else:
             # 4. Si no hay input, aplicar fricción para desacelerar suavemente
             vx, vy = self.velocity
