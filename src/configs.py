@@ -9,7 +9,7 @@ if os.path.exists(env_path):
         for line in f:
             if line.strip().startswith("DEVELOPMENT="):
                 _, value = line.strip().split("=", 1)
-                DEVELOPMENT = value.strip().lower() == "true"
+                DEVELOPMENT = value.strip().lower() == "true" or value.strip() == "1" or value.strip().lower() == "yes" or value.strip().lower() == "on"
                 break
 
 # Configuraciones generales del juego
