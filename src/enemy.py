@@ -88,7 +88,7 @@ class Enemy(Kinematic):
         Actualiza la posición, velocidad y orientación del enemigo para perseguir al jugador.
         Utiliza el algoritmo KinematicArrive para calcular el steering adecuado.
         """
-        if self.state.startswith("death"):
+        if self.state.startswith(ENEMY_STATES.DEATH_0):
             pass
         # Calcular vector y distancia al objetivo
         dx = self.target.position[0] - self.position[0]
@@ -98,10 +98,10 @@ class Enemy(Kinematic):
         self.orientation = math.atan2(dy, dx)
         # Si está dentro del radio objetivo, detenerse completamente
         if dist < self.arrive.target_radius:
-            self.set_state("attack")
+            self.set_state(ENEMY_STATES.ATTACK)
             self.velocity = (0, 0)
         else:
-            self.set_state("move")
+            self.set_state(ENEMY_STATES.MOVE)
             # Calcular y aplicar el steering usando KinematicArrive
             steering = self.arrive.get_steering(dx, dy, dist)
             self.updateKinematic(steering, self.maxSpeed, dt)
