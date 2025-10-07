@@ -1,0 +1,73 @@
+{
+    "Map/SizeTest": {
+        "height": 4300,
+        "width": 2
+    },
+    "activeFile": "maps/map.tmx",
+    "expandedProjectPaths": [
+        ".",
+        "maps"
+    ],
+    "file.lastUsedOpenFilter": "All Files (*)",
+    "fileStates": {
+        "": {
+            "scaleInEditor": 1
+        },
+        "Dungeon_Tileset.tsx": {
+            "scaleInDock": 2,
+            "scaleInEditor": 4
+        },
+        "map.tmx": {
+            "expandedGroupLayers": [
+                13
+            ],
+            "scale": 2,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 196.25,
+                "y": 35.25
+            }
+        },
+        "maps/Dungeon_Tileset.tsx": {
+            "scaleInDock": 2,
+            "scaleInEditor": 3
+        },
+        "maps/map.tmx": {
+            "scale": 1,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 523.5,
+                "y": 522.5
+            }
+        },
+        "maps/map.tmx#Dungeon_Tileset": {
+            "dynamicWrapping": false,
+            "scaleInDock": 2
+        }
+    },
+    "frame.defaultDuration": 1000,
+    "last.imagePath": "C:/Users/junio/Downloads/2D Pixel Dungeon Asset Pack/character and tileset",
+    "last.objectTemplatePath": "//wsl.localhost/Ubuntu/home/jmltundercode/Dexel_Survival_Dungeon/src/assets/maps",
+    "map.height": 38,
+    "map.lastUsedFormat": "tmx",
+    "map.orientation": "1",
+    "map.tileHeight": 16,
+    "map.tileWidth": 16,
+    "map.width": 50,
+    "openFiles": [
+        "maps/map.tmx"
+    ],
+    "project": "dexel_survival_dungeon.tiled-project",
+    "property.type": "object",
+    "recentFiles": [
+        "maps/map.tmx",
+        "maps/Dungeon_Tileset.tsx",
+        "Dungeon_Tileset.tsx",
+        "map.tmx"
+    ],
+    "tileset.lastUsedFormat": "tsx",
+    "tileset.tileSize": {
+        "height": 16,
+        "width": 16
+    }
+}
