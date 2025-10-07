@@ -120,6 +120,7 @@ class Player(Kinematic):
                 fy = -vy / speed * friction
                 # Si la fricción aplicada en este frame es suficiente para detener el movimiento, fuerza la velocidad a cero
                 if abs(fx * dt) >= abs(vx) and abs(fy * dt) >= abs(vy):
+                    self.set_state(PLAYER_STATES.IDLE)
                     self.velocity = (0.0, 0.0)
                     accel[0] = 0.0
                     accel[1] = 0.0
