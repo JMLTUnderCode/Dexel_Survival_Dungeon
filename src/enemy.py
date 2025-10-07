@@ -9,17 +9,17 @@ from configs import *
 
 class Enemy(Kinematic):
     """
-    Clase Enemy: NPC que persigue al jugador usando el algoritmo KinematicArrive.
-    Utiliza el mismo sprite que el jugador y se mueve de forma suave y natural por el mapa.
-    """
-    def __init__(self, type, position, target, maxSpeed=180, map_width=800, map_height=600, collision_rects=None):
-        """
+    Clase que representa un enemigo que persigue al jugador.
+    Utiliza el algoritmo KinematicArrive para moverse suavemente hacia el objetivo.
+    Atributos:
         type: tipo de enemigo (puede usarse para diferentes sprites o comportamientos)
         position: posición inicial del enemigo (x, y)
         target: referencia al objeto target (objetivo a seguir)
         maxSpeed: velocidad máxima del enemigo
         map_width, map_height: dimensiones del mapa para clamp
-        """
+        collision_rects: lista de rectángulos para detección de colisiones
+    """
+    def __init__(self, type, position, target, maxSpeed=180, map_width=800, map_height=600, collision_rects=None):
         super().__init__(position=position, orientation=0.0, velocity=(0,0), rotation=0.0, map_width=map_width, map_height=map_height, collision_rects=collision_rects)
         self.maxSpeed = maxSpeed
         self.target = target
@@ -43,6 +43,11 @@ class Enemy(Kinematic):
         )
 
     def load_animations(self):
+        """
+        Carga las animaciones del enemigo desde archivos PNG.
+        Retorna un diccionario con las animaciones cargadas.
+        Cada animación se espera que esté en un archivo con el formato:
+        """
         base = os.path.join("assets", "enemies")
         anims = {}
         frame_duration = 0.12
