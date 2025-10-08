@@ -11,6 +11,7 @@ Un intenso roguelike en 2D pixel donde la supervivencia depende de tu estrategia
     - [**Requisitos**](#requisitos)
     - [**Instalación rápida**](#instalación-rápida)
     - [**Descargar ejecutable**](#descargar-ejecutable)
+    - [**Release**](#release)
   - [🏗️ **Estructura del Proyecto**](#️-estructura-del-proyecto)
   - [🎨 **Tecnologías Utilizadas**](#-tecnologías-utilizadas)
   - [🤝 **Contribuir**](#-contribuir)
@@ -24,7 +25,6 @@ Un intenso roguelike en 2D pixel donde la supervivencia depende de tu estrategia
 - **🤖 IA inteligente** - Enemigos que te persiguen, flanquean y emboscan
 - **🎮 Controles fluidos** - Movimiento WASD, apuntado con mouse, recarga táctica
 - **🏰 Mazmorras procedurales** - Cada partida es única con diferentes layouts y obstáculos
-- **💥 Sistema de armas** - Disparos precisos, recarga estratégica y gestión de munición
 - **✨ Pixel art optimizado** - Arte retro con animaciones smooth y rotaciones realistas
 
 ## 🕹️ **Cómo Jugar**
@@ -34,7 +34,6 @@ Un intenso roguelike en 2D pixel donde la supervivencia depende de tu estrategia
 | **WASD** | Movimiento del personaje |
 | **Mouse** | Apuntar y rotar personaje |
 | **Click izquierdo** | Atacar |
-| **R** | Recargar arma |
 | **ESC** | Pausa/Menú |
 
 ## 🚀 **Instalación y Ejecución**
@@ -63,16 +62,27 @@ python src/main.py
 Ve a la [página oficial](https://jmltundercode.github.io/Dexel_Survival_Dungeon) y descarga el juego para tu sistema operativo preferido.
 
 ### **Release**
-Para la generación de nuevas versiones 
-```sh
-git tag vx.y.z
-git push origin vx.y.z
-```
-Ej.
-```sh
-git tag v1.1.2
-git push origin v1.1.2
-```
+
+- Para la generación de nuevas versiones 
+  ```sh
+  git tag vx.y.z
+  git push origin vx.y.z
+  ```
+  Ej.
+  ```sh
+  git tag v1.1.2
+  git push origin v1.1.2
+  ```
+- Para remover un tag
+  ```sh
+  git tag -d <tag-name>
+  git push origin --delete <tag-name>
+  ```
+  Ej.
+  ```sh
+  git tag -d v1.1.2
+  git push origin --delete v1.1.2
+  ```
 
 ## 🏗️ **Estructura del Proyecto**
 
@@ -114,8 +124,8 @@ dexel-survival-dungeon/
 
 ## 📋 **Roadmap**
 
-- [ ] Sistema básico de movimiento y ataque
-- [ ] IA enemiga básica (persecución y ataque)
+- [x] Sistema básico de movimiento y ataque
+- [x] IA enemiga básica (persecución y ataque)
 - [ ] Arte pixel art y animaciones
 - [ ] Sonidos y música
 - [ ] Sistema de progresión y puntuación
