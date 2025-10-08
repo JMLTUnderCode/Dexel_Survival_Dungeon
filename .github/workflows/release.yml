@@ -20,12 +20,12 @@ jobs:
         run: pip install -r requirements.txt
         
       - name: Build executable
-        run: pyinstaller --onefile src/main.py --name DexelSurvivalDungeon
+        run: pyinstaller --onedir src/main.py --name DexelSurvivalDungeon
 
       - name: Prepare release folder
         run: |
           mkdir DexelSurvivalDungeon
-          copy dist\DexelSurvivalDungeon.exe DexelSurvivalDungeon\
+          copy dist\DexelSurvivalDungeon\DexelSurvivalDungeon.exe DexelSurvivalDungeon\
           xcopy src\assets DexelSurvivalDungeon\assets\ /E /I
 
       - name: Create zip package
@@ -51,13 +51,18 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Build executable
-        run: pyinstaller --onefile src/main.py --name DexelSurvivalDungeon
+        run: pyinstaller --onedir src/main.py --name DexelSurvivalDungeon
       
+      - name: Package linux artifact
+        run: |
+          # empaqueta la carpeta dist/DexelSurvivalDungeon para subir como artifact
+          tar -czf DexelSurvivalDungeon-linux.tar.gz -C dist DexelSurvivalDungeon
+
       - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
           name: DexelSurvivalDungeon-linux
-          path: dist/DexelSurvivalDungeon
+          path: DexelSurvivalDungeon-linux.tar.gz
 
   release:
     needs: [build-windows, build-linux]
@@ -82,7 +87,7 @@ jobs:
         with:
           files: |
             artifacts/DexelSurvivalDungeon-windows.zip
-            artifacts/DexelSurvivalDungeon
+            artifacts/DexelSurvivalDungeon-linux.tar.gz
 
   update-web:
     needs: [release]
