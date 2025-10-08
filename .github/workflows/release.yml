@@ -18,18 +18,23 @@ jobs:
 
       - name: Install dependencies
         run: pip install -r requirements.txt
-        
+
       - name: Build executable
-        run: pyinstaller --onedir src/main.py --name DexelSurvivalDungeon
+        run: pyinstaller --onefile src/main.py --name DexelSurvivalDungeon --add-data "src/assets;assets"
 
-      - name: Prepare release folder
+      - name: Prepare release folder (PowerShell)
         run: |
-          mkdir DexelSurvivalDungeon
-          copy dist\DexelSurvivalDungeon\DexelSurvivalDungeon.exe DexelSurvivalDungeon\
-          xcopy src\assets DexelSurvivalDungeon\assets\ /E /I
+          Remove-Item -Recurse -Force DexelSurvivalDungeon -ErrorAction SilentlyContinue
+          New-Item -ItemType Directory -Path DexelSurvivalDungeon
+          Copy-Item -Path "dist\DexelSurvivalDungeon.exe" -Destination "DexelSurvivalDungeon\" -Force
+          Copy-Item -Path "src\assets" -Destination "DexelSurvivalDungeon\assets" -Recurse -Force
+        shell: pwsh
 
-      - name: Create zip package
-        run: powershell Compress-Archive -Path DexelSurvivalDungeon -DestinationPath DexelSurvivalDungeon-windows.zip
+      - name: Create zip package (PowerShell Compress-Archive)
+        run: |
+          Remove-Item -Force DexelSurvivalDungeon-windows.zip -ErrorAction SilentlyContinue
+          Compress-Archive -Path DexelSurvivalDungeon -DestinationPath DexelSurvivalDungeon-windows.zip -Force
+        shell: pwsh
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -51,12 +56,17 @@ jobs:
         run: pip install -r requirements.txt
 
       - name: Build executable
-        run: pyinstaller --onedir src/main.py --name DexelSurvivalDungeon
-      
-      - name: Package linux artifact
+        run: pyinstaller --onefile src/main.py --name DexelSurvivalDungeon --add-data "src/assets:assets"
+
+      - name: Prepare release folder (linux)
         run: |
-          # empaqueta la carpeta dist/DexelSurvivalDungeon para subir como artifact
-          tar -czf DexelSurvivalDungeon-linux.tar.gz -C dist DexelSurvivalDungeon
+          rm -rf DexelSurvivalDungeon || true
+          mkdir -p DexelSurvivalDungeon
+          cp dist/DexelSurvivalDungeon DexelSurvivalDungeon/
+          cp -r src/assets DexelSurvivalDungeon/assets
+
+      - name: Package linux artifact
+        run: tar -czf DexelSurvivalDungeon-linux.tar.gz DexelSurvivalDungeon
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -107,7 +117,7 @@ jobs:
           python3 update_web_links.py \
             "${{ github.ref_name }}" \
             "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/DexelSurvivalDungeon-windows.zip" \
-            "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/DexelSurvivalDungeon"
+            "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/DexelSurvivalDungeon-linux.tar.gz"
 
       - name: Commit y push de la web actualizada
         run: |
