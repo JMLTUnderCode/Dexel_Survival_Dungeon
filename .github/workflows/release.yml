@@ -22,19 +22,14 @@ jobs:
       - name: Build executable
         run: pyinstaller --onefile src/main.py --name DexelSurvivalDungeon --add-data "src/assets;assets"
 
-      - name: Prepare release folder (PowerShell)
+      - name: Prepare release folder
         run: |
-          Remove-Item -Recurse -Force DexelSurvivalDungeon -ErrorAction SilentlyContinue
-          New-Item -ItemType Directory -Path DexelSurvivalDungeon
-          Copy-Item -Path "dist\DexelSurvivalDungeon.exe" -Destination "DexelSurvivalDungeon\" -Force
-          Copy-Item -Path "src\assets" -Destination "DexelSurvivalDungeon\assets" -Recurse -Force
-        shell: pwsh
+          mkdir DexelSurvivalDungeon
+          copy dist\DexelSurvivalDungeon.exe DexelSurvivalDungeon\
+          xcopy src\assets DexelSurvivalDungeon\assets\ /E /I
 
-      - name: Create zip package (PowerShell Compress-Archive)
-        run: |
-          Remove-Item -Force DexelSurvivalDungeon-windows.zip -ErrorAction SilentlyContinue
-          Compress-Archive -Path DexelSurvivalDungeon -DestinationPath DexelSurvivalDungeon-windows.zip -Force
-        shell: pwsh
+      - name: Create zip package
+        run: powershell Compress-Archive -Path DexelSurvivalDungeon -DestinationPath DexelSurvivalDungeon-windows.zip
 
       - name: Upload artifact
         uses: actions/upload-artifact@v4
@@ -58,10 +53,9 @@ jobs:
       - name: Build executable
         run: pyinstaller --onefile src/main.py --name DexelSurvivalDungeon --add-data "src/assets:assets"
 
-      - name: Prepare release folder (linux)
+      - name: Prepare release folder
         run: |
-          rm -rf DexelSurvivalDungeon || true
-          mkdir -p DexelSurvivalDungeon
+          mkdir DexelSurvivalDungeon
           cp dist/DexelSurvivalDungeon DexelSurvivalDungeon/
           cp -r src/assets DexelSurvivalDungeon/assets
 
@@ -116,8 +110,8 @@ jobs:
         run: |
           python3 update_web_links.py \
             "${{ github.ref_name }}" \
-            "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/DexelSurvivalDungeon-windows.zip" \
-            "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/DexelSurvivalDungeon-linux.tar.gz"
+            "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/DexelSurvivalDungeon-windows" \
+            "https://github.com/${{ github.repository }}/releases/download/${{ github.ref_name }}/DexelSurvivalDungeon-linux"
 
       - name: Commit y push de la web actualizada
         run: |
