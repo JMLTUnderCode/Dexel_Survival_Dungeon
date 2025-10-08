@@ -19,11 +19,12 @@ class Enemy(Kinematic):
         map_width, map_height: dimensiones del mapa para clamp
         collision_rects: lista de rectángulos para detección de colisiones
     """
-    def __init__(self, type, position, target, maxSpeed=180, map_width=800, map_height=600, collision_rects=None):
-        super().__init__(position=position, orientation=0.0, velocity=(0,0), rotation=0.0, map_width=map_width, map_height=map_height, collision_rects=collision_rects)
-        self.maxSpeed = maxSpeed
-        self.target = target
+    def __init__(self, type, position, target, maxSpeed=180):
+        super().__init__(position=position, orientation=0.0, velocity=(0,0), rotation=0.0)
         self.type = type
+        self.target = target
+        self.maxSpeed = maxSpeed
+
         self.state = ENEMY_STATES.MOVE
         self.animations : dict[str, Animation] = self.load_animations()
         if "move" not in self.animations:
@@ -83,30 +84,6 @@ class Enemy(Kinematic):
         if state not in self.animations:
             raise RuntimeError(f"No se encontró la animación '{state}' para el enemigo '{self.type}'. Verifica que exista el archivo 'src/assets/enemies/{self.type}-{state}.png'.")
 
-    def update(self, dt):
-        """
-        Actualiza la posición, velocidad y orientación del enemigo para perseguir al jugador.
-        Utiliza el algoritmo KinematicArrive para calcular el steering adecuado.
-        """
-        if self.state.startswith(ENEMY_STATES.DEATH_0):
-            pass
-        # Calcular vector y distancia al objetivo
-        dx = self.target.position[0] - self.position[0]
-        dy = self.target.position[1] - self.position[1]
-        dist = math.hypot(dx, dy)
-        # Orientar el sprite hacia el jugador
-        self.orientation = math.atan2(dy, dx)
-        # Si está dentro del radio objetivo, detenerse completamente
-        if dist < self.arrive.target_radius:
-            self.set_state(ENEMY_STATES.ATTACK)
-            self.velocity = (0, 0)
-        else:
-            self.set_state(ENEMY_STATES.MOVE)
-            # Calcular y aplicar el steering usando KinematicArrive
-            steering = self.arrive.get_steering(dx, dy, dist)
-            self.updateKinematic(steering, self.maxSpeed, dt)
-        self.current_animation.update(dt)
-
     def draw(self, surface, camera_x, camera_z):
         """
         Dibuja el enemigo en pantalla, rotando el sprite hacia el jugador.
@@ -136,3 +113,29 @@ class Enemy(Kinematic):
             int(self.collider_box)
         )
         pygame.draw.rect(surface, (0, 255, 0), enemy_box, 1)  # Verde, grosor 1
+
+    def update(self, surface, camera_x, camera_z, collision_rects , dt):
+        """
+        Actualiza la posición, velocidad y orientación del enemigo para perseguir al jugador.
+        Utiliza el algoritmo KinematicArrive para calcular el steering adecuado.
+        """
+        if self.state.startswith(ENEMY_STATES.DEATH_0):
+            pass
+        # Calcular vector y distancia al objetivo
+        dx = self.target.position[0] - self.position[0]
+        dy = self.target.position[1] - self.position[1]
+        dist = math.hypot(dx, dy)
+        # Orientar el sprite hacia el jugador
+        self.orientation = math.atan2(dy, dx)
+        # Si está dentro del radio objetivo, detenerse completamente
+        if dist < self.arrive.target_radius:
+            self.set_state(ENEMY_STATES.ATTACK)
+            self.velocity = (0, 0)
+        else:
+            self.set_state(ENEMY_STATES.MOVE)
+            # Calcular y aplicar el steering usando KinematicArrive
+            steering = self.arrive.get_steering(dx, dy, dist)
+            self.updateKinematic(steering, self.maxSpeed, dt, collision_rects)
+        self.current_animation.update(dt)
+
+        self.draw(surface, camera_x, camera_z)

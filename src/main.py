@@ -20,9 +20,6 @@ player = Player(
     type="oldman",
     position=(RENDER_TILE_SIZE*14, RENDER_TILE_SIZE*10),
     maxSpeed=200,
-    map_width=game_map.width,
-    map_height=game_map.height,
-    collision_rects=game_map.collision_rects,
 )
 
 # --- Inicializar enemigo (bot que sigue al jugador) ---
@@ -43,9 +40,6 @@ enemies = [
         position=cfg["position"],
         target=cfg["target"],
         maxSpeed=190,
-        map_width=game_map.width,
-        map_height=game_map.height,
-        collision_rects=game_map.collision_rects,
     )
     for cfg in enemy_configs
 ]
@@ -76,14 +70,11 @@ def main():
         game_map.draw(screen, camera_x, camera_z)
 
         # --- Actualizar jugador
-        player.draw(screen, camera_x, camera_z)
-        player.handle_input(camera_x, camera_z, dt)
-        player.check_changes(dt)
+        player.update(screen, camera_x, camera_z, game_map.collision_rects, dt)
         
         # --- Actualizar enemigo
         for enemy in enemies:
-            enemy.update(dt)
-            enemy.draw(screen, camera_x, camera_z)
+            enemy.update(screen, camera_x, camera_z, game_map.collision_rects, dt)
 
         pygame.display.flip()
 

@@ -18,8 +18,8 @@ class Player(Kinematic):
         map_width, map_height: dimensiones del mapa para clamp
         collision_rects: lista de rectángulos para detección de colisiones
     """
-    def __init__(self, type, position, maxSpeed=200, map_width=800, map_height=600, collision_rects=None):
-        super().__init__(position=position, orientation=0.0, velocity=(0,0), rotation=0.0, map_width=map_width, map_height=map_height, collision_rects=collision_rects)
+    def __init__(self, type, position, maxSpeed=200):
+        super().__init__(position=position, orientation=0.0, velocity=(0,0), rotation=0.0)
         self.type = type
         self.maxSpeed = maxSpeed      # Velocidad máxima en píxeles/seg
         self.color = (200, 200, 255)  # Color para las ondas de ataque
@@ -161,13 +161,16 @@ class Player(Kinematic):
 
         self._pending_steering = SteeringOutput(linear=tuple(accel), angular=angular)
 
-    def check_changes(self, dt=1/60):
+    def update(self, surface, camera_x, camera_z, collision_rects, dt):
         """
         Actualiza la cinemática, animación y ondas de ataque del jugador.
         Debe llamarse cada frame después de manejar la entrada.
         """
+        # Manejar entrada para actualizar el steering
+        self.handle_input(camera_x, camera_z, dt)
+
         # Actualizar cinemática
-        self.updateKinematic(self._pending_steering, self.maxSpeed, dt)
+        self.updateKinematic(self._pending_steering, self.maxSpeed, dt, collision_rects)
 
         # Actualizar animación
         self.current_animation.update(dt)
@@ -176,6 +179,8 @@ class Player(Kinematic):
         for wave in self.attack_waves:
             wave.update()
         self.attack_waves = [w for w in self.attack_waves if w.alive]
+
+        self.draw(surface, camera_x, camera_z)
     
     def draw(self, surface, camera_x, camera_z):
         """
