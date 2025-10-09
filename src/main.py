@@ -1,7 +1,7 @@
 import pygame
 import sys
 from player import Player
-from enemy import Enemy
+from enemy import EnemyArrive, EnemySeek
 from map import Map
 from configs import *
 
@@ -34,15 +34,30 @@ enemy_configs = [
     {"type": "gargant-boss", "target": player, "position": (RENDER_TILE_SIZE*45, RENDER_TILE_SIZE*49)},
 ]
 
-enemies = [
-    Enemy(
-        type=cfg["type"],
-        position=cfg["position"],
-        target=cfg["target"],
-        maxSpeed=190,
-    )
-    for cfg in enemy_configs
-]
+if ALGORITHM == "ARRIVE":
+    enemies = [
+        EnemyArrive(
+            type=cfg["type"],
+            position=cfg["position"],
+            target=cfg["target"],
+            maxSpeed=190,
+            target_radius=40,
+            slow_radius=150,
+            time_to_target=0.15,
+            max_accel=300,
+        )
+        for cfg in enemy_configs
+    ]
+else:  # Por defecto, SEEK
+    enemies = [
+        EnemySeek(
+            type=cfg["type"],
+            position=cfg["position"],
+            target=cfg["target"],
+            maxSpeed=190,
+        )
+        for cfg in enemy_configs
+    ]
 
 def main():
     running = True
