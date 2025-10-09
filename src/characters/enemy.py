@@ -102,9 +102,8 @@ class Enemy(Kinematic):
                 try:
                     self.__class__._dev_font = pygame.font.SysFont(None, 18, bold=True)
                 except pygame.error:
-                    # Fallback si SysFont falla
+                    # Fallback si SysFont falla (no se puede poner en negrita con Font)
                     self.__class__._dev_font = pygame.font.Font(None, 18)
-                    self.__class__._dev_font.set_bold(True)
 
             font = self.__class__._dev_font
             # self.algorithm puede ser un Enum o string; obtener representación en mayúsculas
