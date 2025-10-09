@@ -101,7 +101,7 @@ class Enemy(Kinematic):
             if not hasattr(self.__class__, "_dev_font") or self.__class__._dev_font is None:
                 try:
                     self.__class__._dev_font = pygame.font.SysFont(None, 18, bold=True)
-                except Exception:
+                except pygame.error:
                     # Fallback si SysFont falla
                     self.__class__._dev_font = pygame.font.Font(None, 18)
                     self.__class__._dev_font.set_bold(True)
