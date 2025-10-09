@@ -125,7 +125,7 @@ def load_animations(target: str, type: str, states_anims: type[Enum], w_tile: in
             frame_count = img.get_width() // w_tile
             anims[state_value] = Animation(path, w_tile, h_tile, frame_count, frame_duration, scale_to=scale_to)
         else:
-            raise RuntimeError(f"No se encontró la animación '{state}' para '{type}'. Verifica que exista el archivo 'src/assets/{target}/{type}-{state}.png'.")
+            raise RuntimeError(f"No se encontró la animación '{state}' para '{type}'. Verifica que exista el archivo '{path}'.")
     return anims
 
 def set_animation_state(character, state: str):
