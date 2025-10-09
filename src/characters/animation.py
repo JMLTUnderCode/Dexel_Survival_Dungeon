@@ -113,7 +113,7 @@ def load_animations(target: str, type: str, states_anims: Union[ENEMY_STATES, PL
     - frame_duration: duración de cada frame en segundos.
     - scale: factor de escala para redimensionar cada frame.
     """
-    base = os.path.join("..", "assets", target)
+    base = os.path.join("assets", target)
     anims = {}
     scale_to = (int(w_tile * scale), int(h_tile * scale))
     for state in states_anims:
