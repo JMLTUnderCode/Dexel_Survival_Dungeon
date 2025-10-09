@@ -17,11 +17,27 @@ class Enemy(Kinematic):
         target: referencia al objeto target (objetivo a seguir)
         algorithm: algoritmo de búsqueda cinemática ("ARRIVE" o "SEEK")
         maxSpeed: velocidad máxima del enemigo
-        map_width, map_height: dimensiones del mapa para clamp
-        collision_rects: lista de rectángulos para detección de colisiones
+        target_radius: radio de llegada al objetivo
+        slow_radius: radio de desaceleración
+        time_to_target: tiempo para alcanzar el objetivo
     """
-    def __init__(self, type: str, position: tuple, target: Kinematic, algorithm: str, maxSpeed=200, target_radius=40, slow_radius=150, time_to_target=0.15, max_accel=300):
-        super().__init__(position=position, orientation=0.0, velocity=(0,0), rotation=0.0)
+    def __init__(
+        self, 
+        type: str, 
+        position: tuple, 
+        target: Kinematic, 
+        algorithm: str, 
+        maxSpeed: float = 200.0, 
+        target_radius: float = 40.0, 
+        slow_radius: float = 150.0, 
+        time_to_target: float = 0.15
+    ) -> None:
+        super().__init__(
+            position=position, 
+            orientation=0.0, 
+            velocity=(0,0), 
+            rotation=0.0
+        )
         self.type = type
         self.target = target
         self.algorithm = algorithm
@@ -48,7 +64,6 @@ class Enemy(Kinematic):
             target_radius=target_radius,     # Radio de llegada
             slow_radius=slow_radius,         # Radio para empezar a desacelerar
             time_to_target=time_to_target,   # Tiempo para ajustar la velocidad
-            max_accel=max_accel              # Aceleración máxima
         )
         
         # Instanciar el algoritmo de búsqueda cinemática: Seek
@@ -91,7 +106,7 @@ class Enemy(Kinematic):
     def update(self, surface: pygame.Surface, camera_x: float, camera_z: float, collision_rects: list[pygame.Rect], dt: float):
         """
         Actualiza la posición, velocidad y orientación del enemigo para perseguir al jugador.
-        Utiliza el algoritmo KinematicArrive o KinematicSeek para calcular el steering adecuado.
+        Utiliza el algoritmo de movimiento especificado en "algorithm" para calcular el steering adecuado.
         """
         # Calcular el steering según el algoritmo seleccionado
         steering: SteeringOutput = None
