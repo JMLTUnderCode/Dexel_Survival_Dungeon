@@ -1,8 +1,8 @@
 import os
 import pygame
 from pytmx.util_pygame import load_pygame
-from resource_path import resource_path
-from configs import *
+from utils.resource_path import resource_path
+from utils.configs import *
 
 class Map:
     """
@@ -15,7 +15,7 @@ class Map:
     """
     def __init__(self, tmx_file):
         # --- Cargar el mapa TMX usando pytmx ---
-        tmx_path = resource_path(os.path.join("assets", "maps", tmx_file))  # Ruta al archivo TMX del mapa
+        tmx_path = resource_path(os.path.join("..", "assets", "maps", tmx_file))  # Ruta al archivo TMX del mapa
         # Carga el mapa de Tiled (formato TMX) y lo adapta para usar con pygame
         # tmx_data contiene todas las capas, tiles y objetos del mapa
         # Es importante que el archivo .tmx y los tilesets estén en la ruta correcta

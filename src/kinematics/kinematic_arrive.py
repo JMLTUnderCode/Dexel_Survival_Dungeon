@@ -1,7 +1,7 @@
 import math
 from typing import Tuple
 
-from kinematic import Kinematic, SteeringOutput
+from kinematics.kinematic import Kinematic, SteeringOutput
 
 class KinematicArrive:
     """

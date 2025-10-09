@@ -1,10 +1,10 @@
 import os
 import pygame
 import math
-from kinematic import Kinematic, SteeringOutput
-from attack_wave import AttackWave
-from animation import Animation, load_animations, set_animation_state
-from configs import *
+from kinematics.kinematic import Kinematic, SteeringOutput
+from characters.attack_wave import AttackWave
+from characters.animation import Animation, load_animations, set_animation_state
+from utils.configs import *
 
 class Player(Kinematic):
     """

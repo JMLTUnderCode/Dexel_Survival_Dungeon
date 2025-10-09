@@ -1,11 +1,11 @@
 import os
 import pygame
 import math
-from kinematic import Kinematic, SteeringOutput
-from kinematic_arrive import KinematicArrive
-from kinematic_seek import KinematicSeek
-from animation import Animation, load_animations, set_animation_state
-from configs import *
+from kinematics.kinematic import Kinematic, SteeringOutput
+from kinematics.kinematic_arrive import KinematicArrive
+from kinematics.kinematic_seek import KinematicSeek
+from characters.animation import Animation, load_animations, set_animation_state
+from utils.configs import *
 
 class Enemy(Kinematic):
     """

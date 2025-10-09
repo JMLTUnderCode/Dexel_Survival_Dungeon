@@ -1,6 +1,6 @@
 import pygame
 import math
-from configs import *
+from utils.configs import *
 
 class SteeringOutput:
     """

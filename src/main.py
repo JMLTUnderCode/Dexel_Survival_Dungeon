@@ -1,9 +1,9 @@
 import pygame
 import sys
-from player import Player
-from enemy import Enemy
-from map import Map
-from configs import *
+from characters.player import Player
+from characters.enemy import Enemy
+from map.map import Map
+from utils.configs import *
 
 # --- Inicializar pygame y ventana principal ---
 pygame.init()  # Inicializa todos los módulos de pygame
