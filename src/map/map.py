@@ -1,8 +1,8 @@
 import os
 import pygame
 from pytmx.util_pygame import load_pygame
-from resource_path import resource_path
-from configs import *
+from utils.resource_path import resource_path
+from utils.configs import *
 
 class Map:
     """

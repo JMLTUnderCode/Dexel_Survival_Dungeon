@@ -1,7 +1,10 @@
+import os
 import pygame
 from typing import List, Optional, Tuple
+from enum import Enum
+from utils.resource_path import resource_path
 
-__all__ = ["Animation"]
+__all__ = ["Animation", "load_animations", "set_animation_state"]
 
 class Animation:
     """
@@ -93,3 +96,51 @@ class Animation:
     def __len__(self) -> int:
         """Cantidad de frames en la animación."""
         return self.frame_count
+
+def load_animations(target: str, type: str, states_anims: type[Enum], w_tile: int, h_tile: int, frame_duration: float, scale: float) -> dict[str, Animation]:
+    """
+    Carga las animaciones para un personaje (enemigo o jugador) dado su tipo y estados.
+    Retorna un diccionario con las animaciones cargadas.
+    Cada animación se espera que esté en un archivo con el formato:
+    '{type}-{state}.png' dentro de 'assets/{target}/'.
+    Ejemplo: 'assets/enemies/goblin/goblin-move.png'
+
+    Parámetros:
+    - target: carpeta base ('enemies' o 'player').
+    - type: tipo de personaje (ej. 'goblin', 'orc', 'knight').
+    - states_anims: Enum con los estados y nombres de las animaciones.
+    - w_tile, h_tile: tamaño de cada frame en el sprite sheet original.
+    - frame_duration: duración de cada frame en segundos.
+    - scale: factor de escala para redimensionar cada frame.
+    """
+    base = os.path.join("assets", target)
+    anims = {}
+    scale_to = (int(w_tile * scale), int(h_tile * scale))
+    for state in states_anims:
+        state_value = state.value
+        filename = f"{type}-{state_value}.png"
+        path = resource_path(os.path.join(base, filename))
+        if os.path.exists(path):
+            img = pygame.image.load(path)
+            frame_count = img.get_width() // w_tile
+            anims[state_value] = Animation(path, w_tile, h_tile, frame_count, frame_duration, scale_to=scale_to)
+        else:
+            raise RuntimeError(f"No se encontró la animación '{state}' para '{type}'. Verifica que exista el archivo '{path}'.")
+    return anims
+
+def set_animation_state(character, state: str):
+    """
+    Cambia la animación actual del personaje al estado dado.
+    Resetea la animación si el estado cambia.
+    
+    Parámetros:
+    - character: objeto que tiene atributos 'state', 'animations' (dict) y 'current_animation'.
+    - state: nuevo estado (clave en character.animations).
+    """
+    if state != character.state and state in character.animations:
+        character.state = state
+        character.current_animation = character.animations[state]
+        character.current_animation.current_frame = 0
+        character.current_animation.time_acc = 0
+    if state not in character.animations:
+        raise RuntimeError(f"No se encontró la animación '{state}' para '{character.type}'.")
