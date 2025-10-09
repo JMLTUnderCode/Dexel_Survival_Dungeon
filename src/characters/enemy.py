@@ -98,8 +98,15 @@ class Enemy(Kinematic):
         if DEVELOPMENT:
             # Mostrar arriba del sprite el algoritmo activo en VERDE, NEGRITA y MAYÚSCULAS
             # Cachear la fuente en la clase para no recrearla cada frame
-            font = pygame.font.Font(None, 18)
-            font.set_bold(True)
+            if not hasattr(self.__class__, "_dev_font") or self.__class__._dev_font is None:
+                try:
+                    self.__class__._dev_font = pygame.font.SysFont(None, 18, bold=True)
+                except Exception:
+                    # Fallback si SysFont falla
+                    self.__class__._dev_font = pygame.font.Font(None, 18)
+                    self.__class__._dev_font.set_bold(True)
+
+            font = self.__class__._dev_font
             # self.algorithm puede ser un Enum o string; obtener representación en mayúsculas
             alg_text = (
                 self.algorithm.value.upper()
