@@ -1,8 +1,8 @@
 import os
 import pygame
-from typing import List, Optional, Tuple, Union
+from typing import List, Optional, Tuple
+from enum import Enum
 from utils.resource_path import resource_path
-from utils.configs import *
 
 __all__ = ["Animation", "load_animations", "set_animation_state"]
 
@@ -97,7 +97,7 @@ class Animation:
         """Cantidad de frames en la animación."""
         return self.frame_count
 
-def load_animations(target: str, type: str, states_anims: Union[ENEMY_STATES, PLAYER_STATES], w_tile: int, h_tile: int, frame_duration: float, scale: float) -> dict[str, Animation]:
+def load_animations(target: str, type: str, states_anims: type[Enum], w_tile: int, h_tile: int, frame_duration: float, scale: float) -> dict[str, Animation]:
     """
     Carga las animaciones para un personaje (enemigo o jugador) dado su tipo y estados.
     Retorna un diccionario con las animaciones cargadas.
