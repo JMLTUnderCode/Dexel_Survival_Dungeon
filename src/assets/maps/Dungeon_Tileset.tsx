@@ -3,7 +3,7 @@
  <image source="Dungeon_Tileset.png" width="160" height="160"/>
  <tile id="0">
   <objectgroup draworder="index" id="2">
-   <object id="1" template="full.tx" type="colider" x="0" y="0"/>
+   <object id="1" template="full.tx" type="colider" x="0" y="0" width="16" height="16"/>
   </objectgroup>
  </tile>
  <tile id="1">
