@@ -3,90 +3,55 @@ import pygame
 import math
 from kinematic import Kinematic, SteeringOutput
 from attack_wave import AttackWave
-from resource_path import resource_path
-from animation import Animation
+from animation import Animation, load_animations, set_animation_state
 from configs import *
 
 class Player(Kinematic):
     """
     Clase que representa al jugador controlado por el usuario.
     Utiliza entrada de teclado para movimiento y mouse para orientación y ataques.
-    Atributos:
-        type: tipo de jugador (puede usarse para diferentes sprites o comportamientos)
-        position: posición inicial del jugador (x, y)
-        maxSpeed: velocidad máxima del jugador
-        map_width, map_height: dimensiones del mapa para clamp
-        collision_rects: lista de rectángulos para detección de colisiones
+    
+    Parámetros:
+    - type: tipo de jugador (puede usarse para diferentes sprites)
+    - position: posición inicial del jugador (x, y)
+    - maxSpeed: velocidad máxima del jugador
     """
-    def __init__(self, type, position, maxSpeed=200):
+    def __init__(self, type: str, position: tuple, maxSpeed: float = 200):
         super().__init__(position=position, orientation=0.0, velocity=(0,0), rotation=0.0)
-        self.type = type
+        self.type = type              # Tipo de jugador (puede usarse para diferentes sprites)
         self.maxSpeed = maxSpeed      # Velocidad máxima en píxeles/seg
         self.color = (200, 200, 255)  # Color para las ondas de ataque
         self.attack_waves : list[AttackWave] = []  # Lista de ondas de ataque activas
         self._pending_steering = SteeringOutput()  # Entrada de control pendiente
 
         self.state = PLAYER_STATES.IDLE
-        self.animations : dict[str, Animation] = self.load_animations()
+        self.animations : dict[str, Animation] = load_animations(
+            PLAYER,
+            self.type, 
+            PLAYER_STATES, 
+            PLAYER_TILE_WIDTH, 
+            PLAYER_TILE_HEIGHT,
+            frame_duration=0.12,
+            scale=1.25
+        )
         self.current_animation : Animation = self.animations[self.state]
         self.collider_box = PLAYER_COLLIDER_BOX
 
     def get_pos(self):
         return self.position
 
-    def load_animations(self):
-        """
-        Carga las animaciones del jugador desde archivos PNG.
-        Retorna un diccionario con las animaciones cargadas.
-        Cada animación se espera que esté en un archivo con el formato:
-        """
-        base = os.path.join("assets", "player")
-        anims = {}
-        frame_duration = 0.12
-        w_tile = PLAYER_TILE_WIDTH
-        h_tile = PLAYER_TILE_HEIGHT
-        scale = 1.25
-        scale_to = (int(w_tile * scale), int(h_tile * scale))
-        # Puedes ajustar los frame_count y frame_duration según cada animación
-        for state in PLAYER_STATES:
-            state_value = state.value
-            filename = f"{self.type}-{state_value}.png"
-            path = resource_path(os.path.join(base, filename))
-            if os.path.exists(path):
-                img = pygame.image.load(path)
-                frame_count = img.get_width() // w_tile
-                if state_value == PLAYER_STATES.ATTACK:
-                    frame_duration = 0.1  # Ajuste específico para "attack"
-                anims[state_value] = Animation(path, w_tile, h_tile, frame_count, frame_duration, scale_to=scale_to)
-            else:
-                raise RuntimeError(f"No se encontró la animación '{state}' para el player '{self.type}'. Verifica que exista el archivo 'src/assets/player/{self.type}-{state}.png'.")
-        return anims
-
-    def set_state(self, state):
-        """
-        Cambia el estado actual del jugador y reinicia la animación correspondiente.
-        Si el estado no existe en las animaciones cargadas, lanza un error.
-        """
-        if state != self.state and state in self.animations:
-            self.state = state
-            self.current_animation = self.animations[state]
-            self.current_animation.current_frame = 0
-            self.current_animation.time_acc = 0
-        if state not in self.animations:
-            raise RuntimeError(f"No se encontró la animación '{state}' para el jugador '{self.type}'. Verifica que exista el archivo 'src/assets/player/{self.type}-{state}.png'.")
-
-    def handle_event(self, event):
+    def handle_event(self, event: pygame.event.Event) -> None:
         """
         Maneja eventos puntuales como clics de mouse para ataques.
         """
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            self.set_state("attack")
+            set_animation_state(self, PLAYER_STATES.ATTACK)
             # Crear onda de ataque en la posición actual
             self.attack_waves.append(AttackWave(self.position[0], self.position[1], color=self.color))
 
-    def handle_input(self, camera_x, camera_y, dt):
+    def handle_input(self, camera_x: float, camera_y: float, dt: float) -> None:
         """
-        Maneja la entrada del jugador para movimiento y ataque.
+        Maneja la entrada del jugador para movimiento.
         Debe llamarse cada frame antes de actualizar la cinemática.
         """
         # --- Lógica de aceleración y fricción para el movimiento del jugador ---
@@ -109,7 +74,7 @@ class Player(Kinematic):
         if mag > 0:
             accel[0] = accel[0] / mag * accel_value
             accel[1] = accel[1] / mag * accel_value
-            self.set_state(PLAYER_STATES.MOVE)
+            set_animation_state(self, PLAYER_STATES.MOVE)
         else:
             # 4. Si no hay input, aplicar fricción para desacelerar suavemente
             vx, vy = self.velocity
@@ -120,7 +85,7 @@ class Player(Kinematic):
                 fy = -vy / speed * friction
                 # Si la fricción aplicada en este frame es suficiente para detener el movimiento, fuerza la velocidad a cero
                 if abs(fx * dt) >= abs(vx) and abs(fy * dt) >= abs(vy):
-                    self.set_state(PLAYER_STATES.IDLE)
+                    set_animation_state(self, PLAYER_STATES.IDLE)
                     self.velocity = (0.0, 0.0)
                     accel[0] = 0.0
                     accel[1] = 0.0
@@ -163,7 +128,7 @@ class Player(Kinematic):
 
     def update(self, surface, camera_x, camera_z, collision_rects, dt):
         """
-        Actualiza la cinemática, animación y ondas de ataque del jugador.
+        Actualiza el jugador: maneja entrada, cinemática, animación y ataques.
         Debe llamarse cada frame después de manejar la entrada.
         """
         # Manejar entrada para actualizar el steering
