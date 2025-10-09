@@ -2,6 +2,7 @@ import pygame
 import sys
 from characters.player import Player
 from characters.enemy import Enemy
+from data.enemies import enemy_list
 from map.map import Map
 from utils.configs import *
 
@@ -13,39 +14,31 @@ pygame.display.set_caption(GAME_TITLE)  # Establece el título de la ventana
 clock = pygame.time.Clock()  # Reloj para controlar el framerate
 
 # --- Cargar el mapa ---
-game_map = Map("map.tmx")
+#game_map = Map("map.tmx") # Principal
+game_map = Map("presentacion-1.tmx") # Presentacion 1
 
 # --- Inicializar jugador ---
 player = Player(
     type="oldman",
-    position=(RENDER_TILE_SIZE*14, RENDER_TILE_SIZE*10),
+    position=(RENDER_TILE_SIZE*30, RENDER_TILE_SIZE*30),
     maxSpeed=210,
 )
 
 # --- Inicializar enemigo (bot que sigue al jugador) ---
-enemy_configs = [
-    {"type": "gargant-soldier", "target": player, "position": (RENDER_TILE_SIZE*3, RENDER_TILE_SIZE*3)},
-    {"type": "gargant-berserker", "target": player, "position": (RENDER_TILE_SIZE*42, RENDER_TILE_SIZE*7)},
-    {"type": "gargant-berserker", "target": player, "position": (RENDER_TILE_SIZE*36, RENDER_TILE_SIZE*19)},
-    {"type": "gargant-berserker", "target": player, "position": (RENDER_TILE_SIZE*42, RENDER_TILE_SIZE*19)},
-    {"type": "gargant-berserker", "target": player, "position": (RENDER_TILE_SIZE*54, RENDER_TILE_SIZE*19)},
-    {"type": "gargant-lord", "target": player, "position": (RENDER_TILE_SIZE*52, RENDER_TILE_SIZE*33)},
-    {"type": "gargant-lord", "target": player, "position": (RENDER_TILE_SIZE*14, RENDER_TILE_SIZE*33)},
-    {"type": "gargant-boss", "target": player, "position": (RENDER_TILE_SIZE*45, RENDER_TILE_SIZE*49)},
-]
 
 enemies = [
     Enemy(
-        type=cfg["type"],
-        position=cfg["position"],
-        target=cfg["target"],
-        algorithm=ALGORITHM,
-        maxSpeed=180,
-        target_radius=40,
-        slow_radius=180,
-        time_to_target=0.15,
+        type=enemy["type"],
+        position=enemy["position"],
+        target=player,
+        algorithm=enemy["algorithm"],
+        maxSpeed=enemy["maxSpeed"],
+        target_radius=enemy["target_radius"],
+        slow_radius=enemy["slow_radius"],
+        time_to_target=enemy["time_to_target"],
+        max_rotation=enemy["max_rotation"],
     )
-    for cfg in enemy_configs
+    for enemy in enemy_list
 ]
 
 def main():
