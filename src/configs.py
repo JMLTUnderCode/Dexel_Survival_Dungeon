@@ -13,7 +13,7 @@ if os.path.exists(env_path):
                 break
 
 # Cargar variable ALGORITHM desde .env si existe
-ALGORITHM = None
+ALGORITHM = "ARRIVE"  # Por defecto, usar ARRIVE
 if os.path.exists(env_path):
     with open(env_path) as f:
         for line in f:
