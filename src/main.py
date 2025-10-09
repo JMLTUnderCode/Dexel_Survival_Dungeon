@@ -19,7 +19,7 @@ game_map = Map("map.tmx")
 player = Player(
     type="oldman",
     position=(RENDER_TILE_SIZE*14, RENDER_TILE_SIZE*10),
-    maxSpeed=200,
+    maxSpeed=210,
 )
 
 # --- Inicializar enemigo (bot que sigue al jugador) ---
@@ -40,11 +40,10 @@ enemies = [
         position=cfg["position"],
         target=cfg["target"],
         algorithm=ALGORITHM,
-        maxSpeed=190,
+        maxSpeed=180,
         target_radius=40,
-        slow_radius=150,
+        slow_radius=180,
         time_to_target=0.15,
-        max_accel=300,
     )
     for cfg in enemy_configs
 ]
