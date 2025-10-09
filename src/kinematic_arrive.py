@@ -3,18 +3,18 @@ import math
 
 class KinematicArrive:
     """
-    Algoritmo de steering KinematicArrive para bots que buscan acercarse suavemente a un objetivo.
+    Algoritmo de KinematicArrive para bots que buscan acercarse suavemente a un objetivo.
     Permite que un NPC desacelere gradualmente al acercarse al target, evitando frenadas bruscas y logrando un movimiento natural.
     """
     def __init__(self, character : Kinematic, target : Kinematic, max_speed : float, target_radius : float, slow_radius : float, time_to_target : float, max_accel : float):
         """
-        character: objeto que se moverá (debe tener position y velocity)
-        target: objeto objetivo (debe tener position)
-        max_speed: velocidad máxima del NPC
-        target_radius: radio en el que se considera que el NPC ha llegado al objetivo
-        slow_radius: radio a partir del cual el NPC empieza a desacelerar
-        time_to_target: tiempo deseado para alcanzar la velocidad objetivo (controla la suavidad)
-        max_accel: aceleración máxima permitida (limita cambios bruscos)
+        - character: objeto que se moverá (debe tener position y velocity)
+        - target: objeto objetivo (debe tener position)
+        - max_speed: velocidad máxima del NPC
+        - target_radius: radio en el que se considera que el NPC ha llegado al objetivo
+        - slow_radius: radio a partir del cual el NPC empieza a desacelerar
+        - time_to_target: tiempo deseado para alcanzar la velocidad objetivo (controla la suavidad)
+        - max_accel: aceleración máxima permitida (limita cambios bruscos)
         """
         self.character = character
         self.target = target
@@ -24,7 +24,7 @@ class KinematicArrive:
         self.time_to_target = time_to_target
         self.max_accel = max_accel
 
-    def get_steering(self, dx=None, dy=None, dist=None) -> SteeringOutput:
+    def get_steering(self) -> SteeringOutput:
         """
         Calcula el SteeringOutput necesario para que el character se acerque al target de forma suave.
         - Si está dentro de target_radius, se detiene completamente.
@@ -33,10 +33,9 @@ class KinematicArrive:
         - Limita la aceleración máxima para evitar cambios bruscos.
         """
         # 1. Calcular vector y distancia al objetivo
-        if dx is None or dy is None or dist is None:
-            dx = self.target.position[0] - self.character.position[0]
-            dy = self.target.position[1] - self.character.position[1]
-            dist = math.hypot(dx, dy)
+        dx = self.target.position[0] - self.character.position[0]
+        dy = self.target.position[1] - self.character.position[1]
+        dist = math.hypot(dx, dy)
             
         if dist < self.target_radius:
             # 2. Si está dentro del radio objetivo, no moverse
@@ -61,5 +60,18 @@ class KinematicArrive:
                 steering_linear[0] / accel_mag * self.max_accel,
                 steering_linear[1] / accel_mag * self.max_accel
             )
-        # 7. SteeringOutput: solo steering lineal, sin rotación angular
+
+        # 7. Calcular nueva orientación
+        self.character.orientation = self.newOrientation(self.character.orientation, desired_velocity)
+
+        # 8. SteeringOutput: solo steering lineal, sin rotación angular
         return SteeringOutput(steering_linear, 0)
+    
+    def newOrientation(self, current_orientation: float, velocity: tuple) -> float:
+        """
+        Calcula la nueva orientación basada en la dirección de la velocidad.
+        Si la velocidad es cero, mantiene la orientación actual.
+        """
+        if velocity == (0, 0):
+            return current_orientation
+        return math.atan2(velocity[1], velocity[0])
