@@ -1,9 +1,9 @@
-import os
-import pygame
 import math
+import pygame
 from kinematics.kinematic import Kinematic, SteeringOutput
 from kinematics.kinematic_arrive import KinematicArrive
 from kinematics.kinematic_seek import KinematicSeek
+from kinematics.kinematic_wandering import KinematicWander
 from characters.animation import Animation, load_animations, set_animation_state
 from utils.configs import *
 
@@ -30,7 +30,8 @@ class Enemy(Kinematic):
         maxSpeed: float = 200.0, 
         target_radius: float = 40.0, 
         slow_radius: float = 150.0, 
-        time_to_target: float = 0.15
+        time_to_target: float = 0.15,
+        max_rotation: float = 1.0
     ) -> None:
         super().__init__(
             position=position, 
@@ -41,7 +42,9 @@ class Enemy(Kinematic):
         self.type = type
         self.target = target
         self.algorithm = algorithm
+        self.maxSpeed = maxSpeed
 
+        # Instanciar atributos de animación
         self.state = ENEMY_STATES.MOVE
         self.animations : dict[str, Animation] = load_animations(
             ENEMY, 
@@ -55,22 +58,28 @@ class Enemy(Kinematic):
         self.current_animation : Animation = self.animations[self.state]
         self.collider_box = ENEMY_COLLIDER_BOX
 
-        self.maxSpeed = maxSpeed
+        # Instanciar el algoritmo de búsqueda cinemática: Seek
+        self.seek = KinematicSeek(
+            character=self,
+            target=target,
+            max_speed=maxSpeed
+        )
+
         # Instanciar el algoritmo de búsqueda cinemática: Arrive
         self.arrive = KinematicArrive(
             character=self,
             target=target,
-            max_speed=self.maxSpeed,
+            max_speed=maxSpeed,
             target_radius=target_radius,     # Radio de llegada
             slow_radius=slow_radius,         # Radio para empezar a desacelerar
             time_to_target=time_to_target,   # Tiempo para ajustar la velocidad
         )
         
-        # Instanciar el algoritmo de búsqueda cinemática: Seek
-        self.seek = KinematicSeek(
+        # Instanciar el algoritmo de vagar: Wander
+        self.wander = KinematicWander(
             character=self,
-            target=target,
-            max_speed=self.maxSpeed
+            max_speed=maxSpeed,
+            max_rotation=max_rotation
         )
 
     def draw(self, surface: pygame.Surface, camera_x: float, camera_z: float):
@@ -87,6 +96,21 @@ class Enemy(Kinematic):
         surface.blit(rotated, rect)
 
         if DEVELOPMENT:
+            # Mostrar arriba del sprite el algoritmo activo en VERDE, NEGRITA y MAYÚSCULAS
+            # Cachear la fuente en la clase para no recrearla cada frame
+            font = pygame.font.Font(None, 18)
+            font.set_bold(True)
+            # self.algorithm puede ser un Enum o string; obtener representación en mayúsculas
+            alg_text = (
+                self.algorithm.value.upper()
+                if hasattr(self.algorithm, "value")
+                else str(self.algorithm).upper()
+            )
+            text_surf = font.render(alg_text, True, (0, 255, 0))
+            # Posicionar el texto justo encima del sprite (ajustar offset si es necesario)
+            text_rect = text_surf.get_rect(center=(sx, sz - rect.height // 2))
+            surface.blit(text_surf, text_rect)
+
             self.draw_collision_box(surface, camera_x, camera_z)
 
     def draw_collision_box(self, surface: pygame.Surface, camera_x: float, camera_z: float):
@@ -110,10 +134,12 @@ class Enemy(Kinematic):
         """
         # Calcular el steering según el algoritmo seleccionado
         steering: SteeringOutput = SteeringOutput((0, 0), 0.0)
-        if self.algorithm == "ARRIVE":
+        if self.algorithm == ALGORITHM.ARRIVE:
             steering = self.arrive.get_steering()
-        elif self.algorithm == "SEEK":
+        elif self.algorithm == ALGORITHM.SEEK:
             steering = self.seek.get_steering()
+        elif self.algorithm == ALGORITHM.WANDER:
+            steering = self.wander.get_steering()
 
         # Aplicar el steering y actualizar la cinemática
         if steering.linear != (0, 0):
