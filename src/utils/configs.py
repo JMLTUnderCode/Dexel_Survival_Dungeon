@@ -12,15 +12,11 @@ if os.path.exists(env_path):
                 DEVELOPMENT = value.strip().lower() == "true" or value.strip() == "1" or value.strip().lower() == "yes" or value.strip().lower() == "on"
                 break
 
-# Cargar variable ALGORITHM desde .env si existe
-ALGORITHM = "ARRIVE"  # Por defecto, usar ARRIVE
-if os.path.exists(env_path):
-    with open(env_path) as f:
-        for line in f:
-            if line.strip().startswith("ALGORITHM="):
-                _, value = line.strip().split("=", 1)
-                ALGORITHM = value.strip()
-                break
+# Lista de algoritmos disponibles
+class ALGORITHM(str, enum.Enum):
+    SEEK = "SEEK"
+    ARRIVE = "ARRIVE"
+    WANDER = "WANDER"
 
 # Configuraciones generales del juego
 GAME_TITLE = "Dexel Survival Dungeon"
