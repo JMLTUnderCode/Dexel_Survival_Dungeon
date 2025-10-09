@@ -109,7 +109,7 @@ class Enemy(Kinematic):
         Utiliza el algoritmo de movimiento especificado en "algorithm" para calcular el steering adecuado.
         """
         # Calcular el steering según el algoritmo seleccionado
-        steering: SteeringOutput = None
+        steering: SteeringOutput = SteeringOutput((0, 0), 0.0)
         if self.algorithm == "ARRIVE":
             steering = self.arrive.get_steering()
         elif self.algorithm == "SEEK":
