@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "maps/map.tmx",
+    "activeFile": "maps/presentacion-1.tmx",
     "expandedProjectPaths": [
         ".",
         "maps"
@@ -63,13 +63,16 @@
     "map.tileWidth": 16,
     "map.width": 60,
     "openFiles": [
-        "maps/map.tmx"
+        "maps/map.tmx",
+        "maps/presentacion-1.tmx",
+        "maps/Dungeon_Tileset.tsx"
     ],
     "project": "dexel_survival_dungeon.tiled-project",
     "property.type": "object",
     "recentFiles": [
         "maps/map.tmx",
         "maps/Dungeon_Tileset.tsx",
+        "maps/presentacion-1.tmx",
         "Dungeon_Tileset.tsx",
         "map.tmx"
     ],
