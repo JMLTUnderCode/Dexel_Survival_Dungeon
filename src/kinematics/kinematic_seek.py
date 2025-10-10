@@ -33,23 +33,23 @@ class KinematicSeek:
 
         Flujo:
         1) Calcular vector hacia target y su magnitud (dist).
-        2) Velocidad deseada = max_speed en dirección al target.
+        2) Velocidad objetivo = max_speed en dirección al target.
         3) Actualizar orientación del character para que mire en la dirección del movimiento.
-        4) Retornar SteeringOutput(linear=desired_velocity, angular=0).
+        4) Retornar SteeringOutput(linear=target_velocity, angular=0).
         """
         # 1) Calcular vector y distancia al objetivo
         dx = self.target.position[0] - self.character.position[0]
         dy = self.target.position[1] - self.character.position[1]
         dist = math.hypot(dx, dy)
 
-        # 2) Velocidad deseada en dirección al objetivo (magnitude = max_speed)
-        desired_velocity = (dx / dist * self.max_speed, dy / dist * self.max_speed)
+        # 2) Velocidad objetivo en dirección al objetivo (magnitude = max_speed)
+        target_velocity = (dx / dist * self.max_speed, dy / dist * self.max_speed)
 
         # 3) Actualizar orientación del character para que mire en la dirección del movimiento
-        self.character.orientation = self.newOrientation(self.character.orientation, desired_velocity)
+        self.character.orientation = self.newOrientation(self.character.orientation, target_velocity)
 
         # 4) Devolver steering: la parte lineal es la velocidad objetivo; angular se maneja por orientación
-        return SteeringOutput(desired_velocity, 0.0)
+        return SteeringOutput(target_velocity, 0.0)
 
     def newOrientation(self, current_orientation: float, velocity: Tuple[float, float]) -> float:
         """
