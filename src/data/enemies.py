@@ -30,7 +30,7 @@ enemy_list = [
         "type": "gargant-soldier",                                              # *
         "position": (RENDER_TILE_SIZE*40, RENDER_TILE_SIZE*26),                 # *
         "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),  # *
-        "algorithm": ALGORITHM.ARRIVE_DINAMIC,                                  # *
+        "algorithm": ALGORITHM.ARRIVE_DYNAMIC,                                  # *
         "maxSpeed": 180.0,                                                      # *
         "target_radius": 40.0,                                                  # *
         "slow_radius": 180.0,                                                   # *

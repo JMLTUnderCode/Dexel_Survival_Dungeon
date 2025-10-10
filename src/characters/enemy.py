@@ -2,7 +2,7 @@ import math
 import pygame
 from kinematics.kinematic import Kinematic, SteeringOutput
 from kinematics.kinematic_arrive import KinematicArrive
-from kinematics.dinamic_arrive import DinamicArrive
+from kinematics.dynamic_arrive import DynamicArrive
 from kinematics.kinematic_seek import KinematicSeek
 from kinematics.kinematic_wandering import KinematicWander
 from characters.animation import Animation, load_animations, set_animation_state
@@ -81,7 +81,7 @@ class Enemy(Kinematic):
         )
 
         # Instanciar el algoritmo de búsqueda cinemática: Arrive Dinámico
-        self.dinamic_arrive = DinamicArrive(
+        self.dynamic_arrive = DynamicArrive(
             character=self,                    # Kinematic que se mueve
             target=target,                     # Objetivo a seguir
             max_speed=maxSpeed,                # Velocidad máxima
@@ -158,8 +158,8 @@ class Enemy(Kinematic):
         steering: SteeringOutput = SteeringOutput((0, 0), 0.0)
         if self.algorithm == ALGORITHM.ARRIVE_KINEMATIC:
             steering = self.kinematic_arrive.get_steering()
-        elif self.algorithm == ALGORITHM.ARRIVE_DINAMIC:
-            steering = self.dinamic_arrive.get_steering()
+        elif self.algorithm == ALGORITHM.ARRIVE_DYNAMIC:
+            steering = self.dynamic_arrive.get_steering()
         elif self.algorithm == ALGORITHM.SEEK:
             steering = self.seek.get_steering()
         elif self.algorithm == ALGORITHM.WANDER:
