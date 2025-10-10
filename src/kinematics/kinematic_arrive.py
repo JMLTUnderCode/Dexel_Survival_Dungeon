@@ -46,35 +46,33 @@ class KinematicArrive:
         3) Si dentro de target_radius -> devolver 0 (llegado).
         4) Aproximarse hacia el objetivo en time_to_target segundos
         5) Limitar velocidad a max_speed
-        6) Devolver SteeringOutput(linear=(vel_x, dir_z), angular=0).
+        6) Devolver steering (solo componente lineal). Angular se gestiona por el sistema de orientación.
         """
 
         # 1) Vector hacia target
-        (dir_x, dir_z) = (self.target.position[0] - self.character.position[0],
-                          self.target.position[1] - self.character.position[1])
+        dx = self.target.position[0] - self.character.position[0]
+        dz = self.target.position[1] - self.character.position[1]
 
         # 2) Actualizar orientación basada en la dirección hacia el objetivo
-        #     Mantener la orientación actual si la dirección es nula.
-        self.character.orientation = self.newOrientation(self.character.orientation, (dir_x, dir_z))
-        
+        self.character.orientation = self.newOrientation(self.character.orientation, (dx, dz))
+
         # 3) Si la distancia es extremadamente pequeña, consideramos que llegó.
-        dist = math.hypot(dir_x, dir_z)
+        dist = math.hypot(dx, dz)
         if dist <= self.target_radius:
             return SteeringOutput((0.0, 0.0), 0.0)
 
         # 4) Aproximarse hacia el objetivo en time_to_target segundos
         #    (esto genera una velocidad objetivo proporcional a la distancia)
-        (dir_x, dir_z) = (dir_x / self.time_to_target, 
-                          dir_z / self.time_to_target)
+        steering_linear = (dx / self.time_to_target, dz / self.time_to_target)
         
         # 5) Limitar velocidad a max_speed
-        dist = math.hypot(dir_x, dir_z)
+        dist = math.hypot(steering_linear[0], steering_linear[1])
         if dist > self.max_speed:
-            (dir_x, dir_z) = (dir_x / dist * self.max_speed, 
-                              dir_z / dist * self.max_speed)
+            steering_linear = (steering_linear[0] / dist * self.max_speed,
+                               steering_linear[1] / dist * self.max_speed)
 
         # 6) Devolver steering (solo componente lineal). Angular se gestiona por el sistema de orientación.
-        return SteeringOutput((dir_x, dir_z), 0.0)
+        return SteeringOutput(steering_linear, 0.0)
 
     def newOrientation(self, current_orientation: float, velocity: Tuple[float, float]) -> float:
         """
