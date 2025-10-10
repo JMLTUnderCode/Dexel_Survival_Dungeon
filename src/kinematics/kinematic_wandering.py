@@ -48,13 +48,13 @@ class KinematicWander:
         # 1) Dirección desde la orientación (orientación en radianes)
         ori = self.character.orientation
         dir_x = math.cos(ori)
-        dir_y = math.sin(ori)
+        dir_z = math.sin(ori)
 
         # 2) Velocidad objetivo
         desired_vx = dir_x * self.max_speed
-        desired_vy = dir_y * self.max_speed
+        desired_vz = dir_z * self.max_speed
 
         # 3) Rotación aleatoria (pequeño cambio para vagar)
         random_rot = self.random_binomial() * self.max_rotation
 
-        return SteeringOutput((desired_vx, desired_vy), random_rot)
+        return SteeringOutput((desired_vx, desired_vz), random_rot)
