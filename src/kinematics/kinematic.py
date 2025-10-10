@@ -21,8 +21,6 @@ class Kinematic:
         orientation: ángulo en radianes representando la orientación
         velocity: tupla (vx, vy) representando la velocidad en píxeles/segundo
         rotation: velocidad angular en radianes/segundo
-        map_width, map_height: dimensiones del mapa para limitar el movimiento
-        collision_rects: lista de pygame.Rect para detección de colisiones
     """
     def __init__(self, position=(0, 0), orientation=0.0, velocity=(0, 0), rotation=0.0):
         self.position = position        # Posicion (x, y)
@@ -30,24 +28,21 @@ class Kinematic:
         self.velocity = velocity        # Velocidad de desplazamiento en x e y.
         self.rotation = rotation        # Velocidad de rotacion
 
-        self.size = 48                  # Tamaño lógico para colisiones y límites
-
-    def validate_movement(self, new_x, new_z, collision_rects):
+    def validate_movement(self, new_x: float, new_z: float, collision_rects: list[pygame.Rect], collider_box: tuple[int, int]):
         """
         Valida si la nueva posición (new_x, new_y) colisiona con algún rectángulo de colisión.
         Retorna True si el movimiento es válido (sin colisiones), False si hay colisiónes.
-        Usa un rectángulo centrado en (new_x, new_y) con tamaño self.size x self.size.
+        Usa un rectángulo centrado en (new_x, new_y) con dimensiones de collider_box.
         """
         if collision_rects is None:
             return True
 
         # Bounding box del personaje en coordenadas de mapa
-        w, h = self.size, self.size
         box_collider = pygame.Rect(
-            int(new_x - w // 2),
-            int(new_z - h // 2), 
-            w, 
-            h
+            int(new_x - collider_box[0] // 2),
+            int(new_z - collider_box[1] // 2),
+            collider_box[0],
+            collider_box[1]
         )
 
         for col_rect in collision_rects:
@@ -55,7 +50,7 @@ class Kinematic:
                 return False  # Colisión detectada
         return True  # Movimiento válido
 
-    def updateKinematic(self, steering : SteeringOutput, maxSpeed: float, time : float, collision_rects):
+    def updateKinematic(self, steering : SteeringOutput, maxSpeed: float, time : float, collision_rects: list[pygame.Rect], collider_box: tuple[int, int]):
         """
         Actualiza la posición, orientación, velocidad y rotación del objeto
         usando el steering proporcionado, respetando las colisiones y límites del mapa.
@@ -69,14 +64,14 @@ class Kinematic:
         new_z = z + vz * time
 
         # 1. Intentar movimiento completo
-        if self.validate_movement(new_x, new_z, collision_rects):
+        if self.validate_movement(new_x, new_z, collision_rects, collider_box):
             self.position = (new_x, new_z)
         else:
             # 2. Intentar solo en X
-            if self.validate_movement(new_x, z, collision_rects):
+            if self.validate_movement(new_x, z, collision_rects, collider_box):
                 self.position = (new_x, z)
             # 3. Intentar solo en Y
-            elif self.validate_movement(x, new_z, collision_rects):
+            elif self.validate_movement(x, new_z, collision_rects, collider_box):
                 self.position = (x, new_z)
             # 4. Si no puede moverse, no cambia posición
 

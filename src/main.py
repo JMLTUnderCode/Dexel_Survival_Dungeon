@@ -21,6 +21,7 @@ game_map = Map("presentacion-1.tmx") # Presentacion 1
 player = Player(
     type="oldman",
     position=(RENDER_TILE_SIZE*30, RENDER_TILE_SIZE*30),
+    collider_box=(PLAYER_COLLIDER_BOX_WIDTH, PLAYER_COLLIDER_BOX_HEIGHT),
     maxSpeed=210,
 )
 
@@ -30,12 +31,14 @@ enemies = [
     Enemy(
         type=enemy["type"],
         position=enemy["position"],
+        collider_box=enemy["collider_box"],
         target=player,
         algorithm=enemy["algorithm"],
         maxSpeed=enemy["maxSpeed"],
         target_radius=enemy["target_radius"],
         slow_radius=enemy["slow_radius"],
         time_to_target=enemy["time_to_target"],
+        max_acceleration=enemy["max_acceleration"],
         max_rotation=enemy["max_rotation"],
     )
     for enemy in enemy_list
