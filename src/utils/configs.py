@@ -14,10 +14,14 @@ if os.path.exists(env_path):
 
 # Lista de algoritmos disponibles
 class ALGORITHM(str, enum.Enum):
-    SEEK = "SEEK"
+    SEEK_KINEMATIC = "SEEK KINEMATIC"
+    SEEK_DYNAMIC = "SEEK DYNAMIC"
     ARRIVE_KINEMATIC = "ARRIVE KINEMATIC"
     ARRIVE_DYNAMIC = "ARRIVE DYNAMIC"
-    WANDER = "WANDER"
+    FLEE_KINEMATIC = "FLEE KINEMATIC"
+    FLEE_DYNAMIC = "FLEE DYNAMIC"
+    WANDER_KINEMATIC = "WANDER KINEMATIC"
+    WANDER_DYNAMIC = "WANDER DYNAMIC"
 
 # Configuraciones generales del juego
 GAME_TITLE = "Dexel Survival Dungeon"
