@@ -1,50 +1,31 @@
 import pygame
 import sys
-from characters.player import Player
-from characters.enemy import Enemy
-from data.enemies import list_of_enemies_data
 from map.map import Map
 from utils.configs import *
+from ui.algorithm_set import *
 
 # --- Inicializar pygame y ventana principal ---
 pygame.init()  # Inicializa todos los módulos de pygame
-screen = pygame.display.set_mode((CAMERA_WIDTH, CAMERA_HEIGHT))  # Crea la ventana principal del juego
+screen = pygame.display.set_mode((CAMERA_WIDTH + UI_PANEL_WIDTH, CAMERA_HEIGHT))  # Crea la ventana principal del juego
+game_surface = pygame.Surface((CAMERA_WIDTH, CAMERA_HEIGHT)) # Surface donde se renderiza la escena de juego (sin UI)
 pygame.display.set_caption(GAME_TITLE)  # Establece el título de la ventana
 
-clock = pygame.time.Clock()  # Reloj para controlar el framerate
+# --- Reloj para controlar el framerate ---
+clock = pygame.time.Clock()
 
 # --- Cargar el mapa ---
 #game_map = Map("map.tmx") # Principal
 game_map = Map("presentacion-1.tmx") # Presentacion 1
 
-# --- Inicializar jugador ---
-player = Player(
-    type="oldman",
-    position=(RENDER_TILE_SIZE*30, RENDER_TILE_SIZE*30),
-    collider_box=(PLAYER_COLLIDER_BOX_WIDTH, PLAYER_COLLIDER_BOX_HEIGHT),
-    maxSpeed=210,
-)
+# --- Inicializar UI ---
+init_ui_fonts()
+build_ui_buttons()
 
-# --- Inicializar enemigo (bot que sigue al jugador) ---
-enemy_list = list_of_enemies_data["ALL"]  # Cambiar aquí para probar diferentes algoritmos
-enemies = [
-    Enemy(
-        type=enemy["type"],
-        position=enemy["position"],
-        collider_box=enemy["collider_box"],
-        target=player,
-        algorithm=enemy["algorithm"],
-        maxSpeed=enemy["maxSpeed"],
-        target_radius=enemy["target_radius"],
-        slow_radius=enemy["slow_radius"],
-        time_to_target=enemy["time_to_target"],
-        max_acceleration=enemy["max_acceleration"],
-        max_rotation=enemy["max_rotation"],
-    )
-    for enemy in enemy_list
-]
+# --- Inicializar jugador y enemigos ---
+player, enemies = create_player_and_enemies("ALL")
 
 def main():
+    global player, enemies
     running = True
     while running:
         dt = clock.tick(FPS) / 1000.0  # segundos
@@ -53,7 +34,27 @@ def main():
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 running = False
-            player.handle_event(event)
+
+            player, enemies, changed = handle_ui_event(event, player, enemies)
+            if not changed:
+                # Si el evento es del mouse y está dentro del área de juego, ajustar la posición X para que
+                # sea relativa al game_surface antes de pasarlo a player.handle_event
+                if hasattr(event, "pos"):
+                    ex, ey = event.pos
+                    if ex > UI_PANEL_WIDTH:
+                        # crear un evento "game_event" con pos ajustada y pasar a player
+                        adjusted_event = event
+                        # Pygame Event is mutable on some attributes; safer to create a new event for mouse positions
+                        try:
+                            adjusted_event = pygame.event.Event(event.type, {**event.__dict__, "pos": (ex - UI_PANEL_WIDTH, ey)})
+                        except Exception:
+                            adjusted_event = event
+                        player.handle_event(adjusted_event)
+                    else:
+                        # click on UI left panel (already handled by handle_ui_event), ignore for player
+                        pass
+                else:
+                    player.handle_event(event)
 
         # --- Obtener posición del jugador ---
         px, pz = player.get_pos()
@@ -65,16 +66,24 @@ def main():
         camera_x = max(0, min(camera_x, game_map.width - CAMERA_WIDTH))
         camera_z = max(0, min(camera_z, game_map.height - CAMERA_HEIGHT))
         
-        screen.fill((30, 30, 30))
+        # --- Render: dibujar todo en game_surface (área de juego) y luego blittear a screen desplazado ---
+        game_surface.fill((30, 30, 30))
 
-        game_map.draw(screen, camera_x, camera_z)
+        game_map.draw(game_surface, camera_x, camera_z)
 
-        # --- Actualizar jugador
-        player.update(screen, camera_x, camera_z, game_map.collision_rects, dt)
+        # --- Actualizar jugador (player.update internamente usa pygame.mouse.get_pos -> ajustado en player.handle_input) 
+        player.update(game_surface, camera_x, camera_z, game_map.collision_rects, dt)
         
-        # --- Actualizar enemigo
+        # --- Actualizar enemigos (se dibujan dentro de game_surface)
         for enemy in enemies:
-            enemy.update(screen, camera_x, camera_z, game_map.collision_rects, dt)
+            enemy.update(game_surface, camera_x, camera_z, game_map.collision_rects, dt)
+
+        # --- Blit del area de juego en la pantalla principal, desplazada a la derecha por UI_PANEL_WIDTH ---
+        screen.fill((0, 0, 0))  # fondo detrás del panel (opcional)
+        screen.blit(game_surface, (UI_PANEL_WIDTH, 0))
+
+        # --- Dibujar UI (panel izquierdo) encima de todo (UI dibuja en coordenadas de pantalla)
+        draw_ui(screen)
 
         pygame.display.flip()
 
