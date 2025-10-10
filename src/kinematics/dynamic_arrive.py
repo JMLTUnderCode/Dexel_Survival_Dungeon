@@ -82,7 +82,10 @@ class DynamicArrive:
         # 5) Vector de velocidad deseada (normalizamos la dirección)
         targetVelocity = (dx, dz)
         mag = math.hypot(targetVelocity[0], targetVelocity[1])
-        targetVelocity = (targetVelocity[0] / mag * targetSpeed, targetVelocity[1] / mag * targetSpeed)
+        if mag == 0.0:
+            targetVelocity = (0.0, 0.0)
+        else:
+            targetVelocity = (targetVelocity[0] / mag * targetSpeed, targetVelocity[1] / mag * targetSpeed)
 
         # 6) Calcular la aceleración deseada para alcanzar targetVelocity en time_to_target segundos.
         current_vx, current_vy = self.character.velocity
