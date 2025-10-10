@@ -1,10 +1,14 @@
 import math
+from unittest import case
 import pygame
 from kinematics.kinematic import Kinematic, SteeringOutput
-from kinematics.kinematic_arrive import KinematicArrive
-from kinematics.dynamic_arrive import DynamicArrive
 from kinematics.kinematic_seek import KinematicSeek
+from kinematics.kinematic_flee import KinematicFlee
+from kinematics.kinematic_arrive import KinematicArrive
 from kinematics.kinematic_wandering import KinematicWander
+from kinematics.dynamic_seek import DynamicSeek
+from kinematics.dynamic_flee import DynamicFlee
+from kinematics.dynamic_arrive import DynamicArrive
 from characters.animation import Animation, load_animations, set_animation_state
 from utils.configs import *
 
@@ -53,7 +57,7 @@ class Enemy(Kinematic):
         # Instanciar atributos de animación
         self.state = ENEMY_STATES.MOVE
         self.animations : dict[str, Animation] = load_animations(
-            ENEMY, 
+            ENEMY_FOLDER, 
             self.type, 
             ENEMY_STATES, 
             ENEMY_TILE_WIDTH, 
@@ -64,11 +68,18 @@ class Enemy(Kinematic):
         self.current_animation : Animation = self.animations[self.state]
         self.collider_box = collider_box
 
-        # Instanciar el algoritmo de búsqueda cinemática: Seek
-        self.seek = KinematicSeek(
+        # Instanciar el algoritmo de búsqueda cinemática: Seek Cinemático
+        self.kinematic_seek = KinematicSeek(
             character=self,     # Kinematic que se mueve
             target=target,      # Objetivo a seguir
             max_speed=maxSpeed  # Velocidad máxima
+        )
+
+        # Instanciar el algoritmo de búsqueda cinemática: Seek Dinámico
+        self.dynamic_seek = DynamicSeek(
+            character=self,                    # Kinematic que se mueve
+            target=target,                     # Objetivo a seguir
+            max_acceleration=max_acceleration  # Aceleración máxima
         )
 
         # Instanciar el algoritmo de búsqueda cinemática: Arrive Cinemático
@@ -91,8 +102,22 @@ class Enemy(Kinematic):
             max_acceleration=max_acceleration  # Aceleración máxima
         )
         
+        # Instanciar el algoritmo de búsqueda cinemática: Flee Cinemático
+        self.kinematic_flee = KinematicFlee(
+            character=self,     # Kinematic que se mueve
+            target=target,      # Objetivo a seguir
+            max_speed=maxSpeed  # Velocidad máxima
+        )
+
+        # Instanciar el algoritmo de búsqueda cinemática: Flee Dinámico
+        self.dynamic_flee = DynamicFlee(
+            character=self,                    # Kinematic que se mueve
+            target=target,                     # Objetivo a seguir
+            max_acceleration=max_acceleration  # Aceleración máxima
+        )
+
         # Instanciar el algoritmo de vagar: Wander
-        self.wander = KinematicWander(
+        self.wander_kinematic = KinematicWander(
             character=self,            # Kinematic que se mueve
             max_speed=maxSpeed,        # Velocidad máxima
             max_rotation=max_rotation  # Velocidad angular máxima
@@ -156,14 +181,24 @@ class Enemy(Kinematic):
         """
         # Calcular el steering según el algoritmo seleccionado
         steering: SteeringOutput = SteeringOutput((0, 0), 0.0)
-        if self.algorithm == ALGORITHM.ARRIVE_KINEMATIC:
-            steering = self.kinematic_arrive.get_steering()
-        elif self.algorithm == ALGORITHM.ARRIVE_DYNAMIC:
-            steering = self.dynamic_arrive.get_steering()
-        elif self.algorithm == ALGORITHM.SEEK:
-            steering = self.seek.get_steering()
-        elif self.algorithm == ALGORITHM.WANDER:
-            steering = self.wander.get_steering()
+        match (self.algorithm):
+            case ALGORITHM.SEEK_KINEMATIC:
+                steering = self.kinematic_seek.get_steering()
+            case ALGORITHM.SEEK_DYNAMIC:
+                steering = self.dynamic_seek.get_steering()
+            case ALGORITHM.ARRIVE_KINEMATIC:
+                steering = self.kinematic_arrive.get_steering()
+            case ALGORITHM.ARRIVE_DYNAMIC:
+                steering = self.dynamic_arrive.get_steering()
+            case ALGORITHM.FLEE_KINEMATIC:
+                steering = self.kinematic_flee.get_steering()
+            case ALGORITHM.FLEE_DYNAMIC:
+                steering = self.dynamic_flee.get_steering()
+            case ALGORITHM.WANDER_KINEMATIC:
+                steering = self.wander_kinematic.get_steering()
+            case ALGORITHM.WANDER_DYNAMIC:
+                # por implementar
+                pass
 
         # Aplicar el steering y actualizar la cinemática
         if steering.linear != (0, 0):
