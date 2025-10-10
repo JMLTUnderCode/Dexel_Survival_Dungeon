@@ -16,7 +16,7 @@ if os.path.exists(env_path):
 class ALGORITHM(str, enum.Enum):
     SEEK = "SEEK"
     ARRIVE_KINEMATIC = "ARRIVE KINEMATIC"
-    ARRIVE_DINAMIC = "ARRIVE DINAMIC"
+    ARRIVE_DYNAMIC = "ARRIVE DYNAMIC"
     WANDER = "WANDER"
 
 # Configuraciones generales del juego
