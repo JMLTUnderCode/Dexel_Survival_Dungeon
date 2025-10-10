@@ -32,7 +32,8 @@ CAMERA_HEIGHT = 800
 PLAYER="player" # carpeta base de assets del jugador
 PLAYER_TILE_WIDTH = 64
 PLAYER_TILE_HEIGHT = 64
-PLAYER_COLLIDER_BOX = 48
+PLAYER_COLLIDER_BOX_WIDTH = 48
+PLAYER_COLLIDER_BOX_HEIGHT = 48
 class PLAYER_STATES(str, enum.Enum):
     IDLE = "idle"
     MOVE = "move"
@@ -42,7 +43,8 @@ class PLAYER_STATES(str, enum.Enum):
 ENEMY="enemies" # carpeta base de assets de enemigos
 ENEMY_TILE_WIDTH = 64
 ENEMY_TILE_HEIGHT = 64
-ENEMY_COLLIDER_BOX = 48
+ENEMY_COLLIDER_BOX_WIDTH = 48
+ENEMY_COLLIDER_BOX_HEIGHT = 48
 class ENEMY_STATES(str, enum.Enum):
     MOVE = "move"
     MOVE_WOUNDED = "move-wounded"
