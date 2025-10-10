@@ -19,7 +19,6 @@ class KinematicArrive:
     - target: Kinematic objetivo (debe exponer `position: (x,y)`)
     - max_speed: velocidad máxima deseada (unidades/segundo)
     - target_radius: distancia a la que se considera "llegado" (unidades)
-    - slow_radius: radio a partir del cual desacelera (unidades)
     - time_to_target: tiempo deseado para alcanzar la velocidad objetivo (segundos). Controla la suavidad.
     """
 
@@ -29,14 +28,12 @@ class KinematicArrive:
         target: Kinematic,
         max_speed: float = 200.0,
         target_radius: float = 40.0,
-        slow_radius: float = 180.0,
         time_to_target: float = 0.15,
     ) -> None:
         self.character = character
         self.target = target
         self.max_speed = float(max_speed)
         self.target_radius = float(target_radius)
-        self.slow_radius = float(slow_radius)
         self.time_to_target = float(time_to_target)
 
     def get_steering(self) -> SteeringOutput:
@@ -44,48 +41,40 @@ class KinematicArrive:
         Calcula y devuelve el SteeringOutput.
 
         Flujo:
-        1) Calcular vector hacia target y su magnitud (dist).
-        2) Si dentro de target_radius -> devolver 0 (llegado).
-        3) Escoger velocidad objetivo (v_desired):
-           - fuera de slow_radius -> max_speed
-           - dentro -> escala entre 0..max_speed
-        4) Construir v_desired vectorial normalizando la dirección al target.
-        5) Devolver SteeringOutput(linear=desired_accel, angular=0).
+        1) Calcular vector hacia target.
+        2) Actualizar orientación del character para que mire en la dirección del movimiento.
+        3) Si dentro de target_radius -> devolver 0 (llegado).
+        4) Aproximarse hacia el objetivo en time_to_target segundos
+        5) Limitar velocidad a max_speed
+        6) Devolver SteeringOutput(linear=(vel_x, dir_z), angular=0).
         """
 
         # 1) Vector hacia target
-        dx = self.target.position[0] - self.character.position[0]
-        dz = self.target.position[1] - self.character.position[1]
-        dist = math.hypot(dx, dz)
-
-        # 1.a) Si la distancia es extremadamente pequeña, consideramos que llegó.
-        if dist <= self.target_radius:
-            # Asegurar que el character pare: reset de velocidad no se hace aquí, solo se solicita 0 accel.
-            return SteeringOutput((0.0, 0.0), 0.0)
+        (dir_x, dir_z) = (self.target.position[0] - self.character.position[0],
+                          self.target.position[1] - self.character.position[1])
 
         # 2) Actualizar orientación basada en la dirección hacia el objetivo
         #     Mantener la orientación actual si la dirección es nula.
-        self.character.orientation = self.newOrientation(self.character.orientation, (dx, dz))
+        self.character.orientation = self.newOrientation(self.character.orientation, (dir_x, dir_z))
+        
+        # 3) Si la distancia es extremadamente pequeña, consideramos que llegó.
+        dist = math.hypot(dir_x, dir_z)
+        if dist <= self.target_radius:
+            return SteeringOutput((0.0, 0.0), 0.0)
 
-        # 3) Velocidad objetivo (magnitud)
-        if dist > self.slow_radius:
-            speed = self.max_speed
-        else:
-            ratio = dist / self.slow_radius
-            speed = self.max_speed * ratio # Se puede ajustar la escala (lineal, cuadrática, etc.)
-
-        # 4) Vector de velocidad deseada (normalizamos la dirección)
-        desired_velocity = (dx / dist * speed, dz / dist * speed)
-
-        # 5) Calcular aceleración deseada para alcanzar desired_velocity en time_to_target segundos.
-        current_vx, current_vy = self.character.velocity
-        steering_linear = (
-            (desired_velocity[0] - current_vx) / self.time_to_target,
-            (desired_velocity[1] - current_vy) / self.time_to_target,
-        )
+        # 4) Aproximarse hacia el objetivo en time_to_target segundos
+        #    (esto genera una velocidad objetivo proporcional a la distancia)
+        (dir_x, dir_z) = (dir_x / self.time_to_target, 
+                          dir_z / self.time_to_target)
+        
+        # 5) Limitar velocidad a max_speed
+        dist = math.hypot(dir_x, dir_z)
+        if dist > self.max_speed:
+            (dir_x, dir_z) = (dir_x / dist * self.max_speed, 
+                              dir_z / dist * self.max_speed)
 
         # 6) Devolver steering (solo componente lineal). Angular se gestiona por el sistema de orientación.
-        return SteeringOutput(steering_linear, 0.0)
+        return SteeringOutput((dir_x, dir_z), 0.0)
 
     def newOrientation(self, current_orientation: float, velocity: Tuple[float, float]) -> float:
         """
