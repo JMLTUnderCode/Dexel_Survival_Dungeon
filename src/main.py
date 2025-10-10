@@ -2,7 +2,7 @@ import pygame
 import sys
 from characters.player import Player
 from characters.enemy import Enemy
-from data.enemies import enemy_list
+from data.enemies import list_of_enemies_data
 from map.map import Map
 from utils.configs import *
 
@@ -26,7 +26,7 @@ player = Player(
 )
 
 # --- Inicializar enemigo (bot que sigue al jugador) ---
-
+enemy_list = list_of_enemies_data["ALL"]  # Cambiar aquí para probar diferentes algoritmos
 enemies = [
     Enemy(
         type=enemy["type"],
