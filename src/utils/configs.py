@@ -1,5 +1,5 @@
-import enum
 import os
+import enum
 
 # Cargar variable DEVELOPMENT desde .env si existe
 DEVELOPMENT = None
@@ -33,7 +33,7 @@ CAMERA_WIDTH = 1200
 CAMERA_HEIGHT = 800
 
 # Configuraciones del jugador
-PLAYER="player" # carpeta base de assets del jugador
+PLAYER_FOLDER = "player"
 PLAYER_TILE_WIDTH = 64
 PLAYER_TILE_HEIGHT = 64
 PLAYER_COLLIDER_BOX_WIDTH = 48
@@ -44,7 +44,7 @@ class PLAYER_STATES(str, enum.Enum):
     ATTACK = "attack"
 
 # Configuraciones del enemigo
-ENEMY="enemies" # carpeta base de assets de enemigos
+ENEMY_FOLDER = "enemies"
 ENEMY_TILE_WIDTH = 64
 ENEMY_TILE_HEIGHT = 64
 ENEMY_COLLIDER_BOX_WIDTH = 48
@@ -56,3 +56,31 @@ class ENEMY_STATES(str, enum.Enum):
     ATTACK_WOUNDED = "attack-wounded"
     DEATH_0 = "death-0"
     DEATH_1 = "death-1"
+
+# Configuraciones de UI para conjuntos de enemigos con algoritmos
+
+# --- UI: panel de selección de listas de enemigos ---
+UI_PANEL_WIDTH = 240
+UI_PADDING = 12
+UI_BUTTON_HEIGHT = 36
+UI_BG_COLOR = (20, 20, 20, 220)
+UI_BUTTON_COLOR = (50, 50, 50)
+UI_BUTTON_HOVER = (70, 70, 70)
+UI_BUTTON_ACTIVE = (90, 160, 90)
+UI_TEXT_COLOR = (230, 230, 230)
+UI_TITLE_COLOR = (180, 220, 255)
+UI_TITLE_FONT = None
+UI_FONT = None
+
+parsing_button = {
+    "ALGORITHM.SEEK_KINEMATIC": "SEEK KINEMATIC",
+    "ALGORITHM.SEEK_DYNAMIC": "SEEK DYNAMIC",
+    "ALGORITHM.ARRIVE_KINEMATIC": "ARRIVE KINEMATIC",
+    "ALGORITHM.ARRIVE_DYNAMIC": "ARRIVE DYNAMIC",
+    "ALGORITHM.FLEE_KINEMATIC": "FLEE KINEMATIC",
+    "ALGORITHM.FLEE_DYNAMIC": "FLEE DINAMIC",
+    "ALGORITHM.WANDER_KINEMATIC": "WANDER KINEMATIC",
+    "ALGORITHM.WANDER_DYNAMIC": "WANDER DYNAMIC",
+    "ALL": "ALL"
+}
+UI_BUTTONS = []  # list of dicts {key, rect}
