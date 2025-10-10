@@ -501,5 +501,6 @@ list_of_enemies_data = {
     ALGORITHM.FLEE_DYNAMIC: enemy_flee_dynamic,
     ALGORITHM.WANDER_KINEMATIC: enemy_wander_kinematic,
     ALGORITHM.WANDER_DYNAMIC: enemy_wander_dynamic,
-    "ALL": enemy_all
+    "ALL": enemy_all,
+    "EMPTY": [],
 }

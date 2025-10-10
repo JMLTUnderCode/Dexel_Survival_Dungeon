@@ -81,6 +81,7 @@ parsing_button = {
     "ALGORITHM.FLEE_DYNAMIC": "FLEE DINAMIC",
     "ALGORITHM.WANDER_KINEMATIC": "WANDER KINEMATIC",
     "ALGORITHM.WANDER_DYNAMIC": "WANDER DYNAMIC",
-    "ALL": "ALL"
+    "ALL": "ALL",
+    "EMPTY": "EMPTY"
 }
 UI_BUTTONS = []  # list of dicts {key, rect}
