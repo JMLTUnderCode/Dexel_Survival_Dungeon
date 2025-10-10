@@ -13,10 +13,17 @@ class Player(Kinematic):
     
     Parámetros:
     - type: tipo de jugador (puede usarse para diferentes sprites)
-    - position: posición inicial del jugador (x, y)
+    - position: posición inicial del jugador (x, z)
+    - collider_box: dimensiones de la caja de colisión del jugador (ancho, alto)
     - maxSpeed: velocidad máxima del jugador
     """
-    def __init__(self, type: str, position: tuple, maxSpeed: float = 200):
+    def __init__(
+        self, 
+        type: str, 
+        position: tuple, 
+        collider_box: tuple[int, int],
+        maxSpeed: float = 200
+    ) -> None:
         super().__init__(position=position, orientation=0.0, velocity=(0,0), rotation=0.0)
         self.type = type              # Tipo de jugador (puede usarse para diferentes sprites)
         self.maxSpeed = maxSpeed      # Velocidad máxima en píxeles/seg
@@ -35,7 +42,7 @@ class Player(Kinematic):
             scale=1.25
         )
         self.current_animation : Animation = self.animations[self.state]
-        self.collider_box = PLAYER_COLLIDER_BOX
+        self.collider_box = collider_box
 
     def get_pos(self):
         return self.position
@@ -126,28 +133,7 @@ class Player(Kinematic):
 
         self._pending_steering = SteeringOutput(linear=tuple(accel), angular=angular)
 
-    def update(self, surface, camera_x, camera_z, collision_rects, dt):
-        """
-        Actualiza el jugador: maneja entrada, cinemática, animación y ataques.
-        Debe llamarse cada frame después de manejar la entrada.
-        """
-        # Manejar entrada para actualizar el steering
-        self.handle_input(camera_x, camera_z, dt)
-
-        # Actualizar cinemática
-        self.updateKinematic(self._pending_steering, self.maxSpeed, dt, collision_rects)
-
-        # Actualizar animación
-        self.current_animation.update(dt)
-
-        # Actualizar y limpiar ondas de ataque
-        for wave in self.attack_waves:
-            wave.update()
-        self.attack_waves = [w for w in self.attack_waves if w.alive]
-
-        self.draw(surface, camera_x, camera_z)
-    
-    def draw(self, surface, camera_x, camera_z):
+    def draw(self, surface: pygame.Surface, camera_x: float, camera_z: float):
         """
         Dibuja el jugador en pantalla, rotando el sprite hacia el mouse.
         La posición se ajusta por la cámara para renderizar correctamente en el viewport.
@@ -169,16 +155,37 @@ class Player(Kinematic):
         if DEVELOPMENT:
             self.draw_collision_box(surface, camera_x, camera_z)
 
-    def draw_collision_box(self, surface, camera_x, camera_z):
+    def draw_collision_box(self, surface: pygame.Surface, camera_x: float, camera_z: float):
         """
         Dibuja el cuadro de colisión del jugador para depuración.
         """
         sx = self.position[0] - camera_x
         sz = self.position[1] - camera_z
         player_box = pygame.Rect(
-            int(sx - self.collider_box // 2),
-            int(sz - self.collider_box // 2),
-            int(self.collider_box),
-            int(self.collider_box)
+            int(sx - self.collider_box[0] // 2),
+            int(sz - self.collider_box[1] // 2),
+            int(self.collider_box[0]),
+            int(self.collider_box[1])
         )
         pygame.draw.rect(surface, (0, 255, 0), player_box, 1)  # Verde, grosor 1
+
+    def update(self, surface: pygame.Surface, camera_x: float, camera_z: float, collision_rects: list[pygame.Rect], dt: float):
+        """
+        Actualiza el jugador: maneja entrada, cinemática, animación y ataques.
+        Debe llamarse cada frame después de manejar la entrada.
+        """
+        # Manejar entrada para actualizar el steering
+        self.handle_input(camera_x, camera_z, dt)
+
+        # Actualizar cinemática
+        self.updateKinematic(self._pending_steering, self.maxSpeed, dt, collision_rects, self.collider_box)
+
+        # Actualizar animación
+        self.current_animation.update(dt)
+
+        # Actualizar y limpiar ondas de ataque
+        for wave in self.attack_waves:
+            wave.update()
+        self.attack_waves = [w for w in self.attack_waves if w.alive]
+
+        self.draw(surface, camera_x, camera_z)
