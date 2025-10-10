@@ -3,9 +3,9 @@ from typing import Tuple
 
 from kinematics.kinematic import Kinematic, SteeringOutput
 
-class DinamicArrive:
+class DynamicArrive:
     """
-    Dinamic Arrive behaviour (smooth arrival).
+    Dynamic Arrive behaviour (smooth arrival).
 
     Objetivo
     - Generar un SteeringOutput (aceleración lineal, rotación angular) que permita
