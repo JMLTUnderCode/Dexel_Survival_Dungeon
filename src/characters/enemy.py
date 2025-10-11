@@ -201,14 +201,14 @@ class Enemy(Kinematic):
                 pass
 
         # Aplicar el steering y actualizar la cinemática
-        if hasattr(steering, "linear") and hasattr(steering, "angular"):
+        if isinstance(steering, SteeringOutput):
             if steering.linear != (0, 0):
                 set_animation_state(self, ENEMY_STATES.MOVE)
                 self.update_by_dynamic(steering, self.maxSpeed, dt, collision_rects, self.collider_box)
             else:
                 set_animation_state(self, ENEMY_STATES.ATTACK)
 
-        elif hasattr(steering, "velocity") and hasattr(steering, "rotation"):
+        elif isinstance(steering, KinematicSteeringOutput):
             if steering.velocity != (0, 0):
                 set_animation_state(self, ENEMY_STATES.MOVE)
                 self.update_by_kinematic(steering, dt, collision_rects, self.collider_box)
