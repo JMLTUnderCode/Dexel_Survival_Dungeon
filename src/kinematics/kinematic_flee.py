@@ -29,11 +29,11 @@ class KinematicFlee:
 
     def get_steering(self) -> SteeringOutput:
         """
-        Calcula el SteeringOutput para dirigirse directamente al target.
+        Calcula el SteeringOutput para alejarse directamente del target.
 
         Flujo:
-        1) Calcular vector hacia target y su magnitud (dist).
-        2) Velocidad objetivo = max_speed en dirección al target.
+        1) Calcular vector en dirección opuesta al target y su magnitud (dist).
+        2) Velocidad objetivo = max_speed en dirección opuesta al target.
         3) Actualizar orientación del character para que mire en la dirección del movimiento.
         4) Retornar SteeringOutput(linear=target_velocity, angular=0).
         """
