@@ -1,55 +1,15 @@
 import pygame
-from characters.player import Player
-from characters.enemy import Enemy
 from data.enemies import list_of_enemies_data
-from utils.configs import *
+from utils.create_characters import create_player_and_enemies
+import utils.configs as configs
 
 # Construcción dinámica de botones según las claves disponibles en data
 BUTTON_KEYS = list(list_of_enemies_data.keys())
 
-# --- Inicial create (por defecto ALL) ---
-# Helper para crear player y la lista de enemigos desde una key del data set
-def create_player_and_enemies(key="ALL"):
-    """
-    Crea/Resetea globalmente `player` y `enemies` usando list_of_enemies_data[key].
-    Si la key no existe, usa "ALL" o la primera disponible.
-    """
-    if key not in list_of_enemies_data:
-        key = "ALL" if "ALL" in list_of_enemies_data else next(iter(list_of_enemies_data.keys()))
-    enemy_list = list_of_enemies_data[key]
-
-    # Re-crear player (reset)
-    player = Player(
-        type="oldman",
-        position=(RENDER_TILE_SIZE*30, RENDER_TILE_SIZE*30),
-        collider_box=(PLAYER_COLLIDER_BOX_WIDTH, PLAYER_COLLIDER_BOX_HEIGHT),
-        maxSpeed=210,
-    )
-
-    # Re-crear enemies
-    enemies = [
-        Enemy(
-            type=enemy["type"],
-            position=enemy["position"],
-            collider_box=enemy["collider_box"],
-            target=player,
-            algorithm=enemy["algorithm"],
-            maxSpeed=enemy["maxSpeed"],
-            target_radius=enemy["target_radius"],
-            slow_radius=enemy["slow_radius"],
-            time_to_target=enemy["time_to_target"],
-            max_acceleration=enemy["max_acceleration"],
-            max_rotation=enemy["max_rotation"],
-        )
-        for enemy in enemy_list
-    ]
-
-    return player, enemies
-
 def handle_ui_event(event: pygame.event.Event, player, enemies):
     if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
         mx, my = event.pos
-        for b in UI_BUTTONS:
+        for b in configs.UI_BUTTONS:
             if b["rect"].collidepoint((mx, my)):
                 # devuelve los nuevos player, enemies y una señal de que hubo cambio
                 new_player, new_enemies = create_player_and_enemies(b["key"])
@@ -58,12 +18,12 @@ def handle_ui_event(event: pygame.event.Event, player, enemies):
 
 # UI state
 def build_ui_buttons():
-    UI_BUTTONS.clear()
-    y = UI_PADDING + 48
+    configs.UI_BUTTONS.clear()
+    y = configs.UI_PADDING + 48
     for k in BUTTON_KEYS:
-        rect = pygame.Rect(UI_PADDING, y, UI_PANEL_WIDTH - UI_PADDING*2, UI_BUTTON_HEIGHT)
-        UI_BUTTONS.append({"key": k, "rect": rect})
-        y += UI_BUTTON_HEIGHT + 8
+        rect = pygame.Rect(configs.UI_PADDING, y, configs.UI_PANEL_WIDTH - configs.UI_PADDING*2, configs.UI_BUTTON_HEIGHT)
+        configs.UI_BUTTONS.append({"key": k, "rect": rect})
+        y += configs.UI_BUTTON_HEIGHT + 8
 
 def draw_ui(surface: pygame.Surface, ui_width: int, ui_height: int):
     # Panel con fondo semitransparente
@@ -73,18 +33,18 @@ def draw_ui(surface: pygame.Surface, ui_width: int, ui_height: int):
     surface.blit(s, (panel_rect.x, panel_rect.y))
 
     # Título
-    title_surf = UI_TITLE_FONT.render("ENEMY SET", True, UI_TITLE_COLOR)
-    surface.blit(title_surf, (UI_PADDING, UI_PADDING))
+    title_surf = configs.UI_TITLE_FONT.render("ENEMY SET", True, configs.UI_TITLE_COLOR)
+    surface.blit(title_surf, (configs.UI_PADDING, configs.UI_PADDING))
 
     # Botones
     mx, my = pygame.mouse.get_pos()
-    for b in UI_BUTTONS:
+    for b in configs.UI_BUTTONS:
         rect = b["rect"]
         hovered = rect.collidepoint((mx, my))
-        color = UI_BUTTON_HOVER if hovered else UI_BUTTON_COLOR
-        label = parsing_button.get(str(b["key"]), str(b["key"]))
+        color = configs.UI_BUTTON_HOVER if hovered else configs.UI_BUTTON_COLOR
+        label = configs.parsing_button.get(str(b["key"]), str(b["key"]))
         pygame.draw.rect(surface, color, rect, border_radius=6)
-        txt = UI_FONT.render(label, True, UI_TEXT_COLOR)
+        txt = configs.UI_FONT.render(label, True, configs.UI_TEXT_COLOR)
         tx = rect.x + 12
         ty = rect.y + (rect.height - txt.get_height()) // 2
         surface.blit(txt, (tx, ty))
