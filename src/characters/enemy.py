@@ -179,7 +179,7 @@ class Enemy(Kinematic):
         Utiliza el algoritmo de movimiento especificado en "algorithm" para calcular el steering adecuado.
         """
         # Calcular el steering según el algoritmo seleccionado
-        steering: Union[SteeringOutput, KinematicSteeringOutput] = None
+        steering: Union[SteeringOutput, KinematicSteeringOutput] = SteeringOutput(linear=(0, 0), angular=0)
         match (self.algorithm):
             case ALGORITHM.SEEK_KINEMATIC:
                 steering = self.kinematic_seek.get_steering()
