@@ -3,50 +3,49 @@ from typing import Tuple
 
 from kinematics.kinematic import Kinematic, SteeringOutput
 
-class KinematicSeek:
+class DynamicFlee:
     """
-    Kinematic Seek behaviour (direct seeking).
+    Dynamic Flee behaviour (direct fleeing).
 
     Objetivo
     - Calcular un SteeringOutput que haga que `character` se dirija de forma directa
-      hacia `target` a la máxima velocidad especificada (`max_speed`).
-    - No implementa desaceleración ni radios de llegada: es un movimiento directo y agresivo.
+      en dirección opuesta a `target` con una aceleración máxima.
 
     Parámetros (constructor)
     - character: Kinematic que se moverá.
     - target: Kinematic objetivo.
-    - max_speed: velocidad máxima a la que el character intentará moverse (unidades/segundo).
+    - max_acceleration: aceleración máxima permitida (unidades/segundo²).
     """
     def __init__(
         self, 
         character : Kinematic, 
         target : Kinematic, 
-        max_speed : float = 200.0
+        max_acceleration : float = 300.0
     ) -> None:
         self.character = character
         self.target = target
-        self.max_speed = float(max_speed)
+        self.max_acceleration = float(max_acceleration)
 
     def get_steering(self) -> SteeringOutput:
         """
-        Calcula el SteeringOutput para dirigirse directamente al target.
+        Calcula el SteeringOutput para alejarse directamente del target.
 
         Flujo:
-        1) Calcular vector hacia target y su magnitud (dist).
-        2) Velocidad objetivo = max_speed en dirección al target.
-        3) Actualizar orientación del character para que mire en la dirección del movimiento.
+        1) Calcular vector en dirección opuesta al target.
+        2) Actualizar orientación del character para que mire en la dirección del movimiento.
+        3) Velocidad objetivo = max_acceleration en dirección opuesta al target.
         4) Retornar SteeringOutput(linear=target_velocity, angular=0).
         """
         # 1) Calcular vector y distancia al objetivo
-        dx = self.target.position[0] - self.character.position[0]
-        dy = self.target.position[1] - self.character.position[1]
-        dist = math.hypot(dx, dy)
-
-        # 2) Velocidad objetivo en dirección al objetivo (magnitude = max_speed)
-        target_velocity = (dx / dist * self.max_speed, dy / dist * self.max_speed)
-
-        # 3) Actualizar orientación del character para que mire en la dirección del movimiento
-        self.character.orientation = self.newOrientation(self.character.orientation, target_velocity)
+        dx = self.character.position[0] - self.target.position[0]
+        dz = self.character.position[1] - self.target.position[1]
+        
+        # 2) Actualizar orientación del character para que mire en la dirección del movimiento
+        self.character.orientation = self.newOrientation(self.character.orientation, (dx, dz))
+        
+        # 3) Velocidad deseada en dirección al objetivo. (magnitude = max_acceleration)
+        dist = math.hypot(dx, dz)
+        target_velocity = (dx / dist * self.max_acceleration, dz / dist * self.max_acceleration)
 
         # 4) Devolver steering: la parte lineal es la velocidad objetivo; angular se maneja por orientación
         return SteeringOutput(target_velocity, 0.0)

@@ -73,25 +73,25 @@ class DynamicArrive:
             return SteeringOutput((0.0, 0.0), 0.0)
 
         # 4) Velocidad objetivo (magnitud)
-        targetSpeed = 0.0
+        target_speed = 0.0
         if dist > self.slow_radius:
-            targetSpeed = self.max_speed
+            target_speed = self.max_speed
         else:
-            targetSpeed = self.max_speed *  dist / self.slow_radius # Se puede ajustar la escala (lineal, cuadrática, etc.)
+            target_speed = self.max_speed *  dist / self.slow_radius # Se puede ajustar la escala (lineal, cuadrática, etc.)
 
         # 5) Vector de velocidad deseada (normalizamos la dirección)
-        targetVelocity = (dx, dz)
-        mag = math.hypot(targetVelocity[0], targetVelocity[1])
+        target_velocity = (dx, dz)
+        mag = math.hypot(target_velocity[0], target_velocity[1])
         if mag == 0.0:
-            targetVelocity = (0.0, 0.0)
+            target_velocity = (0.0, 0.0)
         else:
-            targetVelocity = (targetVelocity[0] / mag * targetSpeed, targetVelocity[1] / mag * targetSpeed)
+            target_velocity = (target_velocity[0] / mag * target_speed, target_velocity[1] / mag * target_speed)
 
-        # 6) Calcular la aceleración deseada para alcanzar targetVelocity en time_to_target segundos.
+        # 6) Calcular la aceleración deseada para alcanzar target_velocity en time_to_target segundos.
         current_vx, current_vy = self.character.velocity
         steering_linear = (
-            (targetVelocity[0] - current_vx) / self.time_to_target,
-            (targetVelocity[1] - current_vy) / self.time_to_target,
+            (target_velocity[0] - current_vx) / self.time_to_target,
+            (target_velocity[1] - current_vy) / self.time_to_target,
         )
 
         # 7) Limitar la aceleración a max_acceleration

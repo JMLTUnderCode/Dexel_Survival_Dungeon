@@ -33,7 +33,7 @@ class Player(Kinematic):
 
         self.state = PLAYER_STATES.IDLE
         self.animations : dict[str, Animation] = load_animations(
-            PLAYER,
+            PLAYER_FOLDER,
             self.type, 
             PLAYER_STATES, 
             PLAYER_TILE_WIDTH, 
