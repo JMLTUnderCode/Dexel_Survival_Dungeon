@@ -2,6 +2,7 @@ import pygame
 import sys
 from map.map import Map
 from ui.algorithm_set import *
+from utils.create_characters import create_player_and_enemies
 import utils.configs as configs
 
 # --- Inicializar pygame temprano para obtener la resolución de la pantalla ---
