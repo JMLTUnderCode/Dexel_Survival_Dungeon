@@ -29,8 +29,6 @@ FPS = 60
 TILE_SIZE = 16
 ZOOM = 2.5
 RENDER_TILE_SIZE = TILE_SIZE * ZOOM
-CAMERA_WIDTH = 1200
-CAMERA_HEIGHT = 800
 
 # Configuraciones del jugador
 PLAYER_FOLDER = "player"
@@ -60,7 +58,7 @@ class ENEMY_STATES(str, enum.Enum):
 # Configuraciones de UI para conjuntos de enemigos con algoritmos
 
 # --- UI: panel de selección de listas de enemigos ---
-UI_PANEL_WIDTH = 240
+UI_PANEL_WIDTH = 200
 UI_PADDING = 12
 UI_BUTTON_HEIGHT = 36
 UI_BG_COLOR = (20, 20, 20, 220)
