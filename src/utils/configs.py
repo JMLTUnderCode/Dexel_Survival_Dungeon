@@ -24,6 +24,7 @@ class ALGORITHM(str, enum.Enum):
     ARRIVE_DYNAMIC = "ARRIVE DYNAMIC"
     WANDER_DYNAMIC = "WANDER DYNAMIC"
     ALIGN = "ALIGN"
+    VELOCITY_MATCH = "VELOCITY MATCH"
 
 # Configuraciones generales del juego
 GAME_TITLE = "Dexel Survival Dungeon"
@@ -84,6 +85,7 @@ parsing_button = {
     "ALGORITHM.ARRIVE_DYNAMIC": "ARRIVE DYNAMIC",
     "ALGORITHM.WANDER_DYNAMIC": "WANDER DYNAMIC",
     "ALGORITHM.ALIGN": "ALIGN",
+    "ALGORITHM.VELOCITY_MATCH": "VELOCITY MATCH",
     "ALL": "ALL",
     "EMPTY": "EMPTY"
 }
