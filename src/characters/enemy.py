@@ -1,5 +1,4 @@
 import math
-from unittest import case
 import pygame
 from kinematics.kinematic import Kinematic, SteeringOutput
 from kinematics.kinematic_seek import KinematicSeek
