@@ -128,8 +128,8 @@ class Enemy(Kinematic):
 
         # Instanciar el algoritmo de alineación (no usado actualmente)
         self.align = Align(
-            character=self,                     # 
-            target=target,                      #
+            character=self,                     # Quien se alinea
+            target=target,                      # Referencia para alinearse
             target_radius=target_radius,        # Radio de llegada
             slow_radius=slow_radius,            # Radio para empezar a girar
             time_to_target=time_to_target,      # Tiempo para ajustar la rotación
