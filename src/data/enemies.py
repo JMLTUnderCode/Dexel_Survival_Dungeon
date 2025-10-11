@@ -556,7 +556,7 @@ enemy_align = [
 # Atributos relevantes:
 # - time_to_target: tiempo para alcanzar el objetivo (float)
 # - max_acceleration: aceleración máxima (float)
-enemy_velocity_matchingc = [
+enemy_velocity_match = [
     {
         "type": "gargant-berserker",
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
@@ -621,7 +621,7 @@ enemy_all = [
     enemy_wander_kinematic[2],
     #enemy_wander_dynamic[3],
     enemy_align[0],
-    enemy_velocity_matchingc[1],
+    enemy_velocity_match[1],
 ]
 
 list_of_enemies_data = {
@@ -634,7 +634,7 @@ list_of_enemies_data = {
     configs.ALGORITHM.ARRIVE_DYNAMIC: enemy_arrive_dynamic,
     configs.ALGORITHM.WANDER_DYNAMIC: enemy_wander_dynamic,
     configs.ALGORITHM.ALIGN: enemy_align,
-    configs.ALGORITHM.VELOCITY_MATCH: enemy_velocity_matchingc,
+    configs.ALGORITHM.VELOCITY_MATCH: enemy_velocity_match,
     "ALL": enemy_all,
     "EMPTY": [],
 }
