@@ -1,8 +1,6 @@
-import math
-from kinematics.kinematic import Kinematic, SteeringOutput
+import utils.configs as configs
 
-PI = math.pi
-TWO_PI = 2.0 * PI
+from kinematics.kinematic import Kinematic, SteeringOutput
 
 class Align:
     """
@@ -41,11 +39,11 @@ class Align:
         self.max_angular_accel = float(max_angular_accel)
 
     @staticmethod
-    def _map_to_range(angle: float) -> float:
+    def map_to_range(angle: float) -> float:
         """
         Map angle to range [-pi, pi].
         """
-        return (angle + PI) % TWO_PI - PI
+        return (angle + configs.PI) % (2.0 * configs.PI) - configs.PI
 
     def get_steering(self) -> SteeringOutput:
         """
@@ -58,10 +56,9 @@ class Align:
         rotation = self.target.orientation - self.character.orientation
 
         # 2) Mapear a [-pi, pi]
-        rotation = self._map_to_range(rotation)
+        rotation = self.map_to_range(rotation)
         rotation_size = abs(rotation)
 
-        print("\n", rotation_size, " ", self.target_radius )
         # 3) Si ya llegamos, no hay steering
         if rotation_size < self.target_radius:
             return result

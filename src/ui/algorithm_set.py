@@ -55,22 +55,21 @@ def init_ui_fonts(title_font_name: str = "Segoe UI", title_size: int = 20, font_
 
     Intenta usar SysFont con el nombre indicado y, si falla, usa la fuente por defecto.
     """
-    global UI_TITLE_FONT, UI_FONT
 
     # Asegurar que pygame esté inicializado
     if not pygame.get_init():
         pygame.init()
 
     try:
-        UI_TITLE_FONT = pygame.font.SysFont(title_font_name, title_size, bold=True)
+        configs.UI_TITLE_FONT = pygame.font.SysFont(title_font_name, title_size, bold=True)
     except Exception:
-        UI_TITLE_FONT = pygame.font.Font(None, title_size)
+        configs.UI_TITLE_FONT = pygame.font.Font(None, title_size)
         try:
-            UI_TITLE_FONT.set_bold(True)
+            configs.UI_TITLE_FONT.set_bold(True)
         except Exception:
             pass
 
     try:
-        UI_FONT = pygame.font.SysFont(font_name, font_size, bold=False)
+        configs.UI_FONT = pygame.font.SysFont(font_name, font_size, bold=False)
     except Exception:
-        UI_FONT = pygame.font.Font(None, font_size)
+        configs.UI_FONT = pygame.font.Font(None, font_size)

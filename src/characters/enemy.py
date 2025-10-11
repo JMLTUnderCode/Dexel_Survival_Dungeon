@@ -220,7 +220,6 @@ class Enemy(Kinematic):
         # Aplicar el steering y actualizar la cinemática
         if isinstance(steering, SteeringOutput):
             if self.algorithm == configs.ALGORITHM.ALIGN:
-                print(steering.linear, " ", steering.angular)
                 set_animation_state(self, configs.ENEMY_STATES.ATTACK_WOUNDED)  # Debe ser IDLE
                 self.update_by_dynamic(steering, self.maxSpeed, dt, collision_rects, self.collider_box)
 

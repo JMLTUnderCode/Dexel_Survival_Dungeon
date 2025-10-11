@@ -1,5 +1,5 @@
 import math
-from utils.configs import *
+import utils.configs as configs
 
 # Todos los atributos obligatorios para crear un enemigo
 # - type: tipo de enemigo (string)
@@ -23,9 +23,9 @@ from utils.configs import *
 enemy_seek_kinematic = [
     {
         "type": "gargant-berserker",
-        "position": (RENDER_TILE_SIZE*26, RENDER_TILE_SIZE*26),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.SEEK_KINEMATIC,
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.SEEK_KINEMATIC,
         "maxSpeed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -36,9 +36,9 @@ enemy_seek_kinematic = [
     },
     {
         "type": "gargant-soldier",
-        "position": (RENDER_TILE_SIZE*40, RENDER_TILE_SIZE*26),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.SEEK_KINEMATIC,
+        "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.SEEK_KINEMATIC,
         "maxSpeed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -49,9 +49,9 @@ enemy_seek_kinematic = [
     },
     {
         "type": "gargant-lord",
-        "position": (RENDER_TILE_SIZE*26, RENDER_TILE_SIZE*40),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.SEEK_KINEMATIC,
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*40),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.SEEK_KINEMATIC,
         "maxSpeed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -62,9 +62,9 @@ enemy_seek_kinematic = [
     },
     {
         "type": "gargant-boss",
-        "position": (RENDER_TILE_SIZE*40, RENDER_TILE_SIZE*40),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.SEEK_KINEMATIC,
+        "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*40),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.SEEK_KINEMATIC,
         "maxSpeed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -82,9 +82,9 @@ enemy_seek_kinematic = [
 enemy_seek_dynamic = [
     {
         "type": "gargant-berserker",
-        "position": (RENDER_TILE_SIZE*26, RENDER_TILE_SIZE*26),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.SEEK_DYNAMIC,
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.SEEK_DYNAMIC,
         "maxSpeed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -95,9 +95,9 @@ enemy_seek_dynamic = [
     },
     {
         "type": "gargant-soldier",
-        "position": (RENDER_TILE_SIZE*40, RENDER_TILE_SIZE*26),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.SEEK_DYNAMIC,
+        "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.SEEK_DYNAMIC,
         "maxSpeed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -108,9 +108,9 @@ enemy_seek_dynamic = [
     },
     {
         "type": "gargant-lord",
-        "position": (RENDER_TILE_SIZE*26, RENDER_TILE_SIZE*40),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.SEEK_DYNAMIC,
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*40),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.SEEK_DYNAMIC,
         "maxSpeed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -121,9 +121,9 @@ enemy_seek_dynamic = [
     },
     {
         "type": "gargant-boss",
-        "position": (RENDER_TILE_SIZE*40, RENDER_TILE_SIZE*40),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.SEEK_DYNAMIC,
+        "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*40),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.SEEK_DYNAMIC,
         "maxSpeed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -142,9 +142,9 @@ enemy_seek_dynamic = [
 enemy_arrive_kinematic = [
     {
         "type": "gargant-berserker",
-        "position": (RENDER_TILE_SIZE*26, RENDER_TILE_SIZE*26),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.ARRIVE_KINEMATIC,
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.ARRIVE_KINEMATIC,
         "maxSpeed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -155,9 +155,9 @@ enemy_arrive_kinematic = [
     },
     {
         "type": "gargant-soldier",
-        "position": (RENDER_TILE_SIZE*40, RENDER_TILE_SIZE*26),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.ARRIVE_KINEMATIC,
+        "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.ARRIVE_KINEMATIC,
         "maxSpeed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -168,9 +168,9 @@ enemy_arrive_kinematic = [
     },
     {
         "type": "gargant-lord",
-        "position": (RENDER_TILE_SIZE*26, RENDER_TILE_SIZE*40),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.ARRIVE_KINEMATIC,
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*40),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.ARRIVE_KINEMATIC,
         "maxSpeed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -181,9 +181,9 @@ enemy_arrive_kinematic = [
     },
     {
         "type": "gargant-boss",
-        "position": (RENDER_TILE_SIZE*40, RENDER_TILE_SIZE*40),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.ARRIVE_KINEMATIC,
+        "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*40),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.ARRIVE_KINEMATIC,
         "maxSpeed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -204,9 +204,9 @@ enemy_arrive_kinematic = [
 enemy_arrive_dynamic = [
     {
         "type": "gargant-berserker",
-        "position": (RENDER_TILE_SIZE*26, RENDER_TILE_SIZE*26),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.ARRIVE_DYNAMIC,
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.ARRIVE_DYNAMIC,
         "maxSpeed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -217,9 +217,9 @@ enemy_arrive_dynamic = [
     },
     {
         "type": "gargant-soldier",
-        "position": (RENDER_TILE_SIZE*40, RENDER_TILE_SIZE*26),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.ARRIVE_DYNAMIC,
+        "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.ARRIVE_DYNAMIC,
         "maxSpeed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -230,9 +230,9 @@ enemy_arrive_dynamic = [
     },
     {
         "type": "gargant-lord",
-        "position": (RENDER_TILE_SIZE*26, RENDER_TILE_SIZE*40),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.ARRIVE_DYNAMIC,
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*40),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.ARRIVE_DYNAMIC,
         "maxSpeed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -243,9 +243,9 @@ enemy_arrive_dynamic = [
     },
     {
         "type": "gargant-boss",
-        "position": (RENDER_TILE_SIZE*40, RENDER_TILE_SIZE*40),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.ARRIVE_DYNAMIC,
+        "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*40),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.ARRIVE_DYNAMIC,
         "maxSpeed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -262,9 +262,9 @@ enemy_arrive_dynamic = [
 enemy_flee_kinematic = [
     {
         "type": "gargant-berserker",
-        "position": (RENDER_TILE_SIZE*26, RENDER_TILE_SIZE*26),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.FLEE_KINEMATIC,
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.FLEE_KINEMATIC,
         "maxSpeed": 100.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -275,9 +275,9 @@ enemy_flee_kinematic = [
     },
     {
         "type": "gargant-soldier",
-        "position": (RENDER_TILE_SIZE*40, RENDER_TILE_SIZE*26),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.FLEE_KINEMATIC,
+        "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.FLEE_KINEMATIC,
         "maxSpeed": 100.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -288,9 +288,9 @@ enemy_flee_kinematic = [
     },
     {
         "type": "gargant-lord",
-        "position": (RENDER_TILE_SIZE*26, RENDER_TILE_SIZE*40),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.FLEE_KINEMATIC,
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*40),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.FLEE_KINEMATIC,
         "maxSpeed": 100.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -301,9 +301,9 @@ enemy_flee_kinematic = [
     },
     {
         "type": "gargant-boss",
-        "position": (RENDER_TILE_SIZE*40, RENDER_TILE_SIZE*40),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.FLEE_KINEMATIC,
+        "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*40),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.FLEE_KINEMATIC,
         "maxSpeed": 100.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -321,9 +321,9 @@ enemy_flee_kinematic = [
 enemy_flee_dynamic = [
     {
         "type": "gargant-berserker",
-        "position": (RENDER_TILE_SIZE*26, RENDER_TILE_SIZE*26),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.FLEE_DYNAMIC,
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.FLEE_DYNAMIC,
         "maxSpeed": 100.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -334,9 +334,9 @@ enemy_flee_dynamic = [
     },
     {
         "type": "gargant-soldier",
-        "position": (RENDER_TILE_SIZE*40, RENDER_TILE_SIZE*26),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.FLEE_DYNAMIC,
+        "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.FLEE_DYNAMIC,
         "maxSpeed": 100.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -347,9 +347,9 @@ enemy_flee_dynamic = [
     },
     {
         "type": "gargant-lord",
-        "position": (RENDER_TILE_SIZE*26, RENDER_TILE_SIZE*40),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.FLEE_DYNAMIC,
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*40),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.FLEE_DYNAMIC,
         "maxSpeed": 100.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -360,9 +360,9 @@ enemy_flee_dynamic = [
     },
     {
         "type": "gargant-boss",
-        "position": (RENDER_TILE_SIZE*40, RENDER_TILE_SIZE*40),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.FLEE_DYNAMIC,
+        "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*40),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.FLEE_DYNAMIC,
         "maxSpeed": 100.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -380,9 +380,9 @@ enemy_flee_dynamic = [
 enemy_wander_kinematic = [
     {
         "type": "gargant-berserker",
-        "position": (RENDER_TILE_SIZE*26, RENDER_TILE_SIZE*26),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.WANDER_KINEMATIC,
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.WANDER_KINEMATIC,
         "maxSpeed": 120.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -393,9 +393,9 @@ enemy_wander_kinematic = [
     },
     {
         "type": "gargant-soldier",
-        "position": (RENDER_TILE_SIZE*40, RENDER_TILE_SIZE*26),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.WANDER_KINEMATIC,
+        "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.WANDER_KINEMATIC,
         "maxSpeed": 120.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -406,9 +406,9 @@ enemy_wander_kinematic = [
     },
     {
         "type": "gargant-lord",
-        "position": (RENDER_TILE_SIZE*26, RENDER_TILE_SIZE*40),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.WANDER_KINEMATIC,
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*40),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.WANDER_KINEMATIC,
         "maxSpeed": 120.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -419,9 +419,9 @@ enemy_wander_kinematic = [
     },
     {
         "type": "gargant-boss",
-        "position": (RENDER_TILE_SIZE*40, RENDER_TILE_SIZE*40),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.WANDER_KINEMATIC,
+        "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*40),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.WANDER_KINEMATIC,
         "maxSpeed": 120.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -438,9 +438,9 @@ enemy_wander_kinematic = [
 enemy_wander_dynamic = [
     {
         "type": "gargant-berserker",
-        "position": (RENDER_TILE_SIZE*26, RENDER_TILE_SIZE*26),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.WANDER_DYNAMIC,
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.WANDER_DYNAMIC,
         "maxSpeed": 120.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -451,9 +451,9 @@ enemy_wander_dynamic = [
     },
     {
         "type": "gargant-soldier",
-        "position": (RENDER_TILE_SIZE*40, RENDER_TILE_SIZE*26),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.WANDER_DYNAMIC,
+        "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.WANDER_DYNAMIC,
         "maxSpeed": 120.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -464,9 +464,9 @@ enemy_wander_dynamic = [
     },
     {
         "type": "gargant-lord",
-        "position": (RENDER_TILE_SIZE*26, RENDER_TILE_SIZE*40),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.WANDER_DYNAMIC,
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*40),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.WANDER_DYNAMIC,
         "maxSpeed": 120.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -477,9 +477,9 @@ enemy_wander_dynamic = [
     },
     {
         "type": "gargant-boss",
-        "position": (RENDER_TILE_SIZE*40, RENDER_TILE_SIZE*40),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.WANDER_DYNAMIC,
+        "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*40),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.WANDER_DYNAMIC,
         "maxSpeed": 120.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
@@ -500,9 +500,9 @@ enemy_wander_dynamic = [
 enemy_align = [
     {
         "type": "gargant-berserker",
-        "position": (RENDER_TILE_SIZE*26, RENDER_TILE_SIZE*26),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.ALIGN,
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.ALIGN,
         "maxSpeed": 180.0,
         "target_radius": 5 * (math.pi / 180),  # 5 grados en radianes
         "slow_radius": 45 * (math.pi / 180),   # 45 grados en radianes
@@ -513,9 +513,9 @@ enemy_align = [
     },
     {
         "type": "gargant-soldier",
-        "position": (RENDER_TILE_SIZE*40, RENDER_TILE_SIZE*26),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.ALIGN,
+        "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.ALIGN,
         "maxSpeed": 180.0,
         "target_radius": 5 * (math.pi / 180),  # 5 grados en radianes
         "slow_radius": 45 * (math.pi / 180),   # 45 grados en radianes
@@ -526,9 +526,9 @@ enemy_align = [
     },
     {
         "type": "gargant-lord",
-        "position": (RENDER_TILE_SIZE*26, RENDER_TILE_SIZE*40),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.ALIGN,
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*40),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.ALIGN,
         "maxSpeed": 180.0,
         "target_radius": 5 * (math.pi / 180),  # 5 grados en radianes
         "slow_radius": 45 * (math.pi / 180),   # 45 grados en radianes
@@ -539,9 +539,9 @@ enemy_align = [
     },
     {
         "type": "gargant-boss",
-        "position": (RENDER_TILE_SIZE*40, RENDER_TILE_SIZE*40),
-        "collider_box": (ENEMY_COLLIDER_BOX_WIDTH, ENEMY_COLLIDER_BOX_HEIGHT),
-        "algorithm": ALGORITHM.ALIGN,
+        "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*40),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.ALIGN,
         "maxSpeed": 180.0,
         "target_radius": 5 * (math.pi / 180),  # 5 grados en radianes
         "slow_radius": 45 * (math.pi / 180),   # 45 grados en radianes
@@ -565,15 +565,15 @@ enemy_all = [
 ]
 
 list_of_enemies_data = {
-    ALGORITHM.SEEK_KINEMATIC: enemy_seek_kinematic,
-    ALGORITHM.FLEE_KINEMATIC: enemy_flee_kinematic,
-    ALGORITHM.ARRIVE_KINEMATIC: enemy_arrive_kinematic,
-    ALGORITHM.WANDER_KINEMATIC: enemy_wander_kinematic,
-    ALGORITHM.SEEK_DYNAMIC: enemy_seek_dynamic,
-    ALGORITHM.FLEE_DYNAMIC: enemy_flee_dynamic,
-    ALGORITHM.ARRIVE_DYNAMIC: enemy_arrive_dynamic,
-    ALGORITHM.WANDER_DYNAMIC: enemy_wander_dynamic,
-    ALGORITHM.ALIGN: enemy_align,
+    configs.ALGORITHM.SEEK_KINEMATIC: enemy_seek_kinematic,
+    configs.ALGORITHM.FLEE_KINEMATIC: enemy_flee_kinematic,
+    configs.ALGORITHM.ARRIVE_KINEMATIC: enemy_arrive_kinematic,
+    configs.ALGORITHM.WANDER_KINEMATIC: enemy_wander_kinematic,
+    configs.ALGORITHM.SEEK_DYNAMIC: enemy_seek_dynamic,
+    configs.ALGORITHM.FLEE_DYNAMIC: enemy_flee_dynamic,
+    configs.ALGORITHM.ARRIVE_DYNAMIC: enemy_arrive_dynamic,
+    configs.ALGORITHM.WANDER_DYNAMIC: enemy_wander_dynamic,
+    configs.ALGORITHM.ALIGN: enemy_align,
     "ALL": enemy_all,
     "EMPTY": [],
 }
