@@ -52,7 +52,7 @@ class Align:
         """
         result = SteeringOutput(linear=(0.0, 0.0), angular=0.0)
 
-        # 1) Diferencia angular "naiva"
+        # 1) Diferencia angular
         rotation = self.target.orientation - self.character.orientation
 
         # 2) Mapear a [-pi, pi]
