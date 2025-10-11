@@ -9,8 +9,9 @@ from kinematics.kinematic_wandering import KinematicWander
 from kinematics.dynamic_seek import DynamicSeek
 from kinematics.dynamic_flee import DynamicFlee
 from kinematics.dynamic_arrive import DynamicArrive
+from kinematics.align import Align
 from characters.animation import Animation, load_animations, set_animation_state
-from utils.configs import *
+import utils.configs as configs
 
 class Enemy(Kinematic):
     """
@@ -27,6 +28,7 @@ class Enemy(Kinematic):
         time_to_target: tiempo para alcanzar el objetivo
         max_acceleration: aceleración máxima permitida (unidades/segundo²)
         max_rotation: velocidad angular máxima (radianes/segundo)
+        max_angular_accel: aceleración angular máxima (radianes/segundo²)
 
     Algoritmos:
         - KinematicSeek: Persigue al objetivo de manera directa.
@@ -37,6 +39,7 @@ class Enemy(Kinematic):
         - DynamicFlee: Huye del objetivo con aceleración.
         - DynamicArrive: Llega suavemente al objetivo con aceleración.
         - (DynamicWander no implementado)
+        - Align: Alinea la orientación con el objetivo.
     """
     def __init__(
         self, 
@@ -50,7 +53,8 @@ class Enemy(Kinematic):
         slow_radius: float = 150.0, 
         time_to_target: float = 0.15,
         max_acceleration: float = 300.0,
-        max_rotation: float = 1.0
+        max_rotation: float = 1.0,
+        max_angular_accel: float = 8.0
     ) -> None:
         super().__init__(
             position=position, 
@@ -64,13 +68,13 @@ class Enemy(Kinematic):
         self.maxSpeed = maxSpeed
 
         # Instanciar atributos de animación
-        self.state = ENEMY_STATES.MOVE
+        self.state = configs.ENEMY_STATES.MOVE
         self.animations : dict[str, Animation] = load_animations(
-            ENEMY_FOLDER, 
+            configs.ENEMY_FOLDER, 
             self.type, 
-            ENEMY_STATES, 
-            ENEMY_TILE_WIDTH, 
-            ENEMY_TILE_HEIGHT,
+            configs.ENEMY_STATES, 
+            configs.ENEMY_TILE_WIDTH, 
+            configs.ENEMY_TILE_HEIGHT,
             frame_duration=0.12,
             scale=1.25
         )
@@ -122,6 +126,17 @@ class Enemy(Kinematic):
             max_acceleration=max_acceleration  # Aceleración máxima
         )
 
+        # Instanciar el algoritmo de alineación (no usado actualmente)
+        self.align = Align(
+            character=self,                     # Quien se alinea
+            target=target,                      # Referencia para alinearse
+            target_radius=target_radius,        # Radio de llegada
+            slow_radius=slow_radius,            # Radio para empezar a girar
+            time_to_target=time_to_target,      # Tiempo para ajustar la rotación
+            max_rotation=max_rotation,          # Velocidad angular máxima
+            max_angular_accel=max_angular_accel # Aceleración angular máxima
+        )
+
     def draw(self, surface: pygame.Surface, camera_x: float, camera_z: float):
         """
         Dibuja el enemigo en pantalla, rotando el sprite hacia el jugador.
@@ -135,7 +150,7 @@ class Enemy(Kinematic):
         rect = rotated.get_rect(center=(sx, sz))
         surface.blit(rotated, rect)
 
-        if DEVELOPMENT:
+        if configs.DEVELOPMENT:
             # Mostrar arriba del sprite el algoritmo activo en VERDE, NEGRITA y MAYÚSCULAS
             # Cachear la fuente en la clase para no recrearla cada frame
             if not hasattr(self.__class__, "_dev_font") or self.__class__._dev_font is None:
@@ -181,39 +196,46 @@ class Enemy(Kinematic):
         # Calcular el steering según el algoritmo seleccionado
         steering: Union[SteeringOutput, KinematicSteeringOutput] = SteeringOutput(linear=(0, 0), angular=0)
         match (self.algorithm):
-            case ALGORITHM.SEEK_KINEMATIC:
+            case configs.ALGORITHM.SEEK_KINEMATIC:
                 steering = self.kinematic_seek.get_steering()
-            case ALGORITHM.FLEE_KINEMATIC:
+            case configs.ALGORITHM.FLEE_KINEMATIC:
                 steering = self.kinematic_flee.get_steering()
-            case ALGORITHM.ARRIVE_KINEMATIC:
+            case configs.ALGORITHM.ARRIVE_KINEMATIC:
                 steering = self.kinematic_arrive.get_steering()
-            case ALGORITHM.WANDER_KINEMATIC:
+            case configs.ALGORITHM.WANDER_KINEMATIC:
                 steering = self.kinematic_wander.get_steering()
 
-            case ALGORITHM.SEEK_DYNAMIC:
+            case configs.ALGORITHM.SEEK_DYNAMIC:
                 steering = self.dynamic_seek.get_steering()
-            case ALGORITHM.FLEE_DYNAMIC:
+            case configs.ALGORITHM.FLEE_DYNAMIC:
                 steering = self.dynamic_flee.get_steering()
-            case ALGORITHM.ARRIVE_DYNAMIC:
+            case configs.ALGORITHM.ARRIVE_DYNAMIC:
                 steering = self.dynamic_arrive.get_steering()
-            case ALGORITHM.WANDER_DYNAMIC:
+            case configs.ALGORITHM.WANDER_DYNAMIC:
                 # por implementar
                 pass
+            case configs.ALGORITHM.ALIGN:
+                steering = self.align.get_steering()
 
         # Aplicar el steering y actualizar la cinemática
         if isinstance(steering, SteeringOutput):
-            if steering.linear != (0, 0):
-                set_animation_state(self, ENEMY_STATES.MOVE)
+            if self.algorithm == configs.ALGORITHM.ALIGN:
+                set_animation_state(self, configs.ENEMY_STATES.ATTACK_WOUNDED)  # Debe ser IDLE
                 self.update_by_dynamic(steering, self.maxSpeed, dt, collision_rects, self.collider_box)
-            else:
-                set_animation_state(self, ENEMY_STATES.ATTACK)
+
+            elif steering.linear != (0, 0) and self.algorithm != configs.ALGORITHM.ALIGN:
+                set_animation_state(self, configs.ENEMY_STATES.MOVE)
+                self.update_by_dynamic(steering, self.maxSpeed, dt, collision_rects, self.collider_box)
+
+            elif steering.linear == (0, 0) and self.algorithm != configs.ALGORITHM.ALIGN:
+                set_animation_state(self, configs.ENEMY_STATES.ATTACK)
 
         elif isinstance(steering, KinematicSteeringOutput):
             if steering.velocity != (0, 0):
-                set_animation_state(self, ENEMY_STATES.MOVE)
+                set_animation_state(self, configs.ENEMY_STATES.MOVE)
                 self.update_by_kinematic(steering, dt, collision_rects, self.collider_box)
             else:
-                set_animation_state(self, ENEMY_STATES.ATTACK)
+                set_animation_state(self, configs.ENEMY_STATES.ATTACK)
 
         self.current_animation.update(dt)      # Actualizar animación
         self.draw(surface, camera_x, camera_z) # Dibujar enemigo

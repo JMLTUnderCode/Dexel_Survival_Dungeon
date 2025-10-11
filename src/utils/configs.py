@@ -1,3 +1,4 @@
+import math
 import os
 import enum
 
@@ -22,6 +23,7 @@ class ALGORITHM(str, enum.Enum):
     FLEE_DYNAMIC = "FLEE DYNAMIC"
     ARRIVE_DYNAMIC = "ARRIVE DYNAMIC"
     WANDER_DYNAMIC = "WANDER DYNAMIC"
+    ALIGN = "ALIGN"
 
 # Configuraciones generales del juego
 GAME_TITLE = "Dexel Survival Dungeon"
@@ -30,6 +32,7 @@ TILE_SIZE = 16
 ZOOM = 2.5
 RENDER_TILE_SIZE = TILE_SIZE * ZOOM
 SCREEN_OFF_SET = 60
+PI = math.pi
 
 # Configuraciones del jugador
 PLAYER_FOLDER = "player"
@@ -80,6 +83,7 @@ parsing_button = {
     "ALGORITHM.FLEE_DYNAMIC": "FLEE DYNAMIC",
     "ALGORITHM.ARRIVE_DYNAMIC": "ARRIVE DYNAMIC",
     "ALGORITHM.WANDER_DYNAMIC": "WANDER DYNAMIC",
+    "ALGORITHM.ALIGN": "ALIGN",
     "ALL": "ALL",
     "EMPTY": "EMPTY"
 }

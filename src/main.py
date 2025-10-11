@@ -1,8 +1,9 @@
 import pygame
 import sys
 from map.map import Map
-from utils.configs import *
 from ui.algorithm_set import *
+from utils.create_characters import create_player_and_enemies
+import utils.configs as configs
 
 # --- Inicializar pygame temprano para obtener la resolución de la pantalla ---
 pygame.init()
@@ -10,15 +11,15 @@ pygame.init()
 display_info = pygame.display.Info()
 
 # --- Calcular tamaños de pantalla y cámara ---
-SCREEN_WIDTH = display_info.current_w - SCREEN_OFF_SET
-SCREEN_HEIGHT = display_info.current_h - SCREEN_OFF_SET
-CAMERA_WIDTH = max(320, SCREEN_WIDTH - UI_PANEL_WIDTH)
+SCREEN_WIDTH = display_info.current_w - configs.SCREEN_OFF_SET
+SCREEN_HEIGHT = display_info.current_h - configs.SCREEN_OFF_SET
+CAMERA_WIDTH = max(320, SCREEN_WIDTH - configs.UI_PANEL_WIDTH)
 CAMERA_HEIGHT = max(240, SCREEN_HEIGHT)
 
 # --- Crear ventana usando el tamaño total (panel + juego) y la surface de juego ---
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 game_surface = pygame.Surface((CAMERA_WIDTH, CAMERA_HEIGHT))
-pygame.display.set_caption(GAME_TITLE)
+pygame.display.set_caption(configs.GAME_TITLE)
 
 # --- Reloj para controlar el framerate ---
 clock = pygame.time.Clock()
@@ -38,7 +39,7 @@ def main():
     global player, enemies
     running = True
     while running:
-        dt = clock.tick(FPS) / 1000.0  # segundos
+        dt = clock.tick(configs.FPS) / 1000.0  # segundos
 
         # --- Manejar eventos ---
         for event in pygame.event.get():
@@ -51,7 +52,7 @@ def main():
                 # sea relativa al game_surface antes de pasarlo a player.handle_event
                 if hasattr(event, "pos"):
                     ex, ey = event.pos
-                    if ex > UI_PANEL_WIDTH:
+                    if ex > configs.UI_PANEL_WIDTH:
                         # crear un evento "game_event" con pos ajustada y pasar a player
                         adjusted_event = event
                         # Pygame Event is mutable on some attributes; safer to create a new event for mouse positions
@@ -90,10 +91,10 @@ def main():
 
         # --- Blit del area de juego en la pantalla principal, desplazada a la derecha por UI_PANEL_WIDTH ---
         screen.fill((0, 0, 0))  # fondo detrás del panel (opcional)
-        screen.blit(game_surface, (UI_PANEL_WIDTH, 0))
+        screen.blit(game_surface, (configs.UI_PANEL_WIDTH, 0))
 
         # --- Dibujar UI (panel izquierdo) encima de todo (UI dibuja en coordenadas de pantalla)
-        draw_ui(screen, UI_PANEL_WIDTH, SCREEN_HEIGHT)
+        draw_ui(screen, configs.UI_PANEL_WIDTH, SCREEN_HEIGHT)
 
         pygame.display.flip()
 

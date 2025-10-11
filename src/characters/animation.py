@@ -1,7 +1,7 @@
 import os
 import pygame
-from typing import List, Optional, Tuple
 from enum import Enum
+from typing import List, Optional, Tuple
 from utils.resource_path import resource_path
 
 __all__ = ["Animation", "load_animations", "set_animation_state"]
