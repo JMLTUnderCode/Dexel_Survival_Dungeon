@@ -71,8 +71,7 @@ class Kinematic:
         self, 
         new_pos: tuple[float, float], 
         pos: tuple[float, float],
-        collision_rects: 
-        list[pygame.Rect], 
+        collision_rects: list[pygame.Rect], 
         collider_box: tuple[int, int]
     ) -> None:
         """
