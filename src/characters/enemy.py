@@ -11,6 +11,8 @@ from kinematics.dynamic_flee import DynamicFlee
 from kinematics.dynamic_arrive import DynamicArrive
 from kinematics.align import Align
 from kinematics.velocity_match import VelocityMatch
+from kinematics.pursue import Pursue
+from kinematics.evade import Evade
 from characters.animation import Animation, load_animations, set_animation_state
 import utils.configs as configs
 
@@ -23,7 +25,7 @@ class Enemy(Kinematic):
         collider_box: dimensiones de la caja de colisión del enemigo (ancho, alto)
         target: referencia al objeto target (objetivo a seguir)
         algorithm: algoritmo de búsqueda cinemática ("ARRIVE" o "SEEK")
-        maxSpeed: velocidad máxima del enemigo
+        max_speed: velocidad máxima del enemigo
         target_radius: radio de llegada al objetivo
         slow_radius: radio de desaceleración
         time_to_target: tiempo para alcanzar el objetivo
@@ -41,6 +43,9 @@ class Enemy(Kinematic):
         - DynamicArrive: Llega suavemente al objetivo con aceleración.
         - (DynamicWander no implementado)
         - Align: Alinea la orientación con el objetivo.
+        - VelocityMatch: Igualar la velocidad con el objetivo.
+        - Pursue: Persigue al objetivo anticipando su movimiento.
+        - Evade: Huye del objetivo anticipando su movimiento.
     """
     def __init__(
         self, 
@@ -49,13 +54,14 @@ class Enemy(Kinematic):
         collider_box: tuple[int, int],
         target: Kinematic, 
         algorithm: str, 
-        maxSpeed: float = 200.0, 
+        max_speed: float = 200.0, 
         target_radius: float = 40.0, 
         slow_radius: float = 150.0, 
         time_to_target: float = 0.15,
         max_acceleration: float = 300.0,
         max_rotation: float = 1.0,
-        max_angular_accel: float = 8.0
+        max_angular_accel: float = 8.0,
+        max_prediction: float = 1.0
     ) -> None:
         super().__init__(
             position=position, 
@@ -66,7 +72,7 @@ class Enemy(Kinematic):
         self.type = type
         self.target = target
         self.algorithm = algorithm
-        self.maxSpeed = maxSpeed
+        self.max_speed = max_speed
 
         # Instanciar atributos de animación
         self.state = configs.ENEMY_STATES.MOVE
@@ -86,23 +92,23 @@ class Enemy(Kinematic):
         self.kinematic_seek = KinematicSeek(
             character=self,                    # Kinematic que se mueve
             target=target,                     # Objetivo a seguir
-            max_speed=maxSpeed                 # Velocidad máxima
+            max_speed=max_speed                 # Velocidad máxima
         )
         self.kinematic_flee = KinematicFlee(
             character=self,                    # Kinematic que se mueve
             target=target,                     # Objetivo a seguir
-            max_speed=maxSpeed                 # Velocidad máxima
+            max_speed=max_speed                 # Velocidad máxima
         )
         self.kinematic_arrive = KinematicArrive(
             character=self,                    # Kinematic que se mueve
             target=target,                     # Objetivo a seguir
-            max_speed=maxSpeed,                # Velocidad máxima
+            max_speed=max_speed,                # Velocidad máxima
             target_radius=target_radius,       # Radio de llegada
             time_to_target=time_to_target      # Tiempo para ajustar la velocidad
         )
         self.kinematic_wander = KinematicWander(
             character=self,                    # Kinematic que se mueve
-            max_speed=maxSpeed,                # Velocidad máxima
+            max_speed=max_speed,                # Velocidad máxima
             max_rotation=max_rotation          # Velocidad angular máxima
         )
 
@@ -120,7 +126,7 @@ class Enemy(Kinematic):
         self.dynamic_arrive = DynamicArrive(
             character=self,                    # Kinematic que se mueve
             target=target,                     # Objetivo a seguir
-            max_speed=maxSpeed,                # Velocidad máxima
+            max_speed=max_speed,                # Velocidad máxima
             target_radius=target_radius,       # Radio de llegada
             slow_radius=slow_radius,           # Radio para empezar a desacelerar
             time_to_target=time_to_target,     # Tiempo para ajustar la velocidad
@@ -144,6 +150,26 @@ class Enemy(Kinematic):
             target=target,
             max_acceleration=max_acceleration,
             time_to_target=time_to_target
+        )
+
+        # Instanciar el algoritmo de persecución
+        self.pursue = Pursue(
+            character=self,
+            target=target,
+            max_speed=max_speed,
+            target_radius=target_radius,
+            slow_radius=slow_radius,
+            time_to_target=time_to_target,
+            max_acceleration=max_acceleration,
+            max_prediction=max_prediction
+        )
+
+        # Instanciar el algoritmo de evasión
+        self.evade = Evade(
+            character=self,
+            target=target,
+            max_acceleration=max_acceleration,
+            max_prediction=max_prediction
         )
 
     def draw(self, surface: pygame.Surface, camera_x: float, camera_z: float):
@@ -227,6 +253,10 @@ class Enemy(Kinematic):
                 steering = self.align.get_steering()
             case configs.ALGORITHM.VELOCITY_MATCH:
                 steering = self.velocity_match.get_steering()
+            case configs.ALGORITHM.PURSUE:
+                steering = self.pursue.get_steering()
+            case configs.ALGORITHM.EVADE:
+                steering = self.evade.get_steering()
 
         # Aplicar el steering y actualizar la cinemática
         if isinstance(steering, SteeringOutput):
@@ -235,11 +265,11 @@ class Enemy(Kinematic):
                 # Align devuelve angular steering; para align la parte linear suele ser (0,0)
                 if steering.angular != 0.0:
                     # aplicar como aceleración angular
-                    self.update_by_dynamic(steering, self.maxSpeed, dt, collision_rects, self.collider_box)
+                    self.update_by_dynamic(steering, self.max_speed, dt, collision_rects, self.collider_box)
             else:
                 if steering.linear != (0, 0):
                     set_animation_state(self, configs.ENEMY_STATES.MOVE)
-                    self.update_by_dynamic(steering, self.maxSpeed, dt, collision_rects, self.collider_box)
+                    self.update_by_dynamic(steering, self.max_speed, dt, collision_rects, self.collider_box)
                 else:
                     set_animation_state(self, configs.ENEMY_STATES.ATTACK)
 
