@@ -67,7 +67,7 @@ class Map:
                                 self.collision_rects.append(rect)
         print(f"[Map] Cargado mapa '{tmx_file}' con {len(self.collision_rects)} colisionadores.")
 
-    def draw(self, screen, camera_x, camera_z):
+    def draw(self, screen: pygame.Surface, camera_x: int, camera_z: int, camera_width: int, camera_height: int):
         """
         Dibuja todas las capas visibles del mapa en la superficie 'screen',
         ajustando la posición según la cámara (camera_x, camera_z).
@@ -89,13 +89,13 @@ class Map:
                         sx = x * RENDER_TILE_SIZE - camera_x  # Posición X en pantalla (ajustada por la cámara)
                         sz = z * RENDER_TILE_SIZE - camera_z  # Posición Y en pantalla (ajustada por la cámara)
                         # Solo dibuja el tile si está dentro de la cámara/ventana
-                        if -RENDER_TILE_SIZE < sx < CAMERA_WIDTH and -RENDER_TILE_SIZE < sz < CAMERA_HEIGHT:
+                        if -RENDER_TILE_SIZE < sx < camera_width and -RENDER_TILE_SIZE < sz < camera_height:
                             screen.blit(tile_img, (sx, sz))
 
         if DEVELOPMENT:
-            self.draw_collision_rects(screen, camera_x, camera_z)
+            self.draw_collision_rects(screen, camera_x, camera_z, camera_width, camera_height)
 
-    def draw_collision_rects(self, screen, camera_x, camera_z):
+    def draw_collision_rects(self, screen: pygame.Surface, camera_x: int, camera_z: int, camera_width: int, camera_height: int):
         """
         Dibuja los rectángulos de colisión en la pantalla para depuración.
         Los rectángulos se dibujan en rojo semi-transparente.
@@ -105,7 +105,7 @@ class Map:
         for rect in self.collision_rects:
             sx = rect.x - camera_x
             sz = rect.y - camera_z
-            if -RENDER_TILE_SIZE < sx < CAMERA_WIDTH and -RENDER_TILE_SIZE < sz < CAMERA_HEIGHT:
+            if -RENDER_TILE_SIZE < sx < camera_width and -RENDER_TILE_SIZE < sz < camera_height:
                 # Dibuja el rectángulo del colisionador con el tamaño real
                 debug_rect = pygame.Rect(sx, sz, rect.width, rect.height)
                 pygame.draw.rect(screen, (255, 0, 0, 120), debug_rect, 1)  # Borde rojo

@@ -65,9 +65,9 @@ def build_ui_buttons():
         UI_BUTTONS.append({"key": k, "rect": rect})
         y += UI_BUTTON_HEIGHT + 8
 
-def draw_ui(surface):
+def draw_ui(surface: pygame.Surface, ui_width: int, ui_height: int):
     # Panel con fondo semitransparente
-    panel_rect = pygame.Rect(0, 0, UI_PANEL_WIDTH, CAMERA_HEIGHT)
+    panel_rect = pygame.Rect(0, 0, ui_width, ui_height)
     s = pygame.Surface((panel_rect.width, panel_rect.height), pygame.SRCALPHA)
     s.fill((30, 30, 30, 220))
     surface.blit(s, (panel_rect.x, panel_rect.y))
