@@ -10,8 +10,8 @@ pygame.init()
 display_info = pygame.display.Info()
 
 # --- Calcular tamaños de pantalla y cámara ---
-SCREEN_WIDTH = display_info.current_w
-SCREEN_HEIGHT = display_info.current_h
+SCREEN_WIDTH = display_info.current_w - SCREEN_OFF_SET
+SCREEN_HEIGHT = display_info.current_h - SCREEN_OFF_SET
 CAMERA_WIDTH = max(320, SCREEN_WIDTH - UI_PANEL_WIDTH)
 CAMERA_HEIGHT = max(240, SCREEN_HEIGHT)
 

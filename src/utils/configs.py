@@ -29,6 +29,7 @@ FPS = 60
 TILE_SIZE = 16
 ZOOM = 2.5
 RENDER_TILE_SIZE = TILE_SIZE * ZOOM
+SCREEN_OFF_SET = 60
 
 # Configuraciones del jugador
 PLAYER_FOLDER = "player"
