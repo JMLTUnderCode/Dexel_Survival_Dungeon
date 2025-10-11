@@ -1,7 +1,7 @@
 import math
 import random
 
-from kinematics.kinematic import Kinematic, SteeringOutput
+from kinematics.kinematic import Kinematic, KinematicSteeringOutput
 
 class KinematicWander:
     """
@@ -35,15 +35,15 @@ class KinematicWander:
         """
         return random.random() - random.random()
 
-    def get_steering(self) -> SteeringOutput:
+    def get_steering(self) -> KinematicSteeringOutput:
         """
-        Calcula el SteeringOutput para wandering.
+        Calcula el KinematicSteeringOutput para wandering.
 
         Flujo:
         1) Usa la orientación actual del character para obtener la dirección en vector.
         2) Calcula la velocidad objetivo = direction * max_speed.
         3) Genera una rotación aleatoria pequeña en [-max_rotation, max_rotation].
-        4) Retorna SteeringOutput(linear=desired_velocity, angular=random_rotation)
+        4) Retorna KinematicSteeringOutput(velocity=target_velocity, rotation=random_rotation)
         """
         # 1) Dirección desde la orientación (orientación en radianes)
         ori = self.character.orientation
@@ -51,10 +51,9 @@ class KinematicWander:
         dir_z = math.sin(ori)
 
         # 2) Velocidad objetivo
-        desired_vx = dir_x * self.max_speed
-        desired_vz = dir_z * self.max_speed
+        target_velocity = (dir_x * self.max_speed, dir_z * self.max_speed)
 
         # 3) Rotación aleatoria (pequeño cambio para vagar)
         random_rot = self.random_binomial() * self.max_rotation
 
-        return SteeringOutput((desired_vx, desired_vz), random_rot)
+        return KinematicSteeringOutput(target_velocity, random_rot)

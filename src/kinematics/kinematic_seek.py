@@ -1,7 +1,7 @@
 import math
 from typing import Tuple
 
-from kinematics.kinematic import Kinematic, SteeringOutput
+from kinematics.kinematic import Kinematic, KinematicSteeringOutput
 
 class KinematicSeek:
     """
@@ -27,15 +27,15 @@ class KinematicSeek:
         self.target = target
         self.max_speed = float(max_speed)
 
-    def get_steering(self) -> SteeringOutput:
+    def get_steering(self) -> KinematicSteeringOutput:
         """
-        Calcula el SteeringOutput para dirigirse directamente al target.
+        Calcula el KinematicSteeringOutput para dirigirse directamente al target.
 
         Flujo:
         1) Calcular vector hacia target y su magnitud (dist).
         2) Velocidad objetivo = max_speed en dirección al target.
         3) Actualizar orientación del character para que mire en la dirección del movimiento.
-        4) Retornar SteeringOutput(linear=target_velocity, angular=0).
+        4) Retornar KinematicSteeringOutput(velocity=target_velocity, rotation=0).
         """
         # 1) Calcular vector y distancia al objetivo
         dx = self.target.position[0] - self.character.position[0]
@@ -49,7 +49,7 @@ class KinematicSeek:
         self.character.orientation = self.newOrientation(self.character.orientation, target_velocity)
 
         # 4) Devolver steering: la parte lineal es la velocidad objetivo; angular se maneja por orientación
-        return SteeringOutput(target_velocity, 0.0)
+        return KinematicSteeringOutput(target_velocity, 0.0)
 
     def newOrientation(self, current_orientation: float, velocity: Tuple[float, float]) -> float:
         """
