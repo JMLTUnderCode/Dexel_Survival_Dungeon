@@ -4,11 +4,21 @@ from map.map import Map
 from utils.configs import *
 from ui.algorithm_set import *
 
-# --- Inicializar pygame y ventana principal ---
-pygame.init()  # Inicializa todos los módulos de pygame
-screen = pygame.display.set_mode((CAMERA_WIDTH + UI_PANEL_WIDTH, CAMERA_HEIGHT))  # Crea la ventana principal del juego
-game_surface = pygame.Surface((CAMERA_WIDTH, CAMERA_HEIGHT)) # Surface donde se renderiza la escena de juego (sin UI)
-pygame.display.set_caption(GAME_TITLE)  # Establece el título de la ventana
+# --- Inicializar pygame temprano para obtener la resolución de la pantalla ---
+pygame.init()
+# Obtener info del display (ancho/alto de la pantalla disponible para ventanas)
+display_info = pygame.display.Info()
+
+# --- Calcular tamaños de pantalla y cámara ---
+SCREEN_WIDTH = display_info.current_w
+SCREEN_HEIGHT = display_info.current_h
+CAMERA_WIDTH = max(320, SCREEN_WIDTH - UI_PANEL_WIDTH)
+CAMERA_HEIGHT = max(240, SCREEN_HEIGHT)
+
+# --- Crear ventana usando el tamaño total (panel + juego) y la surface de juego ---
+screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
+game_surface = pygame.Surface((CAMERA_WIDTH, CAMERA_HEIGHT))
+pygame.display.set_caption(GAME_TITLE)
 
 # --- Reloj para controlar el framerate ---
 clock = pygame.time.Clock()
@@ -69,7 +79,7 @@ def main():
         # --- Render: dibujar todo en game_surface (área de juego) y luego blittear a screen desplazado ---
         game_surface.fill((30, 30, 30))
 
-        game_map.draw(game_surface, camera_x, camera_z)
+        game_map.draw(game_surface, camera_x, camera_z, CAMERA_WIDTH, CAMERA_HEIGHT)
 
         # --- Actualizar jugador (player.update internamente usa pygame.mouse.get_pos -> ajustado en player.handle_input) 
         player.update(game_surface, camera_x, camera_z, game_map.collision_rects, dt)
@@ -83,7 +93,7 @@ def main():
         screen.blit(game_surface, (UI_PANEL_WIDTH, 0))
 
         # --- Dibujar UI (panel izquierdo) encima de todo (UI dibuja en coordenadas de pantalla)
-        draw_ui(screen)
+        draw_ui(screen, UI_PANEL_WIDTH, SCREEN_HEIGHT)
 
         pygame.display.flip()
 
