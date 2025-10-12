@@ -178,7 +178,7 @@ class Player(Kinematic):
         self.handle_input(camera_x, camera_z, dt)
 
         # Actualizar cinemática
-        self.update_by_dynamic(self._pending_steering, self.max_speed, dt, collision_rects, self.collider_box)
+        self.update_by_dynamic(self._pending_steering, self.max_speed, dt, collision_rects, self.collider_box, "PLAYER")
 
         # Actualizar animación
         self.current_animation.update(dt)
