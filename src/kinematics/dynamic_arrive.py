@@ -48,38 +48,33 @@ class DynamicArrive:
 
         Flujo:
         1) Calcular vector hacia target.
-        2) Actualizar orientación del character para que mire en la dirección del movimiento.
-        3) Si dentro de target_radius -> devolver 0 (llegado).
-        4) Escoger velocidad objetivo (magnitud):
+        2) Si dentro de target_radius -> devolver 0 (llegado).
+        3) Escoger velocidad objetivo (magnitud):
            - fuera de slow_radius -> max_speed
            - dentro -> escala entre 0..max_speed usando la distancia al target
-        5) Calcular vector de velocidad deseada (dirección normalizada * velocidad objetivo).
-        6) Calcular aceleración deseada para alcanzar la velocidad objetivo en time_to_target segundos.
-        7) Limitar la aceleración a max_acceleration.
-        8) Devolver steering (solo componente lineal). Angular se gestiona por el sistema de orientación.
+        4) Calcular vector de velocidad deseada (dirección normalizada * velocidad objetivo).
+        5) Calcular aceleración deseada para alcanzar la velocidad objetivo en time_to_target segundos.
+        6) Limitar la aceleración a max_acceleration.
+        7) Devolver steering (solo componente lineal). Angular se gestiona por el sistema de orientación.
         """
 
         # 1) Vector hacia target
         dx = self.target.position[0] - self.character.position[0]
         dz = self.target.position[1] - self.character.position[1]
-
-        # 2) Actualizar orientación basada en la dirección hacia el objetivo
-        #     Mantener la orientación actual si la dirección es nula.
-        self.character.orientation = self.newOrientation(self.character.orientation, (dx, dz))
         
-        # 3) Si la distancia es extremadamente pequeña, consideramos que llegó.
+        # 2) Si la distancia es extremadamente pequeña, consideramos que llegó.
         dist = math.hypot(dx, dz)
         if dist <= self.target_radius:
             return SteeringOutput((0.0, 0.0), 0.0)
 
-        # 4) Velocidad objetivo (magnitud)
+        # 3) Velocidad objetivo (magnitud)
         target_speed = 0.0
         if dist > self.slow_radius:
             target_speed = self.max_speed
         else:
             target_speed = self.max_speed *  dist / self.slow_radius # Se puede ajustar la escala (lineal, cuadrática, etc.)
 
-        # 5) Vector de velocidad deseada (normalizamos la dirección)
+        # 4) Vector de velocidad deseada (normalizamos la dirección)
         target_velocity = (dx, dz)
         mag = math.hypot(target_velocity[0], target_velocity[1])
         if mag == 0.0:
@@ -87,14 +82,14 @@ class DynamicArrive:
         else:
             target_velocity = (target_velocity[0] / mag * target_speed, target_velocity[1] / mag * target_speed)
 
-        # 6) Calcular la aceleración deseada para alcanzar target_velocity en time_to_target segundos.
+        # 5) Calcular la aceleración deseada para alcanzar target_velocity en time_to_target segundos.
         current_vx, current_vy = self.character.velocity
         steering_linear = (
             (target_velocity[0] - current_vx) / self.time_to_target,
             (target_velocity[1] - current_vy) / self.time_to_target,
         )
 
-        # 7) Limitar la aceleración a max_acceleration
+        # 6) Limitar la aceleración a max_acceleration
         mag = math.hypot(steering_linear[0], steering_linear[1])
         if mag > self.max_acceleration:
             steering_linear = (
@@ -102,16 +97,5 @@ class DynamicArrive:
                 steering_linear[1] / mag * self.max_acceleration,
             )
 
-        # 8) Devolver steering (solo componente lineal). Angular se gestiona por el sistema de orientación.
+        # 7) Devolver steering (solo componente lineal). Angular se gestiona por el sistema de orientación.
         return SteeringOutput(steering_linear, 0.0)
-
-    def newOrientation(self, current_orientation: float, velocity: Tuple[float, float]) -> float:
-        """
-        Devuelve la orientación (ángulo en radianes) derivada de la dirección del vector `velocity`.
-
-        - Si velocity es (0,0) devuelve la orientación actual (no rotar).
-        - Se usa atan2(y, x) → ángulo en radianes en el rango [-pi, pi].
-        """
-        if velocity == (0, 0):
-            return current_orientation
-        return math.atan2(velocity[1], velocity[0])

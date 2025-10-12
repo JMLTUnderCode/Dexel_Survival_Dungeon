@@ -32,31 +32,16 @@ class DynamicSeek:
 
         Flujo:
         1) Calcular vector hacia target.
-        2) Actualizar orientación del character para que mire en la dirección del movimiento.
-        3) Velocidad objetivo = max_acceleration en dirección al target.
-        4) Retornar SteeringOutput(linear=target_velocity, angular=0).
+        2) Velocidad objetivo = max_acceleration en dirección al target.
+        3) Retornar SteeringOutput(linear=target_velocity, angular=0).
         """
         # 1) Calcular vector y distancia al objetivo
         dx = self.target.position[0] - self.character.position[0]
         dz = self.target.position[1] - self.character.position[1]
         
-        # 2) Actualizar orientación del character para que mire en la dirección del movimiento
-        self.character.orientation = self.newOrientation(self.character.orientation, (dx, dz))
-        
-        # 3) Velocidad deseada en dirección al objetivo. (magnitude = max_acceleration)
+        # 2) Velocidad deseada en dirección al objetivo. (magnitude = max_acceleration)
         dist = math.hypot(dx, dz)
         target_velocity = (dx / dist * self.max_acceleration, dz / dist * self.max_acceleration)
 
-        # 4) Devolver steering: la parte lineal es la velocidad objetivo; angular se maneja por orientación
+        # 3) Devolver steering: la parte lineal es la velocidad objetivo; angular se maneja por orientación
         return SteeringOutput(target_velocity, 0.0)
-
-    def newOrientation(self, current_orientation: float, velocity: Tuple[float, float]) -> float:
-        """
-        Calcula y devuelve la nueva orientación (ángulo en radianes) a partir de la dirección del vector velocity.
-
-        - Si velocity == (0,0): devuelve current_orientation (sin cambios).
-        - Se usa math.atan2(vy, vx) para obtener el ángulo en radianes en el rango [-pi, pi].
-        """
-        if velocity == (0, 0):
-            return current_orientation
-        return math.atan2(velocity[1], velocity[0])
