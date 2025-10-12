@@ -6,6 +6,7 @@ import utils.configs as configs
 ALGORITHM_USE_ROTATION = [
     "PLAYER", 
     configs.ALGORITHM.WANDER_KINEMATIC,
+    configs.ALGORITHM.WANDER_DYNAMIC,
     configs.ALGORITHM.ALIGN, 
     configs.ALGORITHM.FACE, 
     configs.ALGORITHM.LOOK_WHERE_YOURE_GOING, 
