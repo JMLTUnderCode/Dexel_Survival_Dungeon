@@ -64,7 +64,7 @@ class Pursue:
 
         explicit_target = self.predict_target(prediction)
 
-        # Delegar a DynamicSeek con target temporal
+        # Delegar a DynamicArrive con target temporal
         self.arrive.target = explicit_target
         self.arrive.max_acceleration = self.max_acceleration
         return self.arrive.get_steering()
