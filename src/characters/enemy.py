@@ -296,7 +296,7 @@ class Enemy(Kinematic):
 
         # Aplicar el steering y actualizar la cinemática
         if isinstance(steering, SteeringOutput):
-            if self.algorithm == configs.ALGORITHM.ALIGN or self.algorithm == configs.ALGORITHM.FACE:
+            if self.algorithm in (configs.ALGORITHM.ALIGN, configs.ALGORITHM.FACE):
                 set_animation_state(self, configs.ENEMY_STATES.ATTACK_WOUNDED)
                 # Align devuelve angular steering; para align la parte linear suele ser (0,0)
                 if steering.angular != 0.0:
