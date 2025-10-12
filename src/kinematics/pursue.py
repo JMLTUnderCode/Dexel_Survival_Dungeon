@@ -24,7 +24,6 @@ class Pursue:
         self.target = target
         self.max_acceleration = float(max_acceleration)
         self.max_prediction = float(max_prediction)
-        self.time_to_target = float(max(1e-4, time_to_target))
         self.arrive: DynamicArrive = DynamicArrive(
             character=self.character, 
             target=self.target, 
