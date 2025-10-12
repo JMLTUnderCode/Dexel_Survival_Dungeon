@@ -14,14 +14,12 @@ class Evade:
         character: Kinematic,
         target: Kinematic,
         max_acceleration: float = 300.0,
-        max_prediction: float = 1.0,
-        time_to_target: float = 0.1
+        max_prediction: float = 1.0
     ) -> None:
         self.character = character
         self.target = target
         self.max_acceleration = float(max_acceleration)
         self.max_prediction = float(max_prediction)
-        self.time_to_target = float(max(1e-4, time_to_target))
         self._flee = DynamicFlee(character=self.character, target=self.target, max_acceleration=self.max_acceleration)
 
     def predict_target(self, prediction: float) -> Kinematic:
