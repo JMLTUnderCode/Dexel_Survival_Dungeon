@@ -126,7 +126,7 @@ class Kinematic:
         self.validate_movement((new_x, new_z), self.position, collision_rects, collider_box)
         
          # Actualizar orientación
-        if (algorithm in ALGORITHM_USE_ROTATION):
+        if algorithm in ALGORITHM_USE_ROTATION:
             self.orientation += steering.rotation * time
         else:
             self.orientation = self.newOrientation(self.orientation, steering.velocity)
@@ -153,14 +153,14 @@ class Kinematic:
         new_x = x + vx * time
         new_z = z + vz * time
 
+        # Validar movimiento con colisiones
+        self.validate_movement((new_x, new_z), self.position, collision_rects, collider_box)
+        
         # Actualizar orientación
-        if (algorithm in ALGORITHM_USE_ROTATION):
+        if algorithm in ALGORITHM_USE_ROTATION:
             self.orientation += self.rotation * time
         else:
             self.orientation = self.newOrientation(self.orientation, self.velocity)
-
-        # Validar movimiento con colisiones
-        self.validate_movement((new_x, new_z), self.position, collision_rects, collider_box)
 
         # Actualizar velocidad
         self.velocity = (
