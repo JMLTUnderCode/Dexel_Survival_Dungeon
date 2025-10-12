@@ -19,7 +19,7 @@ def create_player_and_enemies(key="ALL"):
         type="oldman",
         position=(configs.RENDER_TILE_SIZE*30, configs.RENDER_TILE_SIZE*30),
         collider_box=(configs.PLAYER_COLLIDER_BOX_WIDTH, configs.PLAYER_COLLIDER_BOX_HEIGHT),
-        maxSpeed=210,
+        max_speed=210,
     )
 
     # Re-crear enemies
@@ -30,7 +30,7 @@ def create_player_and_enemies(key="ALL"):
             collider_box=enemy["collider_box"],
             target=player,
             algorithm=enemy["algorithm"],
-            maxSpeed=enemy["maxSpeed"],
+            max_speed=enemy["max_speed"],
             target_radius=enemy["target_radius"],
             slow_radius=enemy["slow_radius"],
             time_to_target=enemy["time_to_target"],

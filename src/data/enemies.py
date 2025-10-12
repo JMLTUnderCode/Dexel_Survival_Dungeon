@@ -9,75 +9,80 @@ import utils.configs as configs
 # - algorithm: algoritmo de movimiento
 
 # Atributos algoritmicos
-# - maxSpeed: velocidad máxima (float)
+# - max_speed: velocidad máxima (float)
 # - target_radius: radio de llegada (float)
 # - slow_radius: radio de desaceleración (float)
 # - time_to_target: tiempo para alcanzar el objetivo (float)
 # - max_acceleration: aceleración máxima (float)
 # - max_rotation: rotación máxima (float)
 # - max_angular_accel: aceleración angular máxima (float)
+# - "max_prediction": máxima predicción (float)  --- SOLO PARA PURSUE Y EVADE ---
 
 # --- Para Kinematic Seek ---
 # Atributos relevantes:
-# - maxSpeed: velocidad máxima (float)
+# - max_speed: velocidad máxima (float)
 enemy_seek_kinematic = [
     {
         "type": "gargant-berserker",
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.SEEK_KINEMATIC,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-soldier",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.SEEK_KINEMATIC,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-lord",
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.SEEK_KINEMATIC,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-boss",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.SEEK_KINEMATIC,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
 ]
 
 # --- Para Dynamic Seek ---
 # Atributos relevantes:
-# - maxSpeed: velocidad máxima (float)
+# - max_speed: velocidad máxima (float)
 # - max_acceleration: aceleración máxima (float)
 enemy_seek_dynamic = [
     {
@@ -85,58 +90,62 @@ enemy_seek_dynamic = [
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.SEEK_DYNAMIC,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-soldier",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.SEEK_DYNAMIC,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-lord",
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.SEEK_DYNAMIC,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-boss",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.SEEK_DYNAMIC,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
 ]
 
 # Para Kinematic Arrive
 # Atributos relevantes:
-# - maxSpeed: velocidad máxima (float)
+# - max_speed: velocidad máxima (float)
 # - target_radius: radio de llegada (float)
 # - time_to_target: tiempo para alcanzar el objetivo (float)
 enemy_arrive_kinematic = [
@@ -145,58 +154,62 @@ enemy_arrive_kinematic = [
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.ARRIVE_KINEMATIC,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-soldier",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.ARRIVE_KINEMATIC,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-lord",
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.ARRIVE_KINEMATIC,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-boss",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.ARRIVE_KINEMATIC,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
 ]
 
 # Para Dynamic Arrive
 # Atributos relevantes:
-# - maxSpeed: velocidad máxima (float)
+# - max_speed: velocidad máxima (float)
 # - target_radius: radio de llegada (float)
 # - slow_radius: radio de desaceleración (float)
 # - time_to_target: tiempo para alcanzar el objetivo (float)
@@ -207,116 +220,124 @@ enemy_arrive_dynamic = [
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.ARRIVE_DYNAMIC,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-soldier",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.ARRIVE_DYNAMIC,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-lord",
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.ARRIVE_DYNAMIC,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-boss",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.ARRIVE_DYNAMIC,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
 ]
 
 # Para Kinematic Flee
 # Atributos relevantes:
-# - maxSpeed: velocidad máxima (float)
+# - max_speed: velocidad máxima (float)
 enemy_flee_kinematic = [
     {
         "type": "gargant-berserker",
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.FLEE_KINEMATIC,
-        "maxSpeed": 100.0,
+        "max_speed": 100.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-soldier",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.FLEE_KINEMATIC,
-        "maxSpeed": 100.0,
+        "max_speed": 100.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-lord",
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.FLEE_KINEMATIC,
-        "maxSpeed": 100.0,
+        "max_speed": 100.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-boss",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.FLEE_KINEMATIC,
-        "maxSpeed": 100.0,
+        "max_speed": 100.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
 ]
 
 # Para Dynamic Flee
 # Atributos relevantes:
-# - maxSpeed: velocidad máxima (float)
+# - max_speed: velocidad máxima (float)
 # - max_acceleration: aceleración máxima (float)
 enemy_flee_dynamic = [
     {
@@ -324,58 +345,62 @@ enemy_flee_dynamic = [
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.FLEE_DYNAMIC,
-        "maxSpeed": 100.0,
+        "max_speed": 100.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-soldier",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.FLEE_DYNAMIC,
-        "maxSpeed": 100.0,
+        "max_speed": 100.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-lord",
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.FLEE_DYNAMIC,
-        "maxSpeed": 100.0,
+        "max_speed": 100.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-boss",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.FLEE_DYNAMIC,
-        "maxSpeed": 100.0,
+        "max_speed": 100.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
 ]
 
 # Para Kinematic Wander
 # Atributos relevantes:
-# - maxSpeed: velocidad máxima (float)
+# - max_speed: velocidad máxima (float)
 # - max_rotation: velocidad angular máxima (float)
 enemy_wander_kinematic = [
     {
@@ -383,52 +408,56 @@ enemy_wander_kinematic = [
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.WANDER_KINEMATIC,
-        "maxSpeed": 120.0,
+        "max_speed": 120.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 15.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-soldier",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.WANDER_KINEMATIC,
-        "maxSpeed": 120.0,
+        "max_speed": 120.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 15.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-lord",
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.WANDER_KINEMATIC,
-        "maxSpeed": 120.0,
+        "max_speed": 120.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 15.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-boss",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.WANDER_KINEMATIC,
-        "maxSpeed": 120.0,
+        "max_speed": 120.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 15.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
 ]
 
@@ -441,52 +470,56 @@ enemy_wander_dynamic = [
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.WANDER_DYNAMIC,
-        "maxSpeed": 120.0,
+        "max_speed": 120.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 15.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-soldier",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.WANDER_DYNAMIC,
-        "maxSpeed": 120.0,
+        "max_speed": 120.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 15.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-lord",
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.WANDER_DYNAMIC,
-        "maxSpeed": 120.0,
+        "max_speed": 120.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 15.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-boss",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.WANDER_DYNAMIC,
-        "maxSpeed": 120.0,
+        "max_speed": 120.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 15.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
 ]
 
@@ -503,52 +536,56 @@ enemy_align = [
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.ALIGN,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 5 * (math.pi / 180),  # 5 grados en radianes
         "slow_radius": 45 * (math.pi / 180),   # 45 grados en radianes
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
         "max_angular_accel": 6.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-soldier",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.ALIGN,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 5 * (math.pi / 180),  # 5 grados en radianes
         "slow_radius": 45 * (math.pi / 180),   # 45 grados en radianes
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
         "max_angular_accel": 6.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-lord",
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.ALIGN,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 5 * (math.pi / 180),  # 5 grados en radianes
         "slow_radius": 45 * (math.pi / 180),   # 45 grados en radianes
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
         "max_angular_accel": 6.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-boss",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.ALIGN,
-        "maxSpeed": 180.0,
+        "max_speed": 180.0,
         "target_radius": 5 * (math.pi / 180),  # 5 grados en radianes
         "slow_radius": 45 * (math.pi / 180),   # 45 grados en radianes
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
         "max_angular_accel": 6.0,
+        "max_prediction": 1.0,
     },
 ]
 
@@ -562,52 +599,103 @@ enemy_velocity_match = [
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.VELOCITY_MATCH,
-        "maxSpeed": 210.0,
+        "max_speed": 210.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-soldier",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*26),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.VELOCITY_MATCH,
-        "maxSpeed": 210.0,
+        "max_speed": 210.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-lord",
         "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.VELOCITY_MATCH,
-        "maxSpeed": 210.0,
+        "max_speed": 210.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
     },
     {
         "type": "gargant-boss",
         "position": (configs.RENDER_TILE_SIZE*40, configs.RENDER_TILE_SIZE*40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.VELOCITY_MATCH,
-        "maxSpeed": 210.0,
+        "max_speed": 210.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
         "max_angular_accel": 1.0,
+        "max_prediction": 1.0,
+    },
+]
+
+# Para Pursue
+# Atributos relevantes:
+# - max_speed: velocidad máxima (float)
+# - target_radius: radio de llegada (float)
+# - slow_radius: radio de desaceleración (float)
+# - time_to_target: tiempo para alcanzar el objetivo (float)
+# - max_acceleration: aceleración máxima (float)
+# - max_prediction: tiempo máximo de predicción (float)
+enemy_pursue = [
+    {
+        "type": "gargant-berserker",
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.PURSUE,
+        "max_speed": 180.0,
+        "target_radius": 40.0,
+        "slow_radius": 180.0,
+        "time_to_target": 0.15,
+        "max_acceleration": 300.0,
+        "max_rotation": 1.0,
+        "max_angular_accel": 1.0,
+        "max_prediction": 0.5,
+    },
+]
+
+# Para Evade
+# Atributos relevantes:
+# - max_speed: velocidad máxima (float)
+# - max_acceleration: aceleración máxima (float)
+# - max_prediction: tiempo máximo de predicción (float)
+enemy_evade = [
+    {
+        "type": "gargant-berserker",
+        "position": (configs.RENDER_TILE_SIZE*26, configs.RENDER_TILE_SIZE*26),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.EVADE,
+        "max_speed": 180.0,
+        "target_radius": 40.0,
+        "slow_radius": 180.0,
+        "time_to_target": 0.15,
+        "max_acceleration": 300.0,
+        "max_rotation": 1.0,
+        "max_angular_accel": 1.0,
+        "max_prediction": 0.5,
     },
 ]
 
@@ -622,6 +710,8 @@ enemy_all = [
     #enemy_wander_dynamic[3],
     enemy_align[0],
     enemy_velocity_match[1],
+    enemy_pursue[0],
+    enemy_evade[0],
 ]
 
 list_of_enemies_data = {
@@ -635,6 +725,8 @@ list_of_enemies_data = {
     configs.ALGORITHM.WANDER_DYNAMIC: enemy_wander_dynamic,
     configs.ALGORITHM.ALIGN: enemy_align,
     configs.ALGORITHM.VELOCITY_MATCH: enemy_velocity_match,
+    configs.ALGORITHM.PURSUE: enemy_pursue,
+    configs.ALGORITHM.EVADE: enemy_evade,
     "ALL": enemy_all,
     "EMPTY": [],
 }

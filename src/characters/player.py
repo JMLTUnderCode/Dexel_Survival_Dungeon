@@ -15,18 +15,18 @@ class Player(Kinematic):
     - type: tipo de jugador (puede usarse para diferentes sprites)
     - position: posición inicial del jugador (x, z)
     - collider_box: dimensiones de la caja de colisión del jugador (ancho, alto)
-    - maxSpeed: velocidad máxima del jugador
+    - max_speed: velocidad máxima del jugador
     """
     def __init__(
         self, 
         type: str, 
         position: tuple, 
         collider_box: tuple[int, int],
-        maxSpeed: float = 200
+        max_speed: float = 200
     ) -> None:
         super().__init__(position=position, orientation=0.0, velocity=(0,0), rotation=0.0)
         self.type = type              # Tipo de jugador (puede usarse para diferentes sprites)
-        self.maxSpeed = maxSpeed      # Velocidad máxima en píxeles/seg
+        self.max_speed = max_speed      # Velocidad máxima en píxeles/seg
         self.color = (200, 200, 255)  # Color para las ondas de ataque
         self.attack_waves : list[AttackWave] = []  # Lista de ondas de ataque activas
         self._pending_steering = SteeringOutput()  # Entrada de control pendiente
@@ -178,7 +178,7 @@ class Player(Kinematic):
         self.handle_input(camera_x, camera_z, dt)
 
         # Actualizar cinemática
-        self.update_by_dynamic(self._pending_steering, self.maxSpeed, dt, collision_rects, self.collider_box)
+        self.update_by_dynamic(self._pending_steering, self.max_speed, dt, collision_rects, self.collider_box)
 
         # Actualizar animación
         self.current_animation.update(dt)
