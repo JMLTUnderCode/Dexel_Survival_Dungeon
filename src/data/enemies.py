@@ -699,6 +699,57 @@ enemy_evade = [
     },
 ]
 
+# Para Face
+# Atributos relevantes:
+# - target_radius: umbral de orientación (float)
+# - slow_radius: radio de desaceleración (float)
+# - time_to_target: tiempo para alcanzar la rotación objetivo (float)
+# - max_rotation: velocidad angular máxima (float)
+# - max_angular_accel: aceleración angular máxima (float)
+enemy_face = [
+    {
+        "type": "gargant-berserker",
+        "position": (configs.RENDER_TILE_SIZE*20, configs.RENDER_TILE_SIZE*28),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.FACE,
+        "max_speed": 180.0,
+        "target_radius": 5 * (math.pi / 180),  # 5 grados en radianes
+        "slow_radius": 45 * (math.pi / 180),   # 45 grados en radianes
+        "time_to_target": 0.1,
+        "max_acceleration": 300.0,
+        "max_rotation": 2.0,
+        "max_angular_accel": 6.0,
+        "max_prediction": 1.0,
+    },
+]
+
+# Para Look Where You're Going (junto a Evade)
+# Atributos relevantes:
+# - max_speed: velocidad máxima (float)
+# - target_radius: umbral de orientación (float)
+# - slow_radius: radio de desaceleración (float)
+# - time_to_target: tiempo para alcanzar la rotación objetivo (float)
+# - max_acceleration: aceleración máxima (float)
+# - max_rotation: velocidad angular máxima (float)
+# - max_angular_accel: aceleración angular máxima (float)
+# - max_prediction: tiempo máximo de predicción (float)
+enemy_look_where = [
+    {
+        "type": "gargant-berserker",
+        "position": (configs.RENDER_TILE_SIZE*22, configs.RENDER_TILE_SIZE*30),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.LOOK_WHERE_YOURE_GOING,
+        "max_speed": 180.0,
+        "target_radius": 5 * (math.pi / 180),  # 5 grados en radianes
+        "slow_radius": 45 * (math.pi / 180),   # 45 grados en radianes
+        "time_to_target": 0.15,
+        "max_acceleration": 300.0,
+        "max_rotation": 2.0,
+        "max_angular_accel": 4.0,
+        "max_prediction": 0.5,
+    },
+]
+
 enemy_all = [
     enemy_seek_kinematic[0],
     enemy_seek_dynamic[1],
@@ -712,6 +763,8 @@ enemy_all = [
     enemy_velocity_match[1],
     enemy_pursue[0],
     enemy_evade[0],
+    enemy_face[0],
+    enemy_look_where[0],
 ]
 
 list_of_enemies_data = {
@@ -727,6 +780,8 @@ list_of_enemies_data = {
     configs.ALGORITHM.VELOCITY_MATCH: enemy_velocity_match,
     configs.ALGORITHM.PURSUE: enemy_pursue,
     configs.ALGORITHM.EVADE: enemy_evade,
+    configs.ALGORITHM.FACE: enemy_face,
+    configs.ALGORITHM.LOOK_WHERE_YOURE_GOING: enemy_look_where,
     "ALL": enemy_all,
     "EMPTY": [],
 }
