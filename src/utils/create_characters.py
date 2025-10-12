@@ -3,15 +3,15 @@ from characters.enemy import Enemy
 from data.enemies import list_of_enemies_data
 import utils.configs as configs
 
-# --- Inicial create (por defecto ALL) ---
+# --- Inicial create (por defecto EMPTY) ---
 # Helper para crear player y la lista de enemigos desde una key del data set
-def create_player_and_enemies(key="ALL"):
+def create_player_and_enemies(key="EMPTY"):
     """
     Crea/Resetea globalmente `player` y `enemies` usando list_of_enemies_data[key].
-    Si la key no existe, usa "ALL" o la primera disponible.
+    Si la key no existe, usa "EMPTY" o la primera disponible.
     """
     if key not in list_of_enemies_data:
-        key = "ALL" if "ALL" in list_of_enemies_data else next(iter(list_of_enemies_data.keys()))
+        key = "EMPTY" if "EMPTY" in list_of_enemies_data else next(iter(list_of_enemies_data.keys()))
     enemy_list = list_of_enemies_data[key]
 
     # Re-crear player (reset)
@@ -19,7 +19,7 @@ def create_player_and_enemies(key="ALL"):
         type="oldman",
         position=(configs.RENDER_TILE_SIZE*30, configs.RENDER_TILE_SIZE*30),
         collider_box=(configs.PLAYER_COLLIDER_BOX_WIDTH, configs.PLAYER_COLLIDER_BOX_HEIGHT),
-        max_speed=210,
+        max_speed=250,
     )
 
     # Re-crear enemies

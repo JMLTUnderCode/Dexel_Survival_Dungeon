@@ -34,8 +34,7 @@ class KinematicFlee:
         Flujo:
         1) Calcular vector en dirección opuesta al target y su magnitud (dist).
         2) Velocidad objetivo = max_speed en dirección opuesta al target.
-        3) Actualizar orientación del character para que mire en la dirección del movimiento.
-        4) Retornar KinematicSteeringOutput(velocity=target_velocity, rotation=0).
+        3) Retornar KinematicSteeringOutput(velocity=target_velocity, rotation=0).
         """
         # 1) Calcular vector y distancia al objetivo
         dx = self.character.position[0] - self.target.position[0]
@@ -45,19 +44,5 @@ class KinematicFlee:
         # 2) Velocidad objetivo en dirección al objetivo (magnitude = max_speed)
         target_velocity = (dx / dist * self.max_speed, dy / dist * self.max_speed)
 
-        # 3) Actualizar orientación del character para que mire en la dirección del movimiento
-        self.character.orientation = self.newOrientation(self.character.orientation, target_velocity)
-
-        # 4) Devolver steering: la parte lineal es la velocidad objetivo; angular se maneja por orientación
+        # 3) Devolver steering: la parte lineal es la velocidad objetivo; angular se maneja por orientación
         return KinematicSteeringOutput(target_velocity, 0.0)
-
-    def newOrientation(self, current_orientation: float, velocity: Tuple[float, float]) -> float:
-        """
-        Calcula y devuelve la nueva orientación (ángulo en radianes) a partir de la dirección del vector velocity.
-
-        - Si velocity == (0,0): devuelve current_orientation (sin cambios).
-        - Se usa math.atan2(vy, vx) para obtener el ángulo en radianes en el rango [-pi, pi].
-        """
-        if velocity == (0, 0):
-            return current_orientation
-        return math.atan2(velocity[1], velocity[0])

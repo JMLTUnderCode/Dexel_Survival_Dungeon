@@ -1,5 +1,16 @@
 import pygame
 import math
+from typing import Tuple
+import utils.configs as configs
+
+ALGORITHM_USE_ROTATION = [
+    "PLAYER", 
+    configs.ALGORITHM.WANDER_KINEMATIC,
+    configs.ALGORITHM.ALIGN, 
+    configs.ALGORITHM.FACE, 
+    configs.ALGORITHM.LOOK_WHERE_YOURE_GOING, 
+    #configs.ALGORITHM.VELOCITY_MATCH,
+]
 
 class SteeringOutput:
     """
@@ -96,7 +107,8 @@ class Kinematic:
         steering: KinematicSteeringOutput, 
         time: float, 
         collision_rects: list[pygame.Rect], 
-        collider_box: tuple[int, int]
+        collider_box: tuple[int, int], 
+        algorithm: str
     ) -> None:
         """
         Actualiza la posición y orientación del objeto usando el steering proporcionado.
@@ -112,9 +124,13 @@ class Kinematic:
 
         # Validar movimiento con colisiones
         self.validate_movement((new_x, new_z), self.position, collision_rects, collider_box)
-
-        # Actualizar orientación
-        self.orientation += steering.rotation * time
+        
+         # Actualizar orientación
+        if algorithm in ALGORITHM_USE_ROTATION:
+            self.orientation += steering.rotation * time
+        else:
+            self.orientation = self.newOrientation(self.orientation, steering.velocity)
+            
 
     def update_by_dynamic(
         self, 
@@ -122,7 +138,8 @@ class Kinematic:
         maxSpeed: float, 
         time: float, 
         collision_rects: list[pygame.Rect], 
-        collider_box: tuple[int, int]
+        collider_box: tuple[int, int],
+        algorithm: str
     ) -> None:
         """
         Actualiza la posición, orientación, velocidad y rotación del objeto
@@ -138,9 +155,12 @@ class Kinematic:
 
         # Validar movimiento con colisiones
         self.validate_movement((new_x, new_z), self.position, collision_rects, collider_box)
-
+        
         # Actualizar orientación
-        self.orientation += self.rotation * time
+        if algorithm in ALGORITHM_USE_ROTATION:
+            self.orientation += self.rotation * time
+        else:
+            self.orientation = self.newOrientation(self.orientation, self.velocity)
 
         # Actualizar velocidad
         self.velocity = (
@@ -156,3 +176,14 @@ class Kinematic:
             # Normalizar la velocidad y escalar a maxSpeed
             scale = maxSpeed / speed
             self.velocity = (self.velocity[0] * scale, self.velocity[1] * scale)
+
+    def newOrientation(self, current_orientation: float, velocity: Tuple[float, float]) -> float:
+        """
+        Calcula y devuelve la nueva orientación (ángulo en radianes) a partir de la dirección del vector velocity.
+
+        - Si velocity == (0,0): devuelve current_orientation (sin cambios).
+        - Se usa math.atan2(vy, vx) para obtener el ángulo en radianes en el rango [-pi, pi].
+        """
+        if velocity == (0, 0):
+            return current_orientation
+        return math.atan2(velocity[1], velocity[0])
