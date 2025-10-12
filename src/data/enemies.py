@@ -16,7 +16,11 @@ import utils.configs as configs
 # - max_acceleration: aceleración máxima (float)
 # - max_rotation: rotación máxima (float)
 # - max_angular_accel: aceleración angular máxima (float)
-# - "max_prediction": máxima predicción (float)  --- SOLO PARA PURSUE Y EVADE ---
+# - max_prediction: máxima predicción (float)  --- SOLO PARA PURSUE Y EVADE ---
+# - wander_offset: offset del círculo de wander (float)  --- SOLO PARA WANDER ---
+# - wander_radius: radio del círculo de wander (float)  --- SOLO PARA WANDER ---
+# - wander_rate: tasa de cambio de orientación aleatoria (float)  --- SOLO PARA WANDER ---
+# - wander_orientation: orientación inicial del wander (float)  --- SOLO PARA WANDER ---
 
 # --- Para Kinematic Seek ---
 # Atributos relevantes:
@@ -463,7 +467,16 @@ enemy_wander_kinematic = [
 
 # Para Dynamic Wander
 # Atributos relevantes:
-
+# - target_radius: umbral de orientación (float)
+# - slow_radius: radio de desaceleración (float)
+# - time_to_target: tiempo para alcanzar la rotación objetivo (float)
+# - max_acceleration: aceleración máxima (float)
+# - max_rotation: velocidad angular máxima (float)
+# - max_angular_accel: aceleración angular máxima (float)
+# - wander_offset: offset del círculo de wander (float)
+# - wander_radius: radio del círculo de wander (float)
+# - wander_rate: tasa de cambio de orientación aleatoria (float)
+# - wander_orientation: orientación inicial del wander (float)
 enemy_wander_dynamic = [
     {
         "type": "gargant-berserker",
@@ -471,12 +484,12 @@ enemy_wander_dynamic = [
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.WANDER_DYNAMIC,
         "max_speed": 120.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius": 5 * (math.pi / 180),
+        "slow_radius": 45 * (math.pi / 180),
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
-        "max_rotation": 15.0,
-        "max_angular_accel": 1.0,
+        "max_rotation": 1.0,
+        "max_angular_accel": 4.0,
         "max_prediction": 1.0,
     },
     {
@@ -485,12 +498,12 @@ enemy_wander_dynamic = [
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.WANDER_DYNAMIC,
         "max_speed": 120.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius": 5 * (math.pi / 180),
+        "slow_radius": 45 * (math.pi / 180),
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
-        "max_rotation": 15.0,
-        "max_angular_accel": 1.0,
+        "max_rotation": 1.0,
+        "max_angular_accel": 4.0,
         "max_prediction": 1.0,
     },
     {
@@ -499,12 +512,12 @@ enemy_wander_dynamic = [
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.WANDER_DYNAMIC,
         "max_speed": 120.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius": 5 * (math.pi / 180),
+        "slow_radius": 45 * (math.pi / 180),
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
-        "max_rotation": 15.0,
-        "max_angular_accel": 1.0,
+        "max_rotation": 1.0,
+        "max_angular_accel": 4.0,
         "max_prediction": 1.0,
     },
     {
@@ -513,12 +526,12 @@ enemy_wander_dynamic = [
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.WANDER_DYNAMIC,
         "max_speed": 120.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius": 5 * (math.pi / 180),
+        "slow_radius": 45 * (math.pi / 180),
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
-        "max_rotation": 15.0,
-        "max_angular_accel": 1.0,
+        "max_rotation": 1.0,
+        "max_angular_accel": 4.0,
         "max_prediction": 1.0,
     },
 ]
@@ -725,14 +738,11 @@ enemy_face = [
 
 # Para Look Where You're Going (junto a Evade)
 # Atributos relevantes:
-# - max_speed: velocidad máxima (float)
 # - target_radius: umbral de orientación (float)
 # - slow_radius: radio de desaceleración (float)
 # - time_to_target: tiempo para alcanzar la rotación objetivo (float)
-# - max_acceleration: aceleración máxima (float)
 # - max_rotation: velocidad angular máxima (float)
 # - max_angular_accel: aceleración angular máxima (float)
-# - max_prediction: tiempo máximo de predicción (float)
 enemy_look_where = [
     {
         "type": "gargant-berserker",
@@ -758,7 +768,7 @@ enemy_all = [
     enemy_flee_kinematic[0],
     enemy_flee_dynamic[1],
     enemy_wander_kinematic[2],
-    #enemy_wander_dynamic[3],
+    enemy_wander_dynamic[3],
     enemy_align[0],
     enemy_velocity_match[1],
     enemy_pursue[0],
