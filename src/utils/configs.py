@@ -27,6 +27,8 @@ class ALGORITHM(str, enum.Enum):
     VELOCITY_MATCH = "VELOCITY MATCH"
     PURSUE = "PURSUE"
     EVADE = "EVADE"
+    FACE = "FACE"
+    LOOK_WHERE_YOURE_GOING = "LOOK WHERE YOU'RE GOING"
 
 # Configuraciones generales del juego
 GAME_TITLE = "Dexel Survival Dungeon"
@@ -90,6 +92,8 @@ parsing_button = {
     "ALGORITHM.VELOCITY_MATCH": "VELOCITY MATCH",
     "ALGORITHM.PURSUE": "PURSUE",
     "ALGORITHM.EVADE": "EVADE",
+    "ALGORITHM.FACE": "FACE",
+    "ALGORITHM.LOOK_WHERE_YOURE_GOING": "LOOK W. Y. GOING",
     "ALL": "ALL",
     "EMPTY": "EMPTY"
 }
