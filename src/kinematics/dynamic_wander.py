@@ -70,7 +70,7 @@ class DynamicWander:
         """Devuelve valor en [-1,1] centrado en 0 (random() - random())."""
         return random.random() - random.random()
 
-    def orientation_to_vector(self,orientation: float) -> Tuple[float, float]:
+    def orientation_to_vector(self, orientation: float) -> Tuple[float, float]:
         """Convierte una orientación (radianes) a un vector unitario (x, z)."""
         return (math.cos(orientation), math.sin(orientation))
 
