@@ -5,10 +5,11 @@ from kinematics.kinematic import Kinematic, SteeringOutput, KinematicSteeringOut
 from kinematics.kinematic_seek import KinematicSeek
 from kinematics.kinematic_flee import KinematicFlee
 from kinematics.kinematic_arrive import KinematicArrive
-from kinematics.kinematic_wandering import KinematicWander
+from kinematics.kinematic_wander import KinematicWander
 from kinematics.dynamic_seek import DynamicSeek
 from kinematics.dynamic_flee import DynamicFlee
 from kinematics.dynamic_arrive import DynamicArrive
+from kinematics.dynamic_wander import DynamicWander
 from kinematics.align import Align
 from kinematics.velocity_match import VelocityMatch
 from kinematics.pursue import Pursue
@@ -43,7 +44,7 @@ class Enemy(Kinematic):
         - DynamicSeek: Persigue al objetivo con aceleración.
         - DynamicFlee: Huye del objetivo con aceleración.
         - DynamicArrive: Llega suavemente al objetivo con aceleración.
-        - (DynamicWander no implementado)
+        - DynamicWander: Se mueve aleatoriamente con aceleración.
         - Align: Alinea la orientación con el objetivo.
         - VelocityMatch: Igualar la velocidad con el objetivo.
         - Pursue: Persigue al objetivo anticipando su movimiento.
@@ -96,23 +97,23 @@ class Enemy(Kinematic):
         self.kinematic_seek = KinematicSeek(
             character=self,                    # Kinematic que se mueve
             target=target,                     # Objetivo a seguir
-            max_speed=max_speed                 # Velocidad máxima
+            max_speed=max_speed                # Velocidad máxima
         )
         self.kinematic_flee = KinematicFlee(
             character=self,                    # Kinematic que se mueve
             target=target,                     # Objetivo a seguir
-            max_speed=max_speed                 # Velocidad máxima
+            max_speed=max_speed                # Velocidad máxima
         )
         self.kinematic_arrive = KinematicArrive(
             character=self,                    # Kinematic que se mueve
             target=target,                     # Objetivo a seguir
-            max_speed=max_speed,                # Velocidad máxima
+            max_speed=max_speed,               # Velocidad máxima
             target_radius=target_radius,       # Radio de llegada
             time_to_target=time_to_target      # Tiempo para ajustar la velocidad
         )
         self.kinematic_wander = KinematicWander(
             character=self,                    # Kinematic que se mueve
-            max_speed=max_speed,                # Velocidad máxima
+            max_speed=max_speed,               # Velocidad máxima
             max_rotation=max_rotation          # Velocidad angular máxima
         )
 
@@ -130,11 +131,25 @@ class Enemy(Kinematic):
         self.dynamic_arrive = DynamicArrive(
             character=self,                    # Kinematic que se mueve
             target=target,                     # Objetivo a seguir
-            max_speed=max_speed,                # Velocidad máxima
+            max_speed=max_speed,               # Velocidad máxima
             target_radius=target_radius,       # Radio de llegada
             slow_radius=slow_radius,           # Radio para empezar a desacelerar
             time_to_target=time_to_target,     # Tiempo para ajustar la velocidad
             max_acceleration=max_acceleration  # Aceleración máxima
+        )
+        self.dynamic_wander = DynamicWander(
+            character=self,                      # Kinematic que se mueve
+            target=target,                       # Objetivo a seguir (no se usa realmente)
+            target_radius=target_radius,         # Radio de llegada (para Face interno)
+            slow_radius=slow_radius,             # Radio para empezar a girar (para Face interno)
+            time_to_target=time_to_target,       # Tiempo para ajustar la rotación (para Face interno)
+            max_acceleration=max_acceleration,   # Aceleración máxima
+            max_rotation=max_rotation,           # Velocidad angular máxima (para Face interno)
+            max_angular_accel=max_angular_accel, # Aceleración angular máxima (para Face interno)
+            wander_offset=40.0,                  # Offset del círculo de wander
+            wander_radius=20.0,                  # Radio del círculo de wander
+            wander_rate=0.9,                     # Tasa de cambio de orientación aleatoria
+            wander_orientation=0.0               # Orientación inicial del wander
         )
 
         # Instanciar el algoritmo de alineación
@@ -273,8 +288,7 @@ class Enemy(Kinematic):
             case configs.ALGORITHM.ARRIVE_DYNAMIC:
                 steering = self.dynamic_arrive.get_steering()
             case configs.ALGORITHM.WANDER_DYNAMIC:
-                # por implementar
-                pass
+                steering = self.dynamic_wander.get_steering()
             case configs.ALGORITHM.ALIGN:
                 steering = self.align.get_steering()
             case configs.ALGORITHM.VELOCITY_MATCH:
