@@ -13,6 +13,8 @@ from kinematics.align import Align
 from kinematics.velocity_match import VelocityMatch
 from kinematics.pursue import Pursue
 from kinematics.evade import Evade
+from kinematics.face import Face
+from kinematics.look_where_youre_going import LookWhereYoureGoing
 from characters.animation import Animation, load_animations, set_animation_state
 import utils.configs as configs
 
@@ -46,6 +48,8 @@ class Enemy(Kinematic):
         - VelocityMatch: Igualar la velocidad con el objetivo.
         - Pursue: Persigue al objetivo anticipando su movimiento.
         - Evade: Huye del objetivo anticipando su movimiento.
+        - Face: Gira para mirar al objetivo.
+        - LookWhereYoureGoing: Gira en la dirección del movimiento.
     """
     def __init__(
         self, 
@@ -172,6 +176,28 @@ class Enemy(Kinematic):
             max_prediction=max_prediction
         )
 
+        # Instanciar el algoritmo de Face
+        self.face = Face(
+            character=self,
+            target=target,
+            target_radius=target_radius,
+            slow_radius=slow_radius,
+            time_to_target=time_to_target,
+            max_rotation=max_rotation,
+            max_angular_accel=max_angular_accel,
+        )
+
+        # Instanciar el algoritmo de Look Where You're Going
+        self.look_where = LookWhereYoureGoing(
+            character=self,                      # Quien se alinea
+            target=target,                       # Referencia para alinearse
+            target_radius=target_radius,         # Radio de llegada
+            slow_radius=slow_radius,             # Radio para empezar a girar
+            time_to_target=time_to_target,       # Tiempo para ajustar la rotación
+            max_rotation=max_rotation,           # Velocidad angular máxima
+            max_angular_accel=max_angular_accel, # Aceleración angular máxima
+        )
+
     def draw(self, surface: pygame.Surface, camera_x: float, camera_z: float):
         """
         Dibuja el enemigo en pantalla, rotando el sprite hacia el jugador.
@@ -257,26 +283,36 @@ class Enemy(Kinematic):
                 steering = self.pursue.get_steering()
             case configs.ALGORITHM.EVADE:
                 steering = self.evade.get_steering()
+            case configs.ALGORITHM.FACE:
+                steering = self.face.get_steering()
+            case configs.ALGORITHM.LOOK_WHERE_YOURE_GOING:
+                steering_lwyg = self.look_where.get_steering()
+                steering_evade = self.evade.get_steering()
+                # Combinar ambos steerings: usar linear de evade y angular de lwyg
+                steering = SteeringOutput(
+                    linear=steering_evade.linear,
+                    angular=steering_lwyg.angular
+                )
 
         # Aplicar el steering y actualizar la cinemática
         if isinstance(steering, SteeringOutput):
-            if self.algorithm == configs.ALGORITHM.ALIGN:
+            if self.algorithm == configs.ALGORITHM.ALIGN or self.algorithm == configs.ALGORITHM.FACE:
                 set_animation_state(self, configs.ENEMY_STATES.ATTACK_WOUNDED)
                 # Align devuelve angular steering; para align la parte linear suele ser (0,0)
                 if steering.angular != 0.0:
                     # aplicar como aceleración angular
-                    self.update_by_dynamic(steering, self.max_speed, dt, collision_rects, self.collider_box)
+                    self.update_by_dynamic(steering, self.max_speed, dt, collision_rects, self.collider_box, self.algorithm)
             else:
                 if steering.linear != (0, 0):
                     set_animation_state(self, configs.ENEMY_STATES.MOVE)
-                    self.update_by_dynamic(steering, self.max_speed, dt, collision_rects, self.collider_box)
+                    self.update_by_dynamic(steering, self.max_speed, dt, collision_rects, self.collider_box, self.algorithm)
                 else:
                     set_animation_state(self, configs.ENEMY_STATES.ATTACK)
 
         elif isinstance(steering, KinematicSteeringOutput):
             if steering.velocity != (0, 0):
                 set_animation_state(self, configs.ENEMY_STATES.MOVE)
-                self.update_by_kinematic(steering, dt, collision_rects, self.collider_box)
+                self.update_by_kinematic(steering, dt, collision_rects, self.collider_box, self.algorithm)
             else:
                 set_animation_state(self, configs.ENEMY_STATES.ATTACK)
 
