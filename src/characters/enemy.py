@@ -16,6 +16,8 @@ from kinematics.pursue import Pursue
 from kinematics.evade import Evade
 from kinematics.face import Face
 from kinematics.look_where_youre_going import LookWhereYoureGoing
+from kinematics.path_following import FollowPath
+from utils.create_paths import make_circle_path, make_rectangle_path
 from characters.animation import Animation, load_animations, set_animation_state
 import utils.configs as configs
 
@@ -66,7 +68,10 @@ class Enemy(Kinematic):
         max_acceleration: float = 300.0,
         max_rotation: float = 1.0,
         max_angular_accel: float = 8.0,
-        max_prediction: float = 1.0
+        max_prediction: float = 1.0, 
+        path_type: str = None,
+        path_params: dict = None,
+        path_offset: float = 12.0,
     ) -> None:
         super().__init__(
             position=position, 
@@ -213,6 +218,36 @@ class Enemy(Kinematic):
             max_angular_accel=max_angular_accel, # Aceleración angular máxima
         )
 
+        # FOLLOW_PATH: build Path (if requested in preset) and FollowPath delegate
+        self.follow_path = None
+        if algorithm == configs.ALGORITHM.PATH_FOLLOWING:
+            # build path based on descriptor passed in preset (safe defaults)
+            try:
+                if path_type == "circle":
+                    center = tuple(path_params.get("center", self.position))
+                    radius = float(path_params.get("radius", 100.0))
+                    segments = int(path_params.get("segments", 48))
+                    path = make_circle_path(radius=radius, center=center, segments=segments)
+                elif path_type == "rectangle" or path_type == "rect":
+                    center = tuple(path_params.get("center", self.position))
+                    width = float(path_params.get("width", 100.0))
+                    height = float(path_params.get("height", 100.0))
+                    segments = int(path_params.get("segments", 48))
+                    path = make_rectangle_path(width=width, height=height, center=center, segments=segments)
+                else:
+                    # fallback: single-point circle around spawn
+                    path = make_circle_path(radius=float(path_params.get("radius", 100.0)) if path_params else 100.0, center=self.position)
+            except Exception:
+                path = make_circle_path(radius=100.0, center=self.position)
+
+            # instantiate FollowPath delegate
+            self.follow_path = FollowPath(
+                character=self, 
+                path=path, 
+                path_offset=path_offset, 
+                max_acceleration=max_acceleration
+            )
+
     def draw(self, surface: pygame.Surface, camera_x: float, camera_z: float):
         """
         Dibuja el enemigo en pantalla, rotando el sprite hacia el jugador.
@@ -249,6 +284,12 @@ class Enemy(Kinematic):
             surface.blit(text_surf, text_rect)
 
             self.draw_collision_box(surface, camera_x, camera_z)
+
+            if hasattr(self, "follow_path") and self.follow_path is not None:
+                path = getattr(self.follow_path, "path", None)
+                if path is not None:
+                    # Path.draw espera surface, camera_x, camera_z, opcionales...
+                    path.draw(surface, camera_x, camera_z, color=(255,200,0), width=2, segments=64)
 
     def draw_collision_box(self, surface: pygame.Surface, camera_x: float, camera_z: float):
         """
@@ -307,6 +348,8 @@ class Enemy(Kinematic):
                     linear=steering_evade.linear,
                     angular=steering_lwyg.angular
                 )
+            case configs.ALGORITHM.PATH_FOLLOWING:
+                steering = self.follow_path.get_steering()
 
         # Aplicar el steering y actualizar la cinemática
         if isinstance(steering, SteeringOutput):
