@@ -760,6 +760,46 @@ enemy_look_where = [
     },
 ]
 
+enemy_follow_path_circle = [
+    {
+        "type": "gargant-berserker",
+        "position": (configs.RENDER_TILE_SIZE * 30, configs.RENDER_TILE_SIZE * 30),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.PATH_FOLLOWING,
+        "max_speed": 100.0,
+        "target_radius": 5 * (math.pi / 180),  # 5 grados en radianes
+        "slow_radius": 45 * (math.pi / 180),   # 45 grados en radianes
+        "time_to_target": 0.15,
+        "max_acceleration": 200.0,
+        "max_rotation": 2.0,
+        "max_angular_accel": 4.0,
+        "max_prediction": 0.5,
+        "path_type": "circle",
+        "path_params": {"radius": 250.0, "segments": 48, "center": (configs.RENDER_TILE_SIZE * 30, configs.RENDER_TILE_SIZE * 30)},
+        "path_offset": 0.25,  # advance 1/4 of the circle (param units) — ver nota
+    },
+]
+
+enemy_follow_path_rect = [
+    {
+        "type": "gargant-berserker",
+        "position": (configs.RENDER_TILE_SIZE * 15, configs.RENDER_TILE_SIZE * 30),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.PATH_FOLLOWING,
+        "max_speed": 100.0,
+        "target_radius": 5 * (math.pi / 180),  # 5 grados en radianes
+        "slow_radius": 45 * (math.pi / 180),   # 45 grados en radianes
+        "time_to_target": 0.15,
+        "max_acceleration": 180.0,
+        "max_rotation": 2.0,
+        "max_angular_accel": 4.0,
+        "max_prediction": 0.5,
+        "path_type": "rectangle",
+        "path_params": {"width": 600.0, "height": 600.0, "segments": 48, "center": (configs.RENDER_TILE_SIZE * 30, configs.RENDER_TILE_SIZE * 30)},
+        "path_offset": 2.0,
+    },
+]
+
 enemy_all = [
     enemy_seek_kinematic[0],
     enemy_seek_dynamic[1],
@@ -792,6 +832,7 @@ list_of_enemies_data = {
     configs.ALGORITHM.EVADE: enemy_evade,
     configs.ALGORITHM.FACE: enemy_face,
     configs.ALGORITHM.LOOK_WHERE_YOURE_GOING: enemy_look_where,
+    configs.ALGORITHM.PATH_FOLLOWING: enemy_follow_path_circle + enemy_follow_path_rect,
     "ALL": enemy_all,
     "EMPTY": [],
 }
