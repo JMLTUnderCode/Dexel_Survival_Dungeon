@@ -29,6 +29,7 @@ class ALGORITHM(str, enum.Enum):
     EVADE = "EVADE"
     FACE = "FACE"
     LOOK_WHERE_YOURE_GOING = "LOOK WHERE YOU'RE GOING"
+    PATH_FOLLOWING = "PATH FOLLOWING"
 
 # Configuraciones generales del juego
 GAME_TITLE = "Dexel Survival Dungeon"
@@ -94,6 +95,7 @@ parsing_button = {
     "ALGORITHM.EVADE": "EVADE",
     "ALGORITHM.FACE": "FACE",
     "ALGORITHM.LOOK_WHERE_YOURE_GOING": "LOOK W. Y. GOING",
+    "ALGORITHM.PATH_FOLLOWING": "PATH FOLLOWING",
     "ALL": "ALL",
     "EMPTY": "EMPTY"
 }
