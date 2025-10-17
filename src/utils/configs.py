@@ -3,7 +3,7 @@ import os
 import enum
 
 # Cargar variable DEVELOPMENT desde .env si existe
-DEVELOPMENT = None
+DEVELOPMENT = True
 env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
 if os.path.exists(env_path):
     with open(env_path) as f:
@@ -39,6 +39,8 @@ ZOOM = 2.5
 RENDER_TILE_SIZE = TILE_SIZE * ZOOM
 SCREEN_OFF_SET = 60
 PI = math.pi
+CONVERT_TO_RAD = PI / 180
+CONVERT_TO_DEG = 180 / PI
 
 # Configuraciones del jugador
 PLAYER_FOLDER = "player"
