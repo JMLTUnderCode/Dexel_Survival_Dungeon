@@ -868,7 +868,8 @@ list_of_enemies_data = {
     configs.ALGORITHM.FACE: enemy_face,
     configs.ALGORITHM.LOOK_WHERE_YOURE_GOING: enemy_look_where,
     configs.ALGORITHM.WANDER_DYNAMIC: enemy_wander_dynamic,
-    configs.ALGORITHM.PATH_FOLLOWING: enemy_follow_path_circle + enemy_follow_path_rect,
+    configs.ALGORITHM.PATH_FOLLOWING: enemy_follow_path_circle,
+    #configs.ALGORITHM.PATH_FOLLOWING: enemy_follow_path_rect,
     "ALL": enemy_all,
     "EMPTY": [],
 }
