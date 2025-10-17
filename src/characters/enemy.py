@@ -151,7 +151,7 @@ class Enemy(Kinematic):
             max_acceleration=max_acceleration,   # Aceleración máxima
             max_rotation=max_rotation,           # Velocidad angular máxima (para Face interno)
             max_angular_accel=max_angular_accel, # Aceleración angular máxima (para Face interno)
-            wander_offset=40.0,                  # Offset del círculo de wander
+            wander_offset=80.0,                  # Offset del círculo de wander
             wander_radius=20.0,                  # Radio del círculo de wander
             wander_rate=0.9,                     # Tasa de cambio de orientación aleatoria
             wander_orientation=0.0               # Orientación inicial del wander
@@ -245,6 +245,7 @@ class Enemy(Kinematic):
                 character=self, 
                 path=path, 
                 path_offset=path_offset, 
+                current_param=0.0,
                 max_acceleration=max_acceleration
             )
 
