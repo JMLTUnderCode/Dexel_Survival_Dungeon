@@ -33,7 +33,8 @@ init_ui_fonts()
 build_ui_buttons()
 
 # --- Inicializar jugador y enemigos ---
-player, enemies = create_player_and_enemies("EMPTY")
+configs.SELECTED_KEY = "EMPTY"
+player, enemies = create_player_and_enemies(configs.SELECTED_KEY)
 
 def main():
     global player, enemies
