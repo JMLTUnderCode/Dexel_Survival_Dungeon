@@ -656,7 +656,7 @@ path_circle = {
 enemy_follow_path_circle = [
     {
         "type": "gargant-berserker",
-        "position": (configs.RENDER_TILE_SIZE * 30, configs.RENDER_TILE_SIZE * 30),
+        "position": (configs.RENDER_TILE_SIZE * 30, configs.RENDER_TILE_SIZE * 31),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
@@ -673,7 +673,7 @@ enemy_follow_path_circle = [
     },
     {
         "type": "gargant-berserker",
-        "position": (configs.RENDER_TILE_SIZE * 28, configs.RENDER_TILE_SIZE * 28),
+        "position": (configs.RENDER_TILE_SIZE * 29, configs.RENDER_TILE_SIZE * 29),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
@@ -690,7 +690,7 @@ enemy_follow_path_circle = [
     },
     {
         "type": "gargant-berserker",
-        "position": (configs.RENDER_TILE_SIZE * 30, configs.RENDER_TILE_SIZE * 32),
+        "position": (configs.RENDER_TILE_SIZE * 31, configs.RENDER_TILE_SIZE * 29),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
@@ -707,7 +707,7 @@ enemy_follow_path_circle = [
     },
     {
         "type": "gargant-berserker",
-        "position": (configs.RENDER_TILE_SIZE * 40, configs.RENDER_TILE_SIZE * 38),
+        "position": (configs.RENDER_TILE_SIZE * 40, configs.RENDER_TILE_SIZE * 40),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
@@ -724,7 +724,7 @@ enemy_follow_path_circle = [
     },
     {
         "type": "gargant-berserker",
-        "position": (configs.RENDER_TILE_SIZE * 40, configs.RENDER_TILE_SIZE * 22),
+        "position": (configs.RENDER_TILE_SIZE * 16, configs.RENDER_TILE_SIZE * 28),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
@@ -749,7 +749,7 @@ path_rect = {
 enemy_follow_path_rect = [
     {
         "type": "gargant-lord",
-        "position": (configs.RENDER_TILE_SIZE * 34, configs.RENDER_TILE_SIZE * 26),
+        "position": (configs.RENDER_TILE_SIZE * 30, configs.RENDER_TILE_SIZE * 25),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
@@ -766,7 +766,7 @@ enemy_follow_path_rect = [
     },
     {
         "type": "gargant-lord",
-        "position": (configs.RENDER_TILE_SIZE * 24, configs.RENDER_TILE_SIZE * 24),
+        "position": (configs.RENDER_TILE_SIZE * 35, configs.RENDER_TILE_SIZE * 30),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
@@ -783,7 +783,7 @@ enemy_follow_path_rect = [
     },
     {
         "type": "gargant-lord",
-        "position": (configs.RENDER_TILE_SIZE * 33, configs.RENDER_TILE_SIZE * 36),
+        "position": (configs.RENDER_TILE_SIZE * 30, configs.RENDER_TILE_SIZE * 35),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
@@ -800,7 +800,7 @@ enemy_follow_path_rect = [
     },
     {
         "type": "gargant-lord",
-        "position": (configs.RENDER_TILE_SIZE * 16, configs.RENDER_TILE_SIZE * 30),
+        "position": (configs.RENDER_TILE_SIZE * 25, configs.RENDER_TILE_SIZE * 30),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
@@ -817,7 +817,24 @@ enemy_follow_path_rect = [
     },
     {
         "type": "gargant-lord",
-        "position": (configs.RENDER_TILE_SIZE * 16, configs.RENDER_TILE_SIZE * 40),
+        "position": (configs.RENDER_TILE_SIZE * 16, configs.RENDER_TILE_SIZE * 38),
+        "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
+        "algorithm": configs.ALGORITHM.PATH_FOLLOWING,
+        "max_speed": 100.0,
+        "target_radius": 5 * configs.CONVERT_TO_RAD,
+        "slow_radius": 60 * configs.CONVERT_TO_RAD,
+        "time_to_target": 0.15,
+        "max_acceleration": 200.0,
+        "max_rotation": 2.0,
+        "max_angular_accel": 4.0,
+        "max_prediction": 0.5,
+        "path_type": path_rect["type"],
+        "path_params": path_rect["params"],
+        "path_offset": path_rect["offset"],
+    },
+    {
+        "type": "gargant-lord",
+        "position": (configs.RENDER_TILE_SIZE * 44, configs.RENDER_TILE_SIZE * 22),
         "collider_box": (configs.ENEMY_COLLIDER_BOX_WIDTH, configs.ENEMY_COLLIDER_BOX_HEIGHT),
         "algorithm": configs.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
@@ -868,8 +885,7 @@ list_of_enemies_data = {
     configs.ALGORITHM.FACE: enemy_face,
     configs.ALGORITHM.LOOK_WHERE_YOURE_GOING: enemy_look_where,
     configs.ALGORITHM.WANDER_DYNAMIC: enemy_wander_dynamic,
-    configs.ALGORITHM.PATH_FOLLOWING: enemy_follow_path_circle,
-    #configs.ALGORITHM.PATH_FOLLOWING: enemy_follow_path_rect,
+    configs.ALGORITHM.PATH_FOLLOWING: enemy_follow_path_circle + enemy_follow_path_rect,
     "ALL": enemy_all,
     "EMPTY": [],
 }
