@@ -3,7 +3,7 @@ import os
 import enum
 
 # Cargar variable DEVELOPMENT desde .env si existe
-DEVELOPMENT = True
+DEVELOPMENT = None
 env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
 if os.path.exists(env_path):
     with open(env_path) as f:
@@ -76,7 +76,7 @@ UI_BUTTON_HEIGHT = 36
 UI_BG_COLOR = (20, 20, 20, 220)
 UI_BUTTON_COLOR = (50, 50, 50)
 UI_BUTTON_HOVER = (70, 70, 70)
-UI_BUTTON_ACTIVE = (132, 87, 69, 52)
+UI_BUTTON_ACTIVE = (132, 87, 69)
 UI_TEXT_COLOR = (230, 230, 230)
 UI_TITLE_COLOR = (180, 220, 255)
 UI_TITLE_FONT = None
@@ -102,5 +102,5 @@ parsing_button = {
     "EMPTY": "EMPTY"
 }
 UI_BUTTONS = []  # list of dicts {key, rect}
-# Estado del botón seleccionado (la clave correspondiente en BUTTON_KEYS)
+# Estado del botón seleccionado (la clave correspondiente en parsing_button)
 SELECTED_KEY = None
