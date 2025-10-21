@@ -37,6 +37,9 @@ def create_player_and_enemies(key="EMPTY"):
             max_acceleration=enemy["max_acceleration"],
             max_rotation=enemy["max_rotation"],
             max_angular_accel=enemy["max_angular_accel"],
+            path_type=enemy.get("path_type", None),
+            path_params=enemy.get("path_params", None),
+            path_offset=enemy.get("path_offset", 12.0),   
         )
         for enemy in enemy_list
     ]

@@ -10,7 +10,7 @@ ALGORITHM_USE_ROTATION = [
     configs.ALGORITHM.ALIGN, 
     configs.ALGORITHM.FACE, 
     configs.ALGORITHM.LOOK_WHERE_YOURE_GOING, 
-    #configs.ALGORITHM.VELOCITY_MATCH,
+    configs.ALGORITHM.VELOCITY_MATCH,
 ]
 
 class SteeringOutput:

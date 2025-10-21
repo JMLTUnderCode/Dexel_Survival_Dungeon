@@ -29,6 +29,7 @@ class ALGORITHM(str, enum.Enum):
     EVADE = "EVADE"
     FACE = "FACE"
     LOOK_WHERE_YOURE_GOING = "LOOK WHERE YOU'RE GOING"
+    PATH_FOLLOWING = "PATH FOLLOWING"
 
 # Configuraciones generales del juego
 GAME_TITLE = "Dexel Survival Dungeon"
@@ -38,6 +39,8 @@ ZOOM = 2.5
 RENDER_TILE_SIZE = TILE_SIZE * ZOOM
 SCREEN_OFF_SET = 60
 PI = math.pi
+CONVERT_TO_RAD = PI / 180
+CONVERT_TO_DEG = 180 / PI
 
 # Configuraciones del jugador
 PLAYER_FOLDER = "player"
@@ -73,7 +76,7 @@ UI_BUTTON_HEIGHT = 36
 UI_BG_COLOR = (20, 20, 20, 220)
 UI_BUTTON_COLOR = (50, 50, 50)
 UI_BUTTON_HOVER = (70, 70, 70)
-UI_BUTTON_ACTIVE = (90, 160, 90)
+UI_BUTTON_ACTIVE = (132, 87, 69)
 UI_TEXT_COLOR = (230, 230, 230)
 UI_TITLE_COLOR = (180, 220, 255)
 UI_TITLE_FONT = None
@@ -94,7 +97,10 @@ parsing_button = {
     "ALGORITHM.EVADE": "EVADE",
     "ALGORITHM.FACE": "FACE",
     "ALGORITHM.LOOK_WHERE_YOURE_GOING": "LOOK W. Y. GOING",
+    "ALGORITHM.PATH_FOLLOWING": "PATH FOLLOWING",
     "ALL": "ALL",
     "EMPTY": "EMPTY"
 }
 UI_BUTTONS = []  # list of dicts {key, rect}
+# Estado del botón seleccionado (la clave correspondiente en parsing_button)
+SELECTED_KEY = None

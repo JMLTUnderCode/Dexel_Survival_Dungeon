@@ -11,6 +11,8 @@ def handle_ui_event(event: pygame.event.Event, player, enemies):
         mx, my = event.pos
         for b in configs.UI_BUTTONS:
             if b["rect"].collidepoint((mx, my)):
+                # marcar el botón seleccionado (desmarca el anterior)
+                configs.SELECTED_KEY = b["key"]
                 # devuelve los nuevos player, enemies y una señal de que hubo cambio
                 new_player, new_enemies = create_player_and_enemies(b["key"])
                 return new_player, new_enemies, True
@@ -41,7 +43,11 @@ def draw_ui(surface: pygame.Surface, ui_width: int, ui_height: int):
     for b in configs.UI_BUTTONS:
         rect = b["rect"]
         hovered = rect.collidepoint((mx, my))
-        color = configs.UI_BUTTON_HOVER if hovered else configs.UI_BUTTON_COLOR
+        # Button color precedence: seleccionado -> hover -> normal
+        if b["key"] == configs.SELECTED_KEY:
+            color = configs.UI_BUTTON_ACTIVE
+        else:
+            color = configs.UI_BUTTON_HOVER if hovered else configs.UI_BUTTON_COLOR
         label = configs.parsing_button.get(str(b["key"]), str(b["key"]))
         pygame.draw.rect(surface, color, rect, border_radius=6)
         txt = configs.UI_FONT.render(label, True, configs.UI_TEXT_COLOR)
