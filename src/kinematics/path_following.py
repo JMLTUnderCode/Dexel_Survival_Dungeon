@@ -56,8 +56,8 @@ class FollowPath:
 
         # Delegate seek: usaremos un target temporal Kinematic que reemplazamos
         # cada frame. DynamicSeek espera un Kinematic como target.
-        dummy_target = Kinematic(position=(0.0, 0.0), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
-        self._seek = DynamicSeek(character=self.character, target=dummy_target, max_acceleration=self.max_acceleration)
+        self.dummy_target = Kinematic(position=(0.0, 0.0), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
+        self._seek = DynamicSeek(character=self.character, target=self.dummy_target, max_acceleration=self.max_acceleration)
 
     def get_steering(self) -> SteeringOutput:
         """
@@ -95,8 +95,8 @@ class FollowPath:
         tx, tz = float(target_pos[0]), float(target_pos[1])
 
         # 4) Construir target temporal y delegar a DynamicSeek
-        explicit_target = Kinematic(position=(tx, tz), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
-        self._seek.target = explicit_target
+        self.dummy_target.position = (tx, tz)
+        self._seek.target = self.dummy_target
         self._seek.max_acceleration = self.max_acceleration
 
         # 5) Devolver el steering calculado por DynamicSeek
