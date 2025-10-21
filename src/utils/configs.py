@@ -102,5 +102,5 @@ parsing_button = {
     "EMPTY": "EMPTY"
 }
 UI_BUTTONS = []  # list of dicts {key, rect}
-# Estado del botón seleccionado (la clave correspondiente en BUTTON_KEYS)
+# Estado del botón seleccionado (la clave correspondiente en parsing_button)
 SELECTED_KEY = None
