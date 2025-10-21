@@ -1,6 +1,6 @@
 from kinematics.kinematic import Kinematic, SteeringOutput
 from kinematics.dynamic_seek import DynamicSeek
-from utils.create_paths import Path
+from helper.paths import Path
 
 class FollowPath:
     """

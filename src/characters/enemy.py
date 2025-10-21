@@ -17,7 +17,7 @@ from kinematics.evade import Evade
 from kinematics.face import Face
 from kinematics.look_where_youre_going import LookWhereYoureGoing
 from kinematics.path_following import FollowPath
-from utils.create_paths import make_circle_path, make_rectangle_path
+from helper.paths import make_circle_path, make_rectangle_path
 from characters.animation import Animation, load_animations, set_animation_state
 from configs.package import CONF
 
