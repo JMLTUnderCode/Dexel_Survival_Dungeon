@@ -1,7 +1,7 @@
 import os
 import sys
 
-def resource_path(relative_path: str) -> str:
+def resource_path_dir(relative_path: str) -> str:
     """
     Resuelve la ruta absoluta de un recurso relativo al proyecto.
 
