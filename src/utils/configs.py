@@ -3,7 +3,7 @@ import os
 import enum
 
 # Cargar variable DEVELOPMENT desde .env si existe
-DEVELOPMENT = True
+DEVELOPMENT = None
 env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
 if os.path.exists(env_path):
     with open(env_path) as f:
