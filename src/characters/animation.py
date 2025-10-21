@@ -97,23 +97,23 @@ class Animation:
         """Cantidad de frames en la animación."""
         return self.frame_count
 
-def load_animations(target: str, type: str, states_anims: type[Enum], w_tile: int, h_tile: int, frame_duration: float, scale: float) -> dict[str, Animation]:
+def load_animations(dir: str, type: str, states_anims: type[Enum], w_tile: int, h_tile: int, frame_duration: float, scale: float) -> dict[str, Animation]:
     """
     Carga las animaciones para un personaje (enemigo o jugador) dado su tipo y estados.
     Retorna un diccionario con las animaciones cargadas.
     Cada animación se espera que esté en un archivo con el formato:
-    '{type}-{state}.png' dentro de 'assets/{target}/'.
+    '{type}-{state}.png' dentro de 'assets/{dir}/'.
     Ejemplo: 'assets/enemies/goblin/goblin-move.png'
 
     Parámetros:
-    - target: carpeta base ('enemies' o 'player').
+    - dir: carpeta base ('enemies' o 'player').
     - type: tipo de personaje (ej. 'goblin', 'orc', 'knight').
     - states_anims: Enum con los estados y nombres de las animaciones.
     - w_tile, h_tile: tamaño de cada frame en el sprite sheet original.
     - frame_duration: duración de cada frame en segundos.
     - scale: factor de escala para redimensionar cada frame.
     """
-    base = os.path.join("assets", target)
+    base = os.path.join("assets", dir)
     anims = {}
     scale_to = (int(w_tile * scale), int(h_tile * scale))
     for state in states_anims:

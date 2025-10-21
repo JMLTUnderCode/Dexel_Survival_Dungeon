@@ -87,11 +87,11 @@ class Enemy(Kinematic):
         # Instanciar atributos de animación
         self.state = CONF.ENEMY.ACTIONS.MOVE
         self.animations : dict[str, Animation] = load_animations(
-            CONF.ENEMY.FOLDER, 
-            self.type, 
-            CONF.ENEMY.ACTIONS, 
-            CONF.ENEMY.TILE_WIDTH, 
-            CONF.ENEMY.TILE_HEIGHT,
+            dir=CONF.ENEMY.FOLDER, 
+            type=self.type, 
+            states_anims=CONF.ENEMY.ACTIONS, 
+            w_tile=CONF.ENEMY.TILE_WIDTH, 
+            h_tile=CONF.ENEMY.TILE_HEIGHT,
             frame_duration=0.12,
             scale=1.25
         )
