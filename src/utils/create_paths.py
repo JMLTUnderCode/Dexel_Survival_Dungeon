@@ -172,7 +172,7 @@ class PolylinePath(Path):
         a, b = self._segment_point(seg_idx)
         return _lerp(a, b, t)
 
-    def draw(self, surface, camera_x: float = 0.0, camera_z: float = 0.0, color: Tuple[int,int,int] = (255, 255, 0), width: int = 2, draw_nodes: bool = False, segments: int = 64):
+    def draw(self, surface, camera_x: float = 0.0, camera_z: float = 0.0, color: Tuple[int,int,int] = (255, 255, 0), width: int = 2, draw_nodes: bool = True):
         """
         Dibuja el path en pantalla para debugging.
         - surface: pygame.Surface donde dibujar.
@@ -197,9 +197,9 @@ class PolylinePath(Path):
             pygame.draw.line(surface, color, pts[-1], pts[0], width)
 
         if draw_nodes:
-            node_color = (255, 200, 0)
+            node_color = (0, 0, 0)
             for p in pts:
-                pygame.draw.circle(surface, node_color, p, max(2, width))
+                pygame.draw.circle(surface, node_color, p, max(4, width))
 
 # Factory helpers
 

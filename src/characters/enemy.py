@@ -290,7 +290,7 @@ class Enemy(Kinematic):
                 path = getattr(self.follow_path, "path", None)
                 if path is not None:
                     # Path.draw espera surface, camera_x, camera_z, opcionales...
-                    path.draw(surface, camera_x, camera_z, color=(255,200,0), width=2, segments=64)
+                    path.draw(surface, camera_x, camera_z, color=(255,200,0), width=2)
 
     def draw_collision_box(self, surface: pygame.Surface, camera_x: float, camera_z: float):
         """
