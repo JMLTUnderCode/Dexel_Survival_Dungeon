@@ -1,9 +1,10 @@
 import pygame
 import sys
 from map.map import Map
-from ui.algorithm_set import *
-from utils.create_characters import create_player_and_enemies
-import utils.configs as configs
+from ui.algorithms import *
+from helper.player import create_player
+from helper.enemies import create_enemies
+from configs.package import CONF
 
 # --- Inicializar pygame temprano para obtener la resolución de la pantalla ---
 pygame.init()
@@ -11,15 +12,15 @@ pygame.init()
 display_info = pygame.display.Info()
 
 # --- Calcular tamaños de pantalla y cámara ---
-SCREEN_WIDTH = display_info.current_w - configs.SCREEN_OFF_SET
-SCREEN_HEIGHT = display_info.current_h - configs.SCREEN_OFF_SET
-CAMERA_WIDTH = max(320, SCREEN_WIDTH - configs.UI_PANEL_WIDTH)
+SCREEN_WIDTH = display_info.current_w - CONF.MAIN_WIN.SCREEN_OFF_SET
+SCREEN_HEIGHT = display_info.current_h - CONF.MAIN_WIN.SCREEN_OFF_SET
+CAMERA_WIDTH = max(320, SCREEN_WIDTH - CONF.ALG_UI.PANEL_WIDTH)
 CAMERA_HEIGHT = max(240, SCREEN_HEIGHT)
 
 # --- Crear ventana usando el tamaño total (panel + juego) y la surface de juego ---
 screen = pygame.display.set_mode((SCREEN_WIDTH, SCREEN_HEIGHT))
 game_surface = pygame.Surface((CAMERA_WIDTH, CAMERA_HEIGHT))
-pygame.display.set_caption(configs.GAME_TITLE)
+pygame.display.set_caption(CONF.MAIN_WIN.GAME_TITLE)
 
 # --- Reloj para controlar el framerate ---
 clock = pygame.time.Clock()
@@ -33,14 +34,15 @@ init_ui_fonts()
 build_ui_buttons()
 
 # --- Inicializar jugador y enemigos ---
-configs.SELECTED_KEY = "EMPTY"
-player, enemies = create_player_and_enemies(configs.SELECTED_KEY)
+player = create_player()
+CONF.ALG_UI.SELECTED_ALGORITHM = "NOTHING"
+enemies = create_enemies(algorithm=CONF.ALG_UI.SELECTED_ALGORITHM, target=player)
 
 def main():
     global player, enemies
     running = True
     while running:
-        dt = clock.tick(configs.FPS) / 1000.0  # segundos
+        dt = clock.tick(CONF.MAIN_WIN.FPS) / 1000.0  # segundos
 
         # --- Manejar eventos ---
         for event in pygame.event.get():
@@ -53,12 +55,12 @@ def main():
                 # sea relativa al game_surface antes de pasarlo a player.handle_event
                 if hasattr(event, "pos"):
                     ex, ey = event.pos
-                    if ex > configs.UI_PANEL_WIDTH:
+                    if ex > CONF.ALG_UI.PANEL_WIDTH:
                         # crear un evento "game_event" con pos ajustada y pasar a player
                         adjusted_event = event
                         # Pygame Event is mutable on some attributes; safer to create a new event for mouse positions
                         try:
-                            adjusted_event = pygame.event.Event(event.type, {**event.__dict__, "pos": (ex - UI_PANEL_WIDTH, ey)})
+                            adjusted_event = pygame.event.Event(event.type, {**event.__dict__, "pos": (ex - CONF.ALG_UI.PANEL_WIDTH, ey)})
                         except Exception:
                             adjusted_event = event
                         player.handle_event(adjusted_event)
@@ -90,12 +92,12 @@ def main():
         for enemy in enemies:
             enemy.update(game_surface, camera_x, camera_z, game_map.collision_rects, dt)
 
-        # --- Blit del area de juego en la pantalla principal, desplazada a la derecha por UI_PANEL_WIDTH ---
+        # --- Blit del area de juego en la pantalla principal, desplazada a la derecha por PANEL_WIDTH ---
         screen.fill((0, 0, 0))  # fondo detrás del panel (opcional)
-        screen.blit(game_surface, (configs.UI_PANEL_WIDTH, 0))
+        screen.blit(game_surface, (CONF.ALG_UI.PANEL_WIDTH, 0))
 
         # --- Dibujar UI (panel izquierdo) encima de todo (UI dibuja en coordenadas de pantalla)
-        draw_ui(screen, configs.UI_PANEL_WIDTH, SCREEN_HEIGHT)
+        draw_ui(screen, CONF.ALG_UI.PANEL_WIDTH, SCREEN_HEIGHT)
 
         pygame.display.flip()
 

@@ -2,7 +2,7 @@ import os
 import pygame
 from enum import Enum
 from typing import List, Optional, Tuple
-from utils.resource_path import resource_path
+from utils.resource_path_dir import resource_path_dir
 
 __all__ = ["Animation", "load_animations", "set_animation_state"]
 
@@ -119,7 +119,7 @@ def load_animations(target: str, type: str, states_anims: type[Enum], w_tile: in
     for state in states_anims:
         state_value = state.value
         filename = f"{type}-{state_value}.png"
-        path = resource_path(os.path.join(base, filename))
+        path = resource_path_dir(os.path.join(base, filename))
         if os.path.exists(path):
             img = pygame.image.load(path)
             frame_count = img.get_width() // w_tile

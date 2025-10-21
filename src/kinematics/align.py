@@ -1,6 +1,5 @@
-import utils.configs as configs
-
 from kinematics.kinematic import Kinematic, SteeringOutput
+from configs.package import CONF
 
 class Align:
     """
@@ -43,7 +42,7 @@ class Align:
         """
         Map angle to range [-pi, pi].
         """
-        return (angle + configs.PI) % (2.0 * configs.PI) - configs.PI
+        return (angle + CONF.CONST.PI) % (2.0 * CONF.CONST.PI) - CONF.CONST.PI
 
     def get_steering(self) -> SteeringOutput:
         """

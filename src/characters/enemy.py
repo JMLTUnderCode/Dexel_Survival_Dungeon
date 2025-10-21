@@ -19,7 +19,7 @@ from kinematics.look_where_youre_going import LookWhereYoureGoing
 from kinematics.path_following import FollowPath
 from utils.create_paths import make_circle_path, make_rectangle_path
 from characters.animation import Animation, load_animations, set_animation_state
-import utils.configs as configs
+from configs.package import CONF
 
 class Enemy(Kinematic):
     """
@@ -85,13 +85,13 @@ class Enemy(Kinematic):
         self.max_speed = max_speed
 
         # Instanciar atributos de animación
-        self.state = configs.ENEMY_STATES.MOVE
+        self.state = CONF.ENEMY.ACTIONS.MOVE
         self.animations : dict[str, Animation] = load_animations(
-            configs.ENEMY_FOLDER, 
+            CONF.ENEMY.FOLDER, 
             self.type, 
-            configs.ENEMY_STATES, 
-            configs.ENEMY_TILE_WIDTH, 
-            configs.ENEMY_TILE_HEIGHT,
+            CONF.ENEMY.ACTIONS, 
+            CONF.ENEMY.TILE_WIDTH, 
+            CONF.ENEMY.TILE_HEIGHT,
             frame_duration=0.12,
             scale=1.25
         )
@@ -220,7 +220,7 @@ class Enemy(Kinematic):
 
         # FOLLOW_PATH: build Path (if requested in preset) and FollowPath delegate
         self.follow_path = None
-        if algorithm == configs.ALGORITHM.PATH_FOLLOWING:
+        if algorithm == CONF.ALG.ALGORITHM.PATH_FOLLOWING:
             # build path based on descriptor passed in preset (safe defaults)
             try:
                 if path_type == "circle":
@@ -262,7 +262,7 @@ class Enemy(Kinematic):
         rect = rotated.get_rect(center=(sx, sz))
         surface.blit(rotated, rect)
 
-        if configs.DEVELOPMENT:
+        if CONF.DEV.DEBUG:
             # Mostrar arriba del sprite el algoritmo activo en VERDE, NEGRITA y MAYÚSCULAS
             # Cachear la fuente en la clase para no recrearla cada frame
             if not hasattr(self.__class__, "_dev_font") or self.__class__._dev_font is None:
@@ -314,34 +314,34 @@ class Enemy(Kinematic):
         # Calcular el steering según el algoritmo seleccionado
         steering: Union[SteeringOutput, KinematicSteeringOutput] = SteeringOutput(linear=(0, 0), angular=0)
         match (self.algorithm):
-            case configs.ALGORITHM.SEEK_KINEMATIC:
+            case CONF.ALG.ALGORITHM.SEEK_KINEMATIC:
                 steering = self.kinematic_seek.get_steering()
-            case configs.ALGORITHM.FLEE_KINEMATIC:
+            case CONF.ALG.ALGORITHM.FLEE_KINEMATIC:
                 steering = self.kinematic_flee.get_steering()
-            case configs.ALGORITHM.ARRIVE_KINEMATIC:
+            case CONF.ALG.ALGORITHM.ARRIVE_KINEMATIC:
                 steering = self.kinematic_arrive.get_steering()
-            case configs.ALGORITHM.WANDER_KINEMATIC:
+            case CONF.ALG.ALGORITHM.WANDER_KINEMATIC:
                 steering = self.kinematic_wander.get_steering()
 
-            case configs.ALGORITHM.SEEK_DYNAMIC:
+            case CONF.ALG.ALGORITHM.SEEK_DYNAMIC:
                 steering = self.dynamic_seek.get_steering()
-            case configs.ALGORITHM.FLEE_DYNAMIC:
+            case CONF.ALG.ALGORITHM.FLEE_DYNAMIC:
                 steering = self.dynamic_flee.get_steering()
-            case configs.ALGORITHM.ARRIVE_DYNAMIC:
+            case CONF.ALG.ALGORITHM.ARRIVE_DYNAMIC:
                 steering = self.dynamic_arrive.get_steering()
-            case configs.ALGORITHM.WANDER_DYNAMIC:
+            case CONF.ALG.ALGORITHM.WANDER_DYNAMIC:
                 steering = self.dynamic_wander.get_steering()
-            case configs.ALGORITHM.ALIGN:
+            case CONF.ALG.ALGORITHM.ALIGN:
                 steering = self.align.get_steering()
-            case configs.ALGORITHM.VELOCITY_MATCH:
+            case CONF.ALG.ALGORITHM.VELOCITY_MATCH:
                 steering = self.velocity_match.get_steering()
-            case configs.ALGORITHM.PURSUE:
+            case CONF.ALG.ALGORITHM.PURSUE:
                 steering = self.pursue.get_steering()
-            case configs.ALGORITHM.EVADE:
+            case CONF.ALG.ALGORITHM.EVADE:
                 steering = self.evade.get_steering()
-            case configs.ALGORITHM.FACE:
+            case CONF.ALG.ALGORITHM.FACE:
                 steering = self.face.get_steering()
-            case configs.ALGORITHM.LOOK_WHERE_YOURE_GOING:
+            case CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING:
                 steering_lwyg = self.look_where.get_steering()
                 steering_evade = self.evade.get_steering()
                 # Combinar ambos steerings: usar linear de evade y angular de lwyg
@@ -349,30 +349,30 @@ class Enemy(Kinematic):
                     linear=steering_evade.linear,
                     angular=steering_lwyg.angular
                 )
-            case configs.ALGORITHM.PATH_FOLLOWING:
+            case CONF.ALG.ALGORITHM.PATH_FOLLOWING:
                 steering = self.follow_path.get_steering()
 
         # Aplicar el steering y actualizar la cinemática
         if isinstance(steering, SteeringOutput):
-            if self.algorithm in (configs.ALGORITHM.ALIGN, configs.ALGORITHM.FACE):
-                set_animation_state(self, configs.ENEMY_STATES.ATTACK_WOUNDED)
+            if self.algorithm in (CONF.ALG.ALGORITHM.ALIGN, CONF.ALG.ALGORITHM.FACE):
+                set_animation_state(self, CONF.ENEMY.ACTIONS.ATTACK_WOUNDED)
                 # Align devuelve angular steering; para align la parte linear suele ser (0,0)
                 if steering.angular != 0.0:
                     # aplicar como aceleración angular
                     self.update_by_dynamic(steering, self.max_speed, dt, collision_rects, self.collider_box, self.algorithm)
             else:
                 if steering.linear != (0, 0):
-                    set_animation_state(self, configs.ENEMY_STATES.MOVE)
+                    set_animation_state(self, CONF.ENEMY.ACTIONS.MOVE)
                     self.update_by_dynamic(steering, self.max_speed, dt, collision_rects, self.collider_box, self.algorithm)
                 else:
-                    set_animation_state(self, configs.ENEMY_STATES.ATTACK)
+                    set_animation_state(self, CONF.ENEMY.ACTIONS.ATTACK)
 
         elif isinstance(steering, KinematicSteeringOutput):
             if steering.velocity != (0, 0):
-                set_animation_state(self, configs.ENEMY_STATES.MOVE)
+                set_animation_state(self, CONF.ENEMY.ACTIONS.MOVE)
                 self.update_by_kinematic(steering, dt, collision_rects, self.collider_box, self.algorithm)
             else:
-                set_animation_state(self, configs.ENEMY_STATES.ATTACK)
+                set_animation_state(self, CONF.ENEMY.ACTIONS.ATTACK)
 
         self.current_animation.update(dt)      # Actualizar animación
         self.draw(surface, camera_x, camera_z) # Dibujar enemigo
