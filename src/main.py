@@ -27,7 +27,7 @@ clock = pygame.time.Clock()
 
 # --- Cargar el mapa ---
 #game_map = Map("map.tmx") # Principal
-game_map = Map("presentacion-1.tmx") # Presentacion 1
+game_map = Map("map.tmx") # Presentacion 1
 
 # --- Inicializar UI ---
 init_ui_fonts()
