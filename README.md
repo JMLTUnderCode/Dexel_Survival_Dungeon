@@ -48,6 +48,13 @@ Un intenso roguelike en 2D pixel donde la supervivencia depende de tu estrategia
 git clone https://github.com/tuusuario/dexel-survival-dungeon.git
 cd dexel-survival-dungeon
 
+# Activar environment
+source env/bin/activate # Linux/MacOS
+source env/Scripts/activate # Windows
+
+# De no tener environment, crear uno
+python -m venv env
+
 # Instalar dependencias
 pip install -r requirements.txt
 
@@ -55,7 +62,8 @@ pip install -r requirements.txt
 python src/main.py
 
 # Mediante el script directo
-./game
+./game # Linux/MacOS
+./play.sh # Windows
 ```
 
 ### **Descargar ejecutable**
