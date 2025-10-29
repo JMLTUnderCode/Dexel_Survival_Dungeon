@@ -3,15 +3,26 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "maps/presentacion-1.tmx",
+    "activeFile": "maps/Dungeon_Tileset.tsx",
     "expandedProjectPaths": [
-        ".",
-        "maps"
+        "maps",
+        "."
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
         "": {
             "scaleInEditor": 1
+        },
+        "C:/Users/junio/Desktop/mapa/Bienenkorb.tsx": {
+            "scaleInDock": 1
+        },
+        "C:/Users/junio/Desktop/mapa/mapa.tmx": {
+            "scale": 0.4787109375,
+            "selectedLayer": 0,
+            "viewCenter": {
+                "x": 1001.6483068135457,
+                "y": 567.1481028151775
+            }
         },
         "Dungeon_Tileset.tsx": {
             "scaleInDock": 2,
@@ -33,11 +44,11 @@
             "scaleInEditor": 3
         },
         "maps/map.tmx": {
-            "scale": 1.5,
-            "selectedLayer": 0,
+            "scale": 1,
+            "selectedLayer": 1,
             "viewCenter": {
-                "x": 319.3333333333333,
-                "y": 198.33333333333337
+                "x": 746.5,
+                "y": 567.5
             }
         },
         "maps/map.tmx#Dungeon_Tileset": {
@@ -48,8 +59,8 @@
             "scale": 1,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 475,
-                "y": 626.5
+                "x": 714.5,
+                "y": 568.5
             }
         }
     },
@@ -71,8 +82,9 @@
     "property.type": "object",
     "recentFiles": [
         "maps/map.tmx",
-        "maps/Dungeon_Tileset.tsx",
         "maps/presentacion-1.tmx",
+        "maps/Dungeon_Tileset.tsx",
+        "C:/Users/junio/Desktop/mapa/mapa.tmx",
         "Dungeon_Tileset.tsx",
         "map.tmx"
     ],
