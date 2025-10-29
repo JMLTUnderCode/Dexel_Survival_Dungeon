@@ -26,8 +26,7 @@ pygame.display.set_caption(CONF.MAIN_WIN.GAME_TITLE)
 clock = pygame.time.Clock()
 
 # --- Cargar el mapa ---
-#game_map = Map("map.tmx") # Principal
-game_map = Map("map.tmx") # Presentacion 1
+game_map = Map(CONF.MAP.LEVELS[1])
 
 # --- Inicializar UI ---
 init_ui_fonts()

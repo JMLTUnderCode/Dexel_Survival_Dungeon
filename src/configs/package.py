@@ -4,6 +4,7 @@ from . import development as DEV
 from . import constants as CONST
 from . import player as PLAYER
 from . import enemy as ENEMY
+from . import map as MAP
 from . import algorithms as ALG
 from . import algorithms_ui as ALG_UI
 
@@ -45,6 +46,10 @@ class EnemyConfig:
     ACTIONS: ENEMY.ACTIONS = ENEMY.ACTIONS
 
 @dataclass
+class MapConfig:
+    LEVELS: dict = field(default_factory=lambda: dict(MAP.LEVELS))
+
+@dataclass
 class AlgorithmConfig:
     ALGORITHM: ALG.ALGORITHM = ALG.ALGORITHM
 
@@ -71,6 +76,7 @@ class Config:
     CONST: ConstantsConfig
     PLAYER: PlayerConfig
     ENEMY: EnemyConfig
+    MAP: MapConfig
     ALG: AlgorithmConfig
     ALG_UI: AlgorithmUIConfig
 
@@ -80,6 +86,7 @@ class Config:
         self.CONST = ConstantsConfig()
         self.PLAYER = PlayerConfig()
         self.ENEMY = EnemyConfig()
+        self.MAP = MapConfig()
         self.ALG = AlgorithmConfig()
         self.ALG_UI = AlgorithmUIConfig()
 
