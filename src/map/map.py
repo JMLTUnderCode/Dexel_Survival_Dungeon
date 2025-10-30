@@ -7,22 +7,40 @@ from configs.package import CONF
 class Map:
     """
     Clase que representa el mapa del juego cargado desde un archivo TMX.
-    Atributos:
-        tmx_data: datos del mapa cargados con pytmx
-        width: ancho del mapa en píxeles (ya escalado)
-        height: alto del mapa en píxeles (ya escalado)
-        collision_rects: lista de pygame.Rect que representan las áreas de colisión
+    * Atributos:
+        * tmx_data: datos del mapa cargados con pytmx
+        * width: ancho del mapa en píxeles (ya escalado)
+        * height: alto del mapa en píxeles (ya escalado)
+        * collision_rects: lista de pygame.Rect que representan las áreas de colisión
+        * level: nivel actual del mapa
+    * Métodos:
+        * load(level): carga el mapa TMX y procesa colisionadores
+        * next_level(): carga el siguiente nivel del mapa
+        * draw(screen, camera_x, camera_z, camera_width, camera_height): dibuja el mapa en la pantalla
+        * draw_collision_rects(screen, camera_x, camera_z, camera_width, camera_height): dibuja los rectángulos de colisión para depuración
     """
-    def __init__(self, tmx_file):
-        # --- Cargar el mapa TMX usando pytmx ---
-        tmx_path = resource_path_dir(os.path.join("assets", "maps", tmx_file))  # Ruta al archivo TMX del mapa
-        # Carga el mapa de Tiled (formato TMX) y lo adapta para usar con pygame
-        # tmx_data contiene todas las capas, tiles y objetos del mapa
-        # Es importante que el archivo .tmx y los tilesets estén en la ruta correcta
-        # pytmx permite acceder a las capas, tiles y propiedades del mapa fácilmente
-        # Ejemplo: tmx_data.width, tmx_data.height, tmx_data.visible_layers
-        # Cada tile es una Surface de pygame
-        # El mapa puede tener varias capas (background, colisiones, decoraciones, etc)
+    def __init__(self, level: int):
+        self.tmx_data = None
+        self.width = 0
+        self.height = 0
+        self.collision_rects = []
+        self.level = level
+
+        self.load(level)
+
+    def load(self, level: int):
+        """
+        Carga el mapa TMX correspondiente al nivel dado y procesa los colisionadores.
+        Resetea la lista de rectángulos de colisión antes de cargar el nuevo mapa.
+        Además, actualiza los atributos width y height del mapa.
+        * Atributos:
+            * level: nivel del mapa a cargar
+        * [IMPORTANTE] Para la carga de colisionadores, se asume que existe una capa llamada "walls" en el TMX.
+        """
+        # --- Se crea la ruta al archivo TMX ---
+        tmx_path = resource_path_dir(os.path.join("assets", "maps", CONF.MAP.LEVELS[level]))
+        
+        # --- Cargar datos del mapa TMX ---
         self.tmx_data = load_pygame(tmx_path)
 
         # --- Calcular el tamaño del mapa en píxeles (ya escalado) ---
@@ -39,10 +57,8 @@ class Map:
         if walls_layer is None:
             raise Exception("No se encontró la capa 'walls' en el mapa.")
 
-        # Inicializa la lista de rectángulos de colisión
-        self.collision_rects = []
-
         # Obtiene todos los colisionadores definidos en el tileset (como objectgroup en Tiled)
+        self.collision_rects = []
         colliders_gen = self.tmx_data.get_tile_colliders()
         colliders_list = list(colliders_gen)
 
@@ -65,12 +81,34 @@ class Map:
                                     int(obj.height * CONF.MAIN_WIN.ZOOM)
                                 )
                                 self.collision_rects.append(rect)
-        print(f"[Map] Cargado mapa '{tmx_file}' con {len(self.collision_rects)} colisionadores.")
+        if CONF.DEV.DEBUG:
+            print(f"[Map] Mapa cargado: '{CONF.MAP.LEVELS[level]}'")
+            print(f"[Map] Nivel actual: {self.level}.")
+            print(f"[Map] Tamaño del tile: {CONF.MAIN_WIN.RENDER_TILE_SIZE}x{CONF.MAIN_WIN.RENDER_TILE_SIZE} píxeles.")
+            print(f"[Map] Tamaño del mapa en tiles: {self.tmx_data.width}x{self.tmx_data.height} tiles.")
+            print(f"[Map] Tamaño del mapa en píxeles: {self.width}x{self.height} píxeles.")
+            print(f"[Map] Número de capas en el mapa: {len(self.tmx_data.layers)}.")
+            print(f"[Map] Número de colisionadores: {len(self.collision_rects)}.")
+
+    def next_level(self) -> None:
+        """
+        Carga el siguiente nivel del mapa.
+        """
+        if self.level + 1 in CONF.MAP.LEVELS:
+            self.level += 1
+            self.load(self.level)
+
 
     def draw(self, screen: pygame.Surface, camera_x: int, camera_z: int, camera_width: int, camera_height: int):
         """
         Dibuja todas las capas visibles del mapa en la superficie 'screen',
         ajustando la posición según la cámara (camera_x, camera_z).
+        * Atributos:
+            * screen: superficie de Pygame donde se dibuja el mapa
+            * camera_x: posición X de la cámara (esquina superior izquierda)
+            * camera_z: posición Z de la cámara (esquina superior izquierda)
+            * camera_width: ancho del área visible de la cámara
+            * camera_height: alto del área visible de la cámara
         """
         # Itera sobre todas las capas visibles del mapa
         for layer in self.tmx_data.visible_layers:
@@ -87,7 +125,7 @@ class Map:
                     # Si hay imagen de tile, calcular su posición en pantalla
                     if tile_img:
                         sx = x * CONF.MAIN_WIN.RENDER_TILE_SIZE - camera_x  # Posición X en pantalla (ajustada por la cámara)
-                        sz = z * CONF.MAIN_WIN.RENDER_TILE_SIZE - camera_z  # Posición Y en pantalla (ajustada por la cámara)
+                        sz = z * CONF.MAIN_WIN.RENDER_TILE_SIZE - camera_z  # Posición Z en pantalla (ajustada por la cámara)
                         # Solo dibuja el tile si está dentro de la cámara/ventana
                         if -CONF.MAIN_WIN.RENDER_TILE_SIZE < sx < camera_width and -CONF.MAIN_WIN.RENDER_TILE_SIZE < sz < camera_height:
                             screen.blit(tile_img, (sx, sz))
@@ -99,6 +137,12 @@ class Map:
         """
         Dibuja los rectángulos de colisión en la pantalla para depuración.
         Los rectángulos se dibujan en rojo semi-transparente.
+        * Atributos:
+            * screen: superficie de Pygame donde se dibujan los rectángulos
+            * camera_x: posición X de la cámara (esquina superior izquierda)
+            * camera_z: posición Z de la cámara (esquina superior izquierda)
+            * camera_width: ancho del área visible de la cámara
+            * camera_height: alto del área visible de la cámara
         """
         collider_surface = pygame.Surface((CONF.MAIN_WIN.RENDER_TILE_SIZE, CONF.MAIN_WIN.RENDER_TILE_SIZE), pygame.SRCALPHA)
         collider_surface.fill((255, 0, 0, 100))  # Rojo semi-transparente
