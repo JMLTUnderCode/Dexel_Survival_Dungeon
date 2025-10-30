@@ -647,11 +647,19 @@ enemy_wander_dynamic = [
     },
 ]
 
-path_circle = {
-    "type": "circle",
-    "params": {"radius": 300.0, "segments": 48, "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 30, CONF.MAIN_WIN.RENDER_TILE_SIZE * 30)},
-    "offset": 2,
+PATH_CONFIGS = {
+    "circle" : {
+        "type": "circle",
+        "params": {"radius": 300.0, "segments": 48, "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 30, CONF.MAIN_WIN.RENDER_TILE_SIZE * 30)},
+        "offset": 2,
+    },
+    "rectangle" : {
+        "type": "rectangle",
+        "params": {"width": 700.0, "height": 700.0, "segments": 70, "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 30, CONF.MAIN_WIN.RENDER_TILE_SIZE * 30)},
+        "offset": 3,
+    },
 }
+
 enemy_follow_path_circle = [
     {
         "type": "gargant-berserker",
@@ -666,9 +674,9 @@ enemy_follow_path_circle = [
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": path_circle["type"],
-        "path_params": path_circle["params"],
-        "path_offset": path_circle["offset"],
+        "path_type": PATH_CONFIGS["circle"]["type"],
+        "path_params": PATH_CONFIGS["circle"]["params"],
+        "path_offset": PATH_CONFIGS["circle"]["offset"],
     },
     {
         "type": "gargant-berserker",
@@ -683,9 +691,9 @@ enemy_follow_path_circle = [
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": path_circle["type"],
-        "path_params": path_circle["params"],
-        "path_offset": path_circle["offset"],
+        "path_type": PATH_CONFIGS["circle"]["type"],
+        "path_params": PATH_CONFIGS["circle"]["params"],
+        "path_offset": PATH_CONFIGS["circle"]["offset"],
     },
     {
         "type": "gargant-berserker",
@@ -700,9 +708,9 @@ enemy_follow_path_circle = [
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": path_circle["type"],
-        "path_params": path_circle["params"],
-        "path_offset": path_circle["offset"],
+        "path_type": PATH_CONFIGS["circle"]["type"],
+        "path_params": PATH_CONFIGS["circle"]["params"],
+        "path_offset": PATH_CONFIGS["circle"]["offset"],
     },
     {
         "type": "gargant-berserker",
@@ -717,9 +725,9 @@ enemy_follow_path_circle = [
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": path_circle["type"],
-        "path_params": path_circle["params"],
-        "path_offset": path_circle["offset"],
+        "path_type": PATH_CONFIGS["circle"]["type"],
+        "path_params": PATH_CONFIGS["circle"]["params"],
+        "path_offset": PATH_CONFIGS["circle"]["offset"],
     },
     {
         "type": "gargant-berserker",
@@ -734,17 +742,12 @@ enemy_follow_path_circle = [
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": path_circle["type"],
-        "path_params": path_circle["params"],
-        "path_offset": path_circle["offset"],
+        "path_type": PATH_CONFIGS["circle"]["type"],
+        "path_params": PATH_CONFIGS["circle"]["params"],
+        "path_offset": PATH_CONFIGS["circle"]["offset"],
     },
 ]
 
-path_rect = {
-    "type": "rectangle",
-    "params": {"width": 700.0, "height": 700.0, "segments": 70, "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 30, CONF.MAIN_WIN.RENDER_TILE_SIZE * 30)},
-    "offset": 3,
-}
 enemy_follow_path_rect = [
     {
         "type": "gargant-lord",
@@ -759,9 +762,9 @@ enemy_follow_path_rect = [
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": path_rect["type"],
-        "path_params": path_rect["params"],
-        "path_offset": path_rect["offset"],
+        "path_type": PATH_CONFIGS["rectangle"]["type"],
+        "path_params": PATH_CONFIGS["rectangle"]["params"],
+        "path_offset": PATH_CONFIGS["rectangle"]["offset"],
     },
     {
         "type": "gargant-lord",
@@ -776,9 +779,9 @@ enemy_follow_path_rect = [
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": path_rect["type"],
-        "path_params": path_rect["params"],
-        "path_offset": path_rect["offset"],
+        "path_type": PATH_CONFIGS["rectangle"]["type"],
+        "path_params": PATH_CONFIGS["rectangle"]["params"],
+        "path_offset": PATH_CONFIGS["rectangle"]["offset"],
     },
     {
         "type": "gargant-lord",
@@ -793,9 +796,9 @@ enemy_follow_path_rect = [
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": path_rect["type"],
-        "path_params": path_rect["params"],
-        "path_offset": path_rect["offset"],
+        "path_type": PATH_CONFIGS["rectangle"]["type"],
+        "path_params": PATH_CONFIGS["rectangle"]["params"],
+        "path_offset": PATH_CONFIGS["rectangle"]["offset"],
     },
     {
         "type": "gargant-lord",
@@ -810,9 +813,9 @@ enemy_follow_path_rect = [
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": path_rect["type"],
-        "path_params": path_rect["params"],
-        "path_offset": path_rect["offset"],
+        "path_type": PATH_CONFIGS["rectangle"]["type"],
+        "path_params": PATH_CONFIGS["rectangle"]["params"],
+        "path_offset": PATH_CONFIGS["rectangle"]["offset"],
     },
     {
         "type": "gargant-lord",
@@ -827,9 +830,9 @@ enemy_follow_path_rect = [
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": path_rect["type"],
-        "path_params": path_rect["params"],
-        "path_offset": path_rect["offset"],
+        "path_type": PATH_CONFIGS["rectangle"]["type"],
+        "path_params": PATH_CONFIGS["rectangle"]["params"],
+        "path_offset": PATH_CONFIGS["rectangle"]["offset"],
     },
     {
         "type": "gargant-lord",
@@ -844,9 +847,9 @@ enemy_follow_path_rect = [
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": path_rect["type"],
-        "path_params": path_rect["params"],
-        "path_offset": path_rect["offset"],
+        "path_type": PATH_CONFIGS["rectangle"]["type"],
+        "path_params": PATH_CONFIGS["rectangle"]["params"],
+        "path_offset": PATH_CONFIGS["rectangle"]["offset"],
     },
 ]
 
@@ -869,25 +872,28 @@ enemy_all = [
     enemy_follow_path_rect[0],
 ]
 
-path_rect = {
-    "type": "rectangle",
-    "params": {
-        "width": 500.0, 
-        "height": 340.0, 
-        "segments": 30, 
-        "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 10 + CONF.MAIN_WIN.RENDER_TILE_SIZE // 2, 
-                   CONF.MAIN_WIN.RENDER_TILE_SIZE * 7 + CONF.MAIN_WIN.RENDER_TILE_SIZE // 2)},
-    "offset": 3,
+paths_1_group = {
+    "zone 1" : {
+        "type": "circle",
+        "params": {
+            "radius": 240, 
+            "segments": 35, 
+            "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 14 + CONF.MAIN_WIN.RENDER_TILE_SIZE // 2, 
+                       CONF.MAIN_WIN.RENDER_TILE_SIZE * 49 + CONF.MAIN_WIN.RENDER_TILE_SIZE // 2)},
+        "offset": 2,
+    },
+    "zone 2" : {
+        "type": "rectangle",
+        "params": {
+            "width": 500.0, 
+            "height": 340.0, 
+            "segments": 30, 
+            "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 10 + CONF.MAIN_WIN.RENDER_TILE_SIZE // 2, 
+                       CONF.MAIN_WIN.RENDER_TILE_SIZE * 7 + CONF.MAIN_WIN.RENDER_TILE_SIZE // 2)},
+        "offset": 3,
+    }
 }
-path_circle = {
-    "type": "circle",
-    "params": {
-        "radius": 240, 
-        "segments": 35, 
-        "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 14 + CONF.MAIN_WIN.RENDER_TILE_SIZE // 2, 
-                   CONF.MAIN_WIN.RENDER_TILE_SIZE * 49 + CONF.MAIN_WIN.RENDER_TILE_SIZE // 2)},
-    "offset": 2,
-}
+
 map_1_group = [
     {
         "type": "gargant-soldier",
@@ -904,23 +910,6 @@ map_1_group = [
         "max_prediction": 0.5,
     },
     {
-        "type": "gargant-berserker",
-        "position": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 10, CONF.MAIN_WIN.RENDER_TILE_SIZE * 7),
-        "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
-        "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
-        "max_speed": 120.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
-        "time_to_target": 0.15,
-        "max_acceleration": 200.0,
-        "max_rotation": 2.0,
-        "max_angular_accel": 4.0,
-        "max_prediction": 0.5,
-        "path_type": path_rect["type"],
-        "path_params": path_rect["params"],
-        "path_offset": path_rect["offset"],
-    },
-    {
         "type": "gargant-lord",
         "position": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 28, CONF.MAIN_WIN.RENDER_TILE_SIZE * 49),
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
@@ -933,9 +922,26 @@ map_1_group = [
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": path_circle["type"],
-        "path_params": path_circle["params"],
-        "path_offset": path_circle["offset"],
+        "path_type": paths_1_group["zone 1"]["type"],
+        "path_params": paths_1_group["zone 1"]["params"],
+        "path_offset": paths_1_group["zone 1"]["offset"],
+    },
+    {
+        "type": "gargant-berserker",
+        "position": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 10, CONF.MAIN_WIN.RENDER_TILE_SIZE * 7),
+        "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
+        "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
+        "max_speed": 120.0,
+        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "time_to_target": 0.15,
+        "max_acceleration": 200.0,
+        "max_rotation": 2.0,
+        "max_angular_accel": 4.0,
+        "max_prediction": 0.5,
+        "path_type": paths_1_group["zone 2"]["type"],
+        "path_params": paths_1_group["zone 2"]["params"],
+        "path_offset": paths_1_group["zone 2"]["offset"],
     },
 ]
 
