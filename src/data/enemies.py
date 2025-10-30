@@ -869,6 +869,77 @@ enemy_all = [
     enemy_follow_path_rect[0],
 ]
 
+path_rect = {
+    "type": "rectangle",
+    "params": {
+        "width": 500.0, 
+        "height": 340.0, 
+        "segments": 30, 
+        "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 10 + CONF.MAIN_WIN.RENDER_TILE_SIZE // 2, 
+                   CONF.MAIN_WIN.RENDER_TILE_SIZE * 7 + CONF.MAIN_WIN.RENDER_TILE_SIZE // 2)},
+    "offset": 3,
+}
+path_circle = {
+    "type": "circle",
+    "params": {
+        "radius": 240, 
+        "segments": 35, 
+        "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 14 + CONF.MAIN_WIN.RENDER_TILE_SIZE // 2, 
+                   CONF.MAIN_WIN.RENDER_TILE_SIZE * 49 + CONF.MAIN_WIN.RENDER_TILE_SIZE // 2)},
+    "offset": 2,
+}
+map_1_group = [
+    {
+        "type": "gargant-soldier",
+        "position": (CONF.MAIN_WIN.RENDER_TILE_SIZE*3, CONF.MAIN_WIN.RENDER_TILE_SIZE*16),
+        "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
+        "algorithm": CONF.ALG.ALGORITHM.PURSUE,
+        "max_speed": 200.0,
+        "target_radius": 40.0,
+        "slow_radius": 180.0,
+        "time_to_target": 0.15,
+        "max_acceleration": 300.0,
+        "max_rotation": 1.0,
+        "max_angular_accel": 1.0,
+        "max_prediction": 0.5,
+    },
+    {
+        "type": "gargant-berserker",
+        "position": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 10, CONF.MAIN_WIN.RENDER_TILE_SIZE * 7),
+        "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
+        "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
+        "max_speed": 120.0,
+        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "time_to_target": 0.15,
+        "max_acceleration": 200.0,
+        "max_rotation": 2.0,
+        "max_angular_accel": 4.0,
+        "max_prediction": 0.5,
+        "path_type": path_rect["type"],
+        "path_params": path_rect["params"],
+        "path_offset": path_rect["offset"],
+    },
+    {
+        "type": "gargant-lord",
+        "position": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 28, CONF.MAIN_WIN.RENDER_TILE_SIZE * 49),
+        "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
+        "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
+        "max_speed": 100.0,
+        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "time_to_target": 0.15,
+        "max_acceleration": 200.0,
+        "max_rotation": 2.0,
+        "max_angular_accel": 4.0,
+        "max_prediction": 0.5,
+        "path_type": path_circle["type"],
+        "path_params": path_circle["params"],
+        "path_offset": path_circle["offset"],
+    },
+]
+
+
 list_of_enemies_data = {
     CONF.ALG.ALGORITHM.SEEK_KINEMATIC: enemy_seek_kinematic,
     CONF.ALG.ALGORITHM.FLEE_KINEMATIC: enemy_flee_kinematic,
@@ -887,4 +958,5 @@ list_of_enemies_data = {
     CONF.ALG.ALGORITHM.PATH_FOLLOWING: enemy_follow_path_circle + enemy_follow_path_rect,
     "ALL": enemy_all,
     "NOTHING": [],
+    CONF.MAP.LEVELS[1]: map_1_group,
 }
