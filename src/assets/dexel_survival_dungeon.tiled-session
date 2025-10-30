@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "maps/Dungeon_Tileset.tsx",
+    "activeFile": "",
     "expandedProjectPaths": [
         "maps",
         "."
@@ -11,6 +11,7 @@
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
         "": {
+            "scaleInDock": 1.5,
             "scaleInEditor": 1
         },
         "C:/Users/junio/Desktop/mapa/Bienenkorb.tsx": {
@@ -43,6 +44,18 @@
             "scaleInDock": 2,
             "scaleInEditor": 3
         },
+        "maps/level_1.tmx": {
+            "scale": 0.75,
+            "selectedLayer": 1,
+            "viewCenter": {
+                "x": 541.9999999999999,
+                "y": 483.33333333333326
+            }
+        },
+        "maps/level_1.tmx#Dungeon_Tileset": {
+            "scaleInDock": 2,
+            "scaleInEditor": 4
+        },
         "maps/map.tmx": {
             "scale": 1,
             "selectedLayer": 1,
@@ -59,12 +72,13 @@
             "scale": 1,
             "selectedLayer": 2,
             "viewCenter": {
-                "x": 714.5,
-                "y": 568.5
+                "x": 479.5,
+                "y": 479.5
             }
         }
     },
     "frame.defaultDuration": 1000,
+    "last.externalTilesetPath": "//wsl.localhost/Ubuntu/home/jmltundercode/Dexel_Survival_Dungeon/src/assets/maps",
     "last.imagePath": "//wsl.localhost/Ubuntu/home/jmltundercode/Dexel_Survival_Dungeon/src/assets/maps",
     "last.objectTemplatePath": "//wsl.localhost/Ubuntu/home/jmltundercode/Dexel_Survival_Dungeon/src/assets/maps",
     "map.height": 60,
@@ -74,20 +88,20 @@
     "map.tileWidth": 16,
     "map.width": 60,
     "openFiles": [
-        "maps/map.tmx",
-        "maps/presentacion-1.tmx",
-        "maps/Dungeon_Tileset.tsx"
+        "maps/level_1.tmx"
     ],
     "project": "dexel_survival_dungeon.tiled-project",
     "property.type": "object",
     "recentFiles": [
-        "maps/map.tmx",
-        "maps/presentacion-1.tmx",
+        "maps/level_1.tmx",
         "maps/Dungeon_Tileset.tsx",
+        "maps/presentacion-1.tmx",
+        "maps/map.tmx",
         "C:/Users/junio/Desktop/mapa/mapa.tmx",
         "Dungeon_Tileset.tsx",
         "map.tmx"
     ],
+    "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)",
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {
         "height": 16,
