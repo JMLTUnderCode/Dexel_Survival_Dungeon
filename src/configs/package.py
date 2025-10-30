@@ -55,6 +55,7 @@ class AlgorithmConfig:
 
 @dataclass
 class AlgorithmUIConfig:
+    ACTIVE: bool = ALG_UI.ACTIVE
     PANEL_WIDTH: int = ALG_UI.PANEL_WIDTH
     PADDING: int = ALG_UI.PADDING
     BUTTON_HEIGHT: int = ALG_UI.BUTTON_HEIGHT

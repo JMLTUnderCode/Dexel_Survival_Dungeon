@@ -14,7 +14,8 @@ display_info = pygame.display.Info()
 # --- Calcular tamaños de pantalla y cámara ---
 SCREEN_WIDTH = display_info.current_w - CONF.MAIN_WIN.SCREEN_OFF_SET
 SCREEN_HEIGHT = display_info.current_h - CONF.MAIN_WIN.SCREEN_OFF_SET
-CAMERA_WIDTH = max(320, SCREEN_WIDTH - CONF.ALG_UI.PANEL_WIDTH)
+# Ancho del área de juego depende de si la UI está activa
+CAMERA_WIDTH = max(320, SCREEN_WIDTH - CONF.ALG_UI.PANEL_WIDTH if CONF.ALG_UI.ACTIVE else SCREEN_WIDTH)
 CAMERA_HEIGHT = max(240, SCREEN_HEIGHT)
 
 # --- Crear ventana usando el tamaño total (panel + juego) y la surface de juego ---
@@ -33,14 +34,17 @@ def main():
     # --- Cargar el mapa ---
     game_map = Map(level=1)
 
-    # --- Inicializar UI ---
-    init_ui_fonts()
-    build_ui_buttons()
+    # --- Inicializar ALGORITHM UI ---
+    if CONF.ALG_UI.ACTIVE:
+        init_ui_fonts()
+        build_ui_buttons()
 
     # --- Inicializar jugador y enemigos ---
     player = create_player()
-    enemies = create_enemies(algorithm=CONF.ALG_UI.SELECTED_ALGORITHM, target=player)
-
+    # El grupo de enemigos depende de si la UI está activa
+    initial_algorithm = CONF.ALG_UI.SELECTED_ALGORITHM if CONF.ALG_UI.ACTIVE else CONF.MAP.LEVELS[game_map.level]
+    enemies = create_enemies(algorithm=initial_algorithm, target=player)
+    
     running = True
     while running:
         dt = clock.tick(CONF.MAIN_WIN.FPS) / 1000.0  # segundos
@@ -50,7 +54,10 @@ def main():
             if event.type == pygame.QUIT:
                 running = False
 
-            player, enemies, changed = handle_ui_event(event, player, enemies)
+            changed = False
+            if CONF.ALG_UI.ACTIVE:
+                player, enemies, changed = handle_ui_event(event, player, enemies)
+
             if not changed:
                 # Si el evento es del mouse y está dentro del área de juego, ajustar la posición X para que
                 # sea relativa al game_surface antes de pasarlo a player.handle_event
@@ -95,10 +102,12 @@ def main():
 
         # --- Blit del area de juego en la pantalla principal, desplazada a la derecha por PANEL_WIDTH ---
         screen.fill((0, 0, 0))  # fondo detrás del panel (opcional)
-        screen.blit(game_surface, (CONF.ALG_UI.PANEL_WIDTH, 0))
+        blit_position = (CONF.ALG_UI.PANEL_WIDTH if CONF.ALG_UI.ACTIVE else 0, 0)
+        screen.blit(game_surface, blit_position)
 
         # --- Dibujar UI (panel izquierdo) encima de todo (UI dibuja en coordenadas de pantalla)
-        draw_ui(screen, CONF.ALG_UI.PANEL_WIDTH, SCREEN_HEIGHT)
+        if CONF.ALG_UI.ACTIVE:
+            draw_ui(screen, CONF.ALG_UI.PANEL_WIDTH, SCREEN_HEIGHT)
 
         pygame.display.flip()
 
