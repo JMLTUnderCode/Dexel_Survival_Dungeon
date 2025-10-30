@@ -25,20 +25,22 @@ pygame.display.set_caption(CONF.MAIN_WIN.GAME_TITLE)
 # --- Reloj para controlar el framerate ---
 clock = pygame.time.Clock()
 
-# --- Cargar el mapa ---
-game_map = Map(CONF.MAP.LEVELS[1])
-
-# --- Inicializar UI ---
-init_ui_fonts()
-build_ui_buttons()
-
-# --- Inicializar jugador y enemigos ---
-player = create_player()
-CONF.ALG_UI.SELECTED_ALGORITHM = "NOTHING"
-enemies = create_enemies(algorithm=CONF.ALG_UI.SELECTED_ALGORITHM, target=player)
-
 def main():
-    global player, enemies
+    if CONF.DEV.DEBUG:
+        print("\n ******** DEVELOPMENT MODE ACTIVE ******** ")
+        print(f"[Main] Juego iniciado en resolución {SCREEN_WIDTH}x{SCREEN_HEIGHT}.")
+
+    # --- Cargar el mapa ---
+    game_map = Map(level=1)
+
+    # --- Inicializar UI ---
+    init_ui_fonts()
+    build_ui_buttons()
+
+    # --- Inicializar jugador y enemigos ---
+    player = create_player()
+    enemies = create_enemies(algorithm=CONF.ALG_UI.SELECTED_ALGORITHM, target=player)
+
     running = True
     while running:
         dt = clock.tick(CONF.MAIN_WIN.FPS) / 1000.0  # segundos
