@@ -188,3 +188,7 @@ class Kinematic:
         if velocity == (0, 0):
             return current_orientation
         return math.atan2(velocity[1], velocity[0])
+    
+    def get_pos(self) -> tuple[float, float]:
+        """Devuelve la posición actual del objeto como una tupla (x, z)."""
+        return self.position

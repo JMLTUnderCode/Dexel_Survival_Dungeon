@@ -306,7 +306,7 @@ class Enemy(Kinematic):
         )
         pygame.draw.rect(surface, (0, 255, 0), enemy_box, 1)  # Verde, grosor 1
 
-    def update(self, surface: pygame.Surface, camera_x: float, camera_z: float, collision_rects: list[pygame.Rect], dt: float):
+    def update(self, collision_rects: list[pygame.Rect], dt: float):
         """
         Actualiza la posición, velocidad y orientación del enemigo para perseguir al jugador.
         Utiliza el algoritmo de movimiento especificado en "algorithm" para calcular el steering adecuado.
@@ -375,4 +375,3 @@ class Enemy(Kinematic):
                 set_animation_state(self, CONF.ENEMY.ACTIONS.ATTACK)
 
         self.current_animation.update(dt)      # Actualizar animación
-        self.draw(surface, camera_x, camera_z) # Dibujar enemigo

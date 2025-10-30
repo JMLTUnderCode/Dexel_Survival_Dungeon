@@ -44,9 +44,6 @@ class Player(Kinematic):
         self.current_animation : Animation = self.animations[self.state]
         self.collider_box = collider_box
 
-    def get_pos(self):
-        return self.position
-
     def handle_event(self, event: pygame.event.Event) -> None:
         """
         Maneja eventos puntuales como clics de mouse para ataques.
@@ -169,14 +166,11 @@ class Player(Kinematic):
         )
         pygame.draw.rect(surface, (0, 255, 0), player_box, 1)  # Verde, grosor 1
 
-    def update(self, surface: pygame.Surface, camera_x: float, camera_z: float, collision_rects: list[pygame.Rect], dt: float):
+    def update(self, collision_rects: list[pygame.Rect], dt: float):
         """
-        Actualiza el jugador: maneja entrada, cinemática, animación y ataques.
+        Actualiza el jugador: cinemática, animación y ataques.
         Debe llamarse cada frame después de manejar la entrada.
         """
-        # Manejar entrada para actualizar el steering
-        self.handle_input(camera_x, camera_z, dt)
-
         # Actualizar cinemática
         self.update_by_dynamic(self._pending_steering, self.max_speed, dt, collision_rects, self.collider_box, "PLAYER")
 
@@ -187,5 +181,3 @@ class Player(Kinematic):
         for wave in self.attack_waves:
             wave.update()
         self.attack_waves = [w for w in self.attack_waves if w.alive]
-
-        self.draw(surface, camera_x, camera_z)
