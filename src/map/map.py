@@ -8,27 +8,27 @@ class Map:
     """
     Clase que representa el mapa del juego cargado desde un archivo TMX.
     * Atributos:
+        * level: nivel actual del mapa
         * tmx_data: datos del mapa cargados con pytmx
         * width: ancho del mapa en píxeles (ya escalado)
         * height: alto del mapa en píxeles (ya escalado)
         * collision_rects: lista de pygame.Rect que representan las áreas de colisión
-        * level: nivel actual del mapa
     * Métodos:
         * load(level): carga el mapa TMX y procesa colisionadores
         * next_level(): carga el siguiente nivel del mapa
         * draw(screen, camera_x, camera_z, camera_width, camera_height): dibuja el mapa en la pantalla
         * draw_collision_rects(screen, camera_x, camera_z, camera_width, camera_height): dibuja los rectángulos de colisión para depuración
     """
-    def __init__(self, level: int):
+    def __init__(self, level: int) -> None:
+        self.level = level
         self.tmx_data = None
         self.width = 0
         self.height = 0
         self.collision_rects = []
-        self.level = level
 
-        self.load(level)
+        self.load()
 
-    def load(self, level: int):
+    def load(self) -> None:
         """
         Carga el mapa TMX correspondiente al nivel dado y procesa los colisionadores.
         Resetea la lista de rectángulos de colisión antes de cargar el nuevo mapa.
@@ -38,7 +38,7 @@ class Map:
         * [IMPORTANTE] Para la carga de colisionadores, se asume que existe una capa llamada "walls" en el TMX.
         """
         # --- Se crea la ruta al archivo TMX ---
-        tmx_path = resource_path_dir(os.path.join("assets", "maps", CONF.MAP.LEVELS[level]))
+        tmx_path = resource_path_dir(os.path.join("assets", "maps", CONF.MAP.LEVELS[self.level]))
         
         # --- Cargar datos del mapa TMX ---
         self.tmx_data = load_pygame(tmx_path)
@@ -82,7 +82,7 @@ class Map:
                                 )
                                 self.collision_rects.append(rect)
         if CONF.DEV.DEBUG:
-            print(f"[Map] Mapa cargado: '{CONF.MAP.LEVELS[level]}'")
+            print(f"[Map] Mapa cargado: '{CONF.MAP.LEVELS[self.level]}'")
             print(f"[Map] Nivel actual: {self.level}.")
             print(f"[Map] Tamaño del tile: {CONF.MAIN_WIN.RENDER_TILE_SIZE}x{CONF.MAIN_WIN.RENDER_TILE_SIZE} píxeles.")
             print(f"[Map] Tamaño del mapa en tiles: {self.tmx_data.width}x{self.tmx_data.height} tiles.")
@@ -96,7 +96,7 @@ class Map:
         """
         if self.level + 1 in CONF.MAP.LEVELS:
             self.level += 1
-            self.load(self.level)
+            self.load()
 
 
     def draw(self, screen: pygame.Surface, camera_x: int, camera_z: int, camera_width: int, camera_height: int):
@@ -115,6 +115,7 @@ class Map:
             if hasattr(layer, 'tiles'):
                 # Itera sobre todos los tiles de la capa
                 for x, z, tile in layer.tiles():
+                    tile_img = None
                     # tile puede ser una Surface o un GID
                     if isinstance(tile, pygame.Surface):
                         tile_img = pygame.transform.scale(tile, (CONF.MAIN_WIN.RENDER_TILE_SIZE, CONF.MAIN_WIN.RENDER_TILE_SIZE))
