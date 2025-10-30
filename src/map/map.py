@@ -33,8 +33,6 @@ class Map:
         Carga el mapa TMX correspondiente al nivel dado y procesa los colisionadores.
         Resetea la lista de rectángulos de colisión antes de cargar el nuevo mapa.
         Además, actualiza los atributos width y height del mapa.
-        * Atributos:
-            * level: nivel del mapa a cargar
         * [IMPORTANTE] Para la carga de colisionadores, se asume que existe una capa llamada "walls" en el TMX.
         """
         # --- Se crea la ruta al archivo TMX ---
