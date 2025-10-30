@@ -1,0 +1,136 @@
+import pygame
+import sys
+from map.map import Map
+from ui.algorithms import *
+from helper.player import create_player
+from helper.enemies import create_enemies
+from configs.package import CONF
+
+class Game:
+    """
+    Clase principal que encapsula la lógica y el estado del juego.
+    
+    Gestiona la inicialización de Pygame, la ventana, el bucle principal del juego,
+    el manejo de eventos, la actualización de entidades y el renderizado, siguiendo
+    una arquitectura profesional de separación de responsabilidades.
+    """
+    def __init__(self):
+        """
+        Inicializa el juego, configurando Pygame, la ventana, el reloj y
+        cargando todos los recursos iniciales como el mapa, jugador y enemigos.
+        """
+        # --- Inicialización de Pygame y Ventana ---
+        pygame.init()
+        display_info = pygame.display.Info()
+        self.screen_width = display_info.current_w - CONF.MAIN_WIN.SCREEN_OFF_SET
+        self.screen_height = display_info.current_h - CONF.MAIN_WIN.SCREEN_OFF_SET
+        
+        self.camera_width = max(320, self.screen_width - CONF.ALG_UI.PANEL_WIDTH if CONF.ALG_UI.ACTIVE else self.screen_width)
+        self.camera_height = max(240, self.screen_height)
+
+        self.screen = pygame.display.set_mode((self.screen_width, self.screen_height))
+        self.game_surface = pygame.Surface((self.camera_width, self.camera_height))
+        pygame.display.set_caption(CONF.MAIN_WIN.GAME_TITLE)
+        
+        self.clock = pygame.time.Clock()
+        self.dt = 0.0
+        self.running = True
+
+        # --- Estado del Juego ---
+        if CONF.DEV.DEBUG:
+            print("\n ******** DEVELOPMENT MODE ACTIVE ******** ")
+            print(f"[Game] Juego iniciado en resolución {self.screen_width}x{self.screen_height}.")
+        self.game_map = Map(level=1)
+        self.player = create_player()
+        
+        initial_algorithm = CONF.ALG_UI.SELECTED_ALGORITHM if CONF.ALG_UI.ACTIVE else CONF.MAP.LEVELS[self.game_map.level]
+        self.enemies = create_enemies(algorithm=initial_algorithm, target=self.player)
+        
+        self.camera_x = 0
+        self.camera_z = 0
+
+        # --- Inicializar UI si está activa ---
+        if CONF.ALG_UI.ACTIVE:
+            init_ui_fonts()
+            build_ui_buttons()
+
+    def _handle_events(self):
+        """
+        Procesa la cola de eventos de Pygame. Gestiona el cierre del juego
+        y delega los eventos de input al jugador.
+        """
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                self.running = False
+
+            changed = False
+            if CONF.ALG_UI.ACTIVE:
+                self.player, self.enemies, changed = handle_ui_event(event, self.player, self.enemies)
+
+            if not changed:
+                # Pasa el evento al manejador de eventos del jugador (para clics, etc.)
+                self.player.handle_event(event)
+
+    def _update(self):
+        """
+        Actualiza el estado de todas las entidades del juego y la cámara.
+        Se llama una vez por frame, después de manejar eventos y antes de renderizar.
+        """
+        # 1. Manejar input continuo (teclado/mouse) para el jugador
+        self.player.handle_input(self.camera_x, self.camera_z, self.dt)
+
+        # 2. Actualizar la posición de la cámara basada en la nueva posición del jugador
+        px, pz = self.player.get_pos()
+        self.camera_x = max(0, min(px - self.camera_width // 2, self.game_map.width - self.camera_width))
+        self.camera_z = max(0, min(pz - self.camera_height // 2, self.game_map.height - self.camera_height))
+
+        # 3. Actualizar la lógica de las entidades (movimiento, IA, colisiones)
+        self.player.update(self.game_map.collision_rects, self.dt)
+        for enemy in self.enemies:
+            enemy.update(self.game_map.collision_rects, self.dt)
+
+    def _render(self):
+        """
+        Dibuja todos los elementos del juego en la pantalla con un orden de renderizado fijo
+        para garantizar que el jugador siempre sea visible.
+        Orden: 1. Mapa -> 2. Enemigos -> 3. Jugador -> 4. UI
+        """
+        # 1. Limpiar la superficie del juego y dibujar el mapa
+        self.game_surface.fill((30, 30, 30))
+        self.game_map.draw(self.game_surface, self.camera_x, self.camera_z, self.camera_width, self.camera_height)
+        
+        # 2. Dibujar todos los enemigos
+        for enemy in self.enemies:
+            enemy.draw(self.game_surface, self.camera_x, self.camera_z)
+
+        # 3. Dibujar al jugador (siempre al final, para que aparezca por encima de los enemigos)
+        self.player.draw(self.game_surface, self.camera_x, self.camera_z)
+
+        # 4. Dibujar la superficie del juego en la pantalla principal
+        self.screen.fill((0, 0, 0))
+        blit_position = (CONF.ALG_UI.PANEL_WIDTH if CONF.ALG_UI.ACTIVE else 0, 0)
+        self.screen.blit(self.game_surface, blit_position)
+
+        # 5. Dibujar la UI encima de todo
+        if CONF.ALG_UI.ACTIVE:
+            draw_ui(self.screen, CONF.ALG_UI.PANEL_WIDTH, self.screen_height)
+
+        # 6. Actualizar la pantalla para mostrar los cambios
+        pygame.display.flip()
+
+    def run(self):
+        """
+        Inicia y mantiene el bucle principal del juego.
+        """
+        while self.running:
+            # Calcular delta time para un movimiento independiente de los FPS
+            self.dt = self.clock.tick(CONF.MAIN_WIN.FPS) / 1000.0
+            
+            # Ciclo de juego estándar: Eventos -> Lógica -> Renderizado
+            self._handle_events()
+            self._update()
+            self._render()
+        
+        # Salir del juego de forma limpia
+        pygame.quit()
+        sys.exit()
