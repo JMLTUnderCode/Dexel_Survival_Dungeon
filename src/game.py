@@ -1,7 +1,7 @@
 import pygame
 import sys
 from map.map import Map
-from ui.algorithms import *
+from ui.enemy_set import EnemySet
 from helper.entity_manager import EntityManager
 from configs.package import CONF
 
@@ -52,26 +52,57 @@ class Game:
         self.camera_z = 0
 
         # --- Inicializar UI si está activa ---
+        self.enemy_set_ui = None
         if CONF.ALG_UI.ACTIVE:
-            init_ui_fonts()
-            build_ui_buttons(self.entity_manager)
+            self.enemy_set_ui = EnemySet(self.entity_manager)
 
     def _handle_events(self):
         """
         Procesa la cola de eventos de Pygame. Gestiona el cierre del juego
-        y delega los eventos de input al jugador.
+        y delega los eventos a los subsistemas correspondientes (UI, Jugador).
         """
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 self.running = False
+                return
 
-            changed = False
-            if CONF.ALG_UI.ACTIVE:
-                # La UI ahora modifica el entity_manager directamente
-                changed = handle_ui_event(event)
+            # 1. Intentar que la UI maneje el evento.
+            # Si lo hace, el evento ya cumplió su propósito.
+            ui_handled_event = self.enemy_set_ui and self.enemy_set_ui.handle_event(event)
 
-            if not changed and self.entity_manager.player:
-                self.entity_manager.player.handle_event(event)
+            # 2. Si la UI no manejó el evento, lo pasamos al jugador.
+            if not ui_handled_event:
+                self._forward_event_to_player(event)
+
+    def _forward_event_to_player(self, event: pygame.event.Event):
+        """
+        Envía un evento al jugador, ajustando las coordenadas del mouse si es necesario.
+        Esta función actúa como un traductor entre las coordenadas de la pantalla
+        y las coordenadas del área de juego.
+        """
+        if not self.entity_manager.player:
+            return
+
+        # Si el evento no tiene posición (ej. teclado), se pasa directamente.
+        if not hasattr(event, "pos"):
+            self.entity_manager.player.handle_event(event)
+            return
+
+        # Si el evento tiene posición (mouse), se ajusta.
+        mouse_x, mouse_y = event.pos
+        game_area_start_x = CONF.ALG_UI.PANEL_WIDTH if self.enemy_set_ui else 0
+
+        # Solo si el evento ocurrió dentro del área de juego, se procesa.
+        if mouse_x >= game_area_start_x:
+            # Ajustar la coordenada X para que sea relativa al game_surface
+            adjusted_x = mouse_x - game_area_start_x
+            
+            try:
+                # Crear un nuevo evento con la posición ajustada
+                adjusted_event = pygame.event.Event(event.type, {**event.__dict__, "pos": (adjusted_x, mouse_y)})
+                self.entity_manager.player.handle_event(adjusted_event)
+            except Exception:
+                self.entity_manager.player.handle_event(event) # Fallback
 
     def _update(self):
         """
@@ -116,8 +147,8 @@ class Game:
         self.screen.blit(self.game_surface, blit_position)
 
         # 5. Dibujar la UI encima de todo
-        if CONF.ALG_UI.ACTIVE:
-            draw_ui(self.screen, CONF.ALG_UI.PANEL_WIDTH, self.screen_height)
+        if self.enemy_set_ui:
+            self.enemy_set_ui.draw(self.screen)
 
         # 6. Actualizar la pantalla para mostrar los cambios
         pygame.display.flip()
