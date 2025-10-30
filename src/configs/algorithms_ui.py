@@ -30,4 +30,4 @@ PARSING_BUTTONS = {
     "ALL"                             : "ALL",
     "NOTHING"                         : "NOTHING"
 }
-SELECTED_ALGORITHM = None
+SELECTED_ALGORITHM = "NOTHING"
