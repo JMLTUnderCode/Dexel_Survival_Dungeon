@@ -211,18 +211,6 @@
    <object id="1" type="colider" x="0" y="0" width="16" height="8"/>
   </objectgroup>
  </tile>
- <tile id="75">
-  <animation>
-   <frame tileid="75" duration="1000"/>
-   <frame tileid="76" duration="1000"/>
-  </animation>
- </tile>
- <tile id="76">
-  <animation>
-   <frame tileid="76" duration="1000"/>
-   <frame tileid="75" duration="1000"/>
-  </animation>
- </tile>
  <tile id="80">
   <properties>
    <property name="block" type="bool" value="true"/>
@@ -230,10 +218,6 @@
   <objectgroup draworder="index" id="2">
    <object id="1" type="colider" x="2" y="2" width="12" height="12"/>
   </objectgroup>
-  <animation>
-   <frame tileid="80" duration="1000"/>
-   <frame tileid="83" duration="1000"/>
-  </animation>
  </tile>
  <tile id="81">
   <properties>
@@ -242,10 +226,6 @@
   <objectgroup draworder="index" id="2">
    <object id="1" type="colider" x="2" y="2" width="12" height="12"/>
   </objectgroup>
-  <animation>
-   <frame tileid="81" duration="1000"/>
-   <frame tileid="82" duration="1000"/>
-  </animation>
  </tile>
  <tile id="82">
   <properties>
@@ -254,10 +234,6 @@
   <objectgroup draworder="index" id="2">
    <object id="1" type="colider" x="2" y="2" width="12" height="12"/>
   </objectgroup>
-  <animation>
-   <frame tileid="82" duration="1000"/>
-   <frame tileid="81" duration="1000"/>
-  </animation>
  </tile>
  <tile id="83">
   <properties>
@@ -266,10 +242,6 @@
   <objectgroup>
    <object id="1" type="colider" x="2" y="2" width="12" height="12"/>
   </objectgroup>
-  <animation>
-   <frame tileid="83" duration="1000"/>
-   <frame tileid="80" duration="1000"/>
-  </animation>
  </tile>
  <tile id="84">
   <properties>
@@ -278,10 +250,6 @@
   <objectgroup draworder="index" id="2">
    <object id="1" type="colider" x="1" y="2" width="14" height="12"/>
   </objectgroup>
-  <animation>
-   <frame tileid="84" duration="1000"/>
-   <frame tileid="85" duration="1000"/>
-  </animation>
  </tile>
  <tile id="85">
   <properties>
@@ -290,31 +258,11 @@
   <objectgroup draworder="index" id="2">
    <object id="5" type="colider" x="1" y="2" width="14" height="12"/>
   </objectgroup>
-  <animation>
-   <frame tileid="85" duration="1000"/>
-   <frame tileid="84" duration="1000"/>
-  </animation>
- </tile>
- <tile id="87">
-  <animation>
-   <frame tileid="87" duration="1000"/>
-   <frame tileid="97" duration="1000"/>
-  </animation>
- </tile>
- <tile id="89">
-  <animation>
-   <frame tileid="89" duration="1000"/>
-   <frame tileid="98" duration="1000"/>
-  </animation>
  </tile>
  <tile id="93">
   <properties>
    <property name="block" type="bool" value="true"/>
   </properties>
-  <animation>
-   <frame tileid="93" duration="1000"/>
-   <frame tileid="95" duration="1000"/>
-  </animation>
  </tile>
  <tile id="94">
   <properties>
@@ -325,26 +273,10 @@
   <properties>
    <property name="block" type="bool" value="true"/>
   </properties>
-  <animation>
-   <frame tileid="95" duration="1000"/>
-   <frame tileid="93" duration="1000"/>
-  </animation>
  </tile>
  <tile id="96">
   <properties>
    <property name="block" type="bool" value="true"/>
   </properties>
- </tile>
- <tile id="97">
-  <animation>
-   <frame tileid="97" duration="1000"/>
-   <frame tileid="87" duration="1000"/>
-  </animation>
- </tile>
- <tile id="98">
-  <animation>
-   <frame tileid="98" duration="1000"/>
-   <frame tileid="89" duration="1000"/>
-  </animation>
  </tile>
 </tileset>

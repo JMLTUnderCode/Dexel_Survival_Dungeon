@@ -4,7 +4,7 @@ import math
 from kinematics.kinematic import Kinematic, SteeringOutput
 from characters.attack_wave import AttackWave
 from characters.animation import Animation, load_animations, set_animation_state
-import utils.configs as configs
+from configs.package import CONF
 
 class Player(Kinematic):
     """
@@ -31,28 +31,25 @@ class Player(Kinematic):
         self.attack_waves : list[AttackWave] = []  # Lista de ondas de ataque activas
         self._pending_steering = SteeringOutput()  # Entrada de control pendiente
 
-        self.state = configs.PLAYER_STATES.IDLE
+        self.state = CONF.PLAYER.ACTIONS.IDLE
         self.animations : dict[str, Animation] = load_animations(
-            configs.PLAYER_FOLDER,
+            CONF.PLAYER.FOLDER,
             self.type, 
-            configs.PLAYER_STATES, 
-            configs.PLAYER_TILE_WIDTH, 
-            configs.PLAYER_TILE_HEIGHT,
+            CONF.PLAYER.ACTIONS, 
+            CONF.PLAYER.TILE_WIDTH, 
+            CONF.PLAYER.TILE_HEIGHT,
             frame_duration=0.12,
             scale=1.25
         )
         self.current_animation : Animation = self.animations[self.state]
         self.collider_box = collider_box
 
-    def get_pos(self):
-        return self.position
-
     def handle_event(self, event: pygame.event.Event) -> None:
         """
         Maneja eventos puntuales como clics de mouse para ataques.
         """
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-            set_animation_state(self, configs.PLAYER_STATES.ATTACK)
+            set_animation_state(self, CONF.PLAYER.ACTIONS.ATTACK)
             # Crear onda de ataque en la posición actual
             self.attack_waves.append(AttackWave(self.position[0], self.position[1], color=self.color))
 
@@ -81,7 +78,7 @@ class Player(Kinematic):
         if mag > 0:
             accel[0] = accel[0] / mag * accel_value
             accel[1] = accel[1] / mag * accel_value
-            set_animation_state(self, configs.PLAYER_STATES.MOVE)
+            set_animation_state(self, CONF.PLAYER.ACTIONS.MOVE)
         else:
             # 4. Si no hay input, aplicar fricción para desacelerar suavemente
             vx, vy = self.velocity
@@ -92,7 +89,7 @@ class Player(Kinematic):
                 fy = -vy / speed * friction
                 # Si la fricción aplicada en este frame es suficiente para detener el movimiento, fuerza la velocidad a cero
                 if abs(fx * dt) >= abs(vx) and abs(fy * dt) >= abs(vy):
-                    set_animation_state(self, configs.PLAYER_STATES.IDLE)
+                    set_animation_state(self, CONF.PLAYER.ACTIONS.IDLE)
                     self.velocity = (0.0, 0.0)
                     accel[0] = 0.0
                     accel[1] = 0.0
@@ -152,7 +149,7 @@ class Player(Kinematic):
         for wave in self.attack_waves:
             wave.draw(surface, camera_x, camera_z)
 
-        if configs.DEVELOPMENT:
+        if CONF.DEV.DEBUG:
             self.draw_collision_box(surface, camera_x, camera_z)
 
     def draw_collision_box(self, surface: pygame.Surface, camera_x: float, camera_z: float):
@@ -169,14 +166,11 @@ class Player(Kinematic):
         )
         pygame.draw.rect(surface, (0, 255, 0), player_box, 1)  # Verde, grosor 1
 
-    def update(self, surface: pygame.Surface, camera_x: float, camera_z: float, collision_rects: list[pygame.Rect], dt: float):
+    def update(self, collision_rects: list[pygame.Rect], dt: float):
         """
-        Actualiza el jugador: maneja entrada, cinemática, animación y ataques.
+        Actualiza el jugador: cinemática, animación y ataques.
         Debe llamarse cada frame después de manejar la entrada.
         """
-        # Manejar entrada para actualizar el steering
-        self.handle_input(camera_x, camera_z, dt)
-
         # Actualizar cinemática
         self.update_by_dynamic(self._pending_steering, self.max_speed, dt, collision_rects, self.collider_box, "PLAYER")
 
@@ -187,5 +181,3 @@ class Player(Kinematic):
         for wave in self.attack_waves:
             wave.update()
         self.attack_waves = [w for w in self.attack_waves if w.alive]
-
-        self.draw(surface, camera_x, camera_z)

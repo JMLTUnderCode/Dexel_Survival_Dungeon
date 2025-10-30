@@ -1,16 +1,16 @@
 import pygame
 import math
 from typing import Tuple
-import utils.configs as configs
+from configs.package import CONF
 
 ALGORITHM_USE_ROTATION = [
     "PLAYER", 
-    configs.ALGORITHM.WANDER_KINEMATIC,
-    configs.ALGORITHM.WANDER_DYNAMIC,
-    configs.ALGORITHM.ALIGN, 
-    configs.ALGORITHM.FACE, 
-    configs.ALGORITHM.LOOK_WHERE_YOURE_GOING, 
-    configs.ALGORITHM.VELOCITY_MATCH,
+    CONF.ALG.ALGORITHM.WANDER_KINEMATIC,
+    CONF.ALG.ALGORITHM.WANDER_DYNAMIC,
+    CONF.ALG.ALGORITHM.ALIGN, 
+    CONF.ALG.ALGORITHM.FACE, 
+    CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING, 
+    CONF.ALG.ALGORITHM.VELOCITY_MATCH,
 ]
 
 class SteeringOutput:
@@ -188,3 +188,7 @@ class Kinematic:
         if velocity == (0, 0):
             return current_orientation
         return math.atan2(velocity[1], velocity[0])
+    
+    def get_pos(self) -> tuple[float, float]:
+        """Devuelve la posición actual del objeto como una tupla (x, z)."""
+        return self.position
