@@ -1,27 +1,32 @@
 import pygame
 from data.enemies import list_of_enemies_data
-from helper.player import create_player
-from helper.enemies import create_enemies
 from configs.package import CONF
+from helper.entity_manager import EntityManager
 
 # Construcción dinámica de botones según las claves disponibles en data
 
 
-def handle_ui_event(event: pygame.event.Event, player, enemies):
-    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+def handle_ui_event(event: pygame.event.Event) -> bool:
+    """Maneja clics en la UI y usa el EntityManager para recrear los enemigos."""
+    if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1 and _entity_manager:
         mx, my = event.pos
         for b in CONF.ALG_UI.BUTTONS:
             if b["rect"].collidepoint((mx, my)):
-                # marcar el botón seleccionado (desmarca el anterior)
                 CONF.ALG_UI.SELECTED_ALGORITHM = b["key"]
-                # devuelve los nuevos player, enemies y una señal de que hubo cambio
-                new_player = create_player()
-                new_enemies = create_enemies(algorithm=b["key"], target=new_player)
-                return new_player, new_enemies, True
-    return player, enemies, False
+                
+                # Usar el manager para recrear la escena
+                _entity_manager.create_player() # Resetea al jugador
+                _entity_manager.create_enemy_group(b["key"]) # Crea el nuevo grupo de enemigos
+                
+                return True # Hubo un cambio
+    return False # No hubo cambio
 
 # UI state
-def build_ui_buttons():
+def build_ui_buttons(entity_manager: EntityManager):
+    """Construye los botones y guarda la referencia al entity manager."""
+    global _entity_manager
+    _entity_manager = entity_manager
+
     button_keys = list(list_of_enemies_data.keys())
     CONF.ALG_UI.BUTTONS.clear()
     y = CONF.ALG_UI.PADDING + 48

@@ -2,8 +2,7 @@ import pygame
 import sys
 from map.map import Map
 from ui.algorithms import *
-from helper.player import create_player
-from helper.enemies import create_enemies
+from helper.entity_manager import EntityManager
 from configs.package import CONF
 
 class Game:
@@ -25,6 +24,10 @@ class Game:
         self.screen_width = display_info.current_w - CONF.MAIN_WIN.SCREEN_OFF_SET
         self.screen_height = display_info.current_h - CONF.MAIN_WIN.SCREEN_OFF_SET
         
+        if CONF.DEV.DEBUG:
+            print("\n ******** DEVELOPMENT MODE ACTIVE ******** ")
+            print(f"[Game] Juego iniciado en resolución {self.screen_width}x{self.screen_height}.")
+
         self.camera_width = max(320, self.screen_width - CONF.ALG_UI.PANEL_WIDTH if CONF.ALG_UI.ACTIVE else self.screen_width)
         self.camera_height = max(240, self.screen_height)
 
@@ -36,15 +39,14 @@ class Game:
         self.dt = 0.0
         self.running = True
 
-        # --- Estado del Juego ---
-        if CONF.DEV.DEBUG:
-            print("\n ******** DEVELOPMENT MODE ACTIVE ******** ")
-            print(f"[Game] Juego iniciado en resolución {self.screen_width}x{self.screen_height}.")
+        # --- Gestor de Entidades y Estado del Juego ---
         self.game_map = Map(level=1)
-        self.player = create_player()
+        self.entity_manager = EntityManager()
         
-        initial_algorithm = CONF.ALG_UI.SELECTED_ALGORITHM if CONF.ALG_UI.ACTIVE else CONF.MAP.LEVELS[self.game_map.level]
-        self.enemies = create_enemies(algorithm=initial_algorithm, target=self.player)
+        # Crear entidades iniciales
+        self.entity_manager.create_player()
+        initial_group = CONF.ALG_UI.SELECTED_ALGORITHM if CONF.ALG_UI.ACTIVE else CONF.MAP.LEVELS[self.game_map.level]
+        self.entity_manager.create_enemy_group(initial_group)
         
         self.camera_x = 0
         self.camera_z = 0
@@ -52,7 +54,7 @@ class Game:
         # --- Inicializar UI si está activa ---
         if CONF.ALG_UI.ACTIVE:
             init_ui_fonts()
-            build_ui_buttons()
+            build_ui_buttons(self.entity_manager)
 
     def _handle_events(self):
         """
@@ -65,28 +67,29 @@ class Game:
 
             changed = False
             if CONF.ALG_UI.ACTIVE:
-                self.player, self.enemies, changed = handle_ui_event(event, self.player, self.enemies)
+                # La UI ahora modifica el entity_manager directamente
+                changed = handle_ui_event(event)
 
-            if not changed:
-                # Pasa el evento al manejador de eventos del jugador (para clics, etc.)
-                self.player.handle_event(event)
+            if not changed and self.entity_manager.player:
+                self.entity_manager.player.handle_event(event)
 
     def _update(self):
         """
         Actualiza el estado de todas las entidades del juego y la cámara.
         Se llama una vez por frame, después de manejar eventos y antes de renderizar.
         """
-        # 1. Manejar input continuo (teclado/mouse) para el jugador
-        self.player.handle_input(self.camera_x, self.camera_z, self.dt)
+        player = self.entity_manager.player
+        if not player: return
 
-        # 2. Actualizar la posición de la cámara basada en la nueva posición del jugador
-        px, pz = self.player.get_pos()
+        # 1. Manejar input y actualizar cámara
+        player.handle_input(self.camera_x, self.camera_z, self.dt)
+        px, pz = player.get_pos()
         self.camera_x = max(0, min(px - self.camera_width // 2, self.game_map.width - self.camera_width))
         self.camera_z = max(0, min(pz - self.camera_height // 2, self.game_map.height - self.camera_height))
 
-        # 3. Actualizar la lógica de las entidades (movimiento, IA, colisiones)
-        self.player.update(self.game_map.collision_rects, self.dt)
-        for enemy in self.enemies:
+        # 2. Actualizar la lógica de las entidades
+        player.update(self.game_map.collision_rects, self.dt)
+        for enemy in self.entity_manager.enemies:
             enemy.update(self.game_map.collision_rects, self.dt)
 
     def _render(self):
@@ -100,11 +103,12 @@ class Game:
         self.game_map.draw(self.game_surface, self.camera_x, self.camera_z, self.camera_width, self.camera_height)
         
         # 2. Dibujar todos los enemigos
-        for enemy in self.enemies:
+        for enemy in self.entity_manager.enemies:
             enemy.draw(self.game_surface, self.camera_x, self.camera_z)
 
         # 3. Dibujar al jugador (siempre al final, para que aparezca por encima de los enemigos)
-        self.player.draw(self.game_surface, self.camera_x, self.camera_z)
+        if self.entity_manager.player:
+            self.entity_manager.player.draw(self.game_surface, self.camera_x, self.camera_z)
 
         # 4. Dibujar la superficie del juego en la pantalla principal
         self.screen.fill((0, 0, 0))
