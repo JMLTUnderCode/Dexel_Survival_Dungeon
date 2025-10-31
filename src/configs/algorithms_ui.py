@@ -1,4 +1,4 @@
-ACTIVE = True
+ACTIVE = False
 PANEL_WIDTH = 200
 PADDING = 12
 BUTTON_HEIGHT = 36
@@ -7,6 +7,7 @@ BUTTON_COLOR = (50, 50, 50)
 BUTTON_HOVER = (70, 70, 70)
 BUTTON_ACTIVE = (132, 87, 69)
 TEXT_COLOR = (230, 230, 230)
+TITLE = "ENEMY SET"
 TITLE_COLOR = (180, 220, 255)
 TITLE_FONT = None
 FONT = None
@@ -31,4 +32,4 @@ PARSING_BUTTONS = {
     "ALL"                             : "ALL",
     "NOTHING"                         : "NOTHING"
 }
-SELECTED_ALGORITHM = "NOTHING"
+SELECTED = "NOTHING"
