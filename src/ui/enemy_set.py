@@ -34,8 +34,8 @@ class EnemySet:
             mx, my = event.pos
             for b in CONF.ALG_UI.BUTTONS:
                 if b["rect"].collidepoint((mx, my)):
-                    CONF.ALG_UI.SELECTED_ALGORITHM = b["key"]
-                    self.entity_manager.create_enemy_group(b["key"])
+                    CONF.ALG_UI.SELECTED = b["key"]
+                    self.entity_manager.create_enemy_group(b["key"], "alg")
                     return True  # Evento manejado
         return False  # Evento no manejado
 
@@ -51,7 +51,7 @@ class EnemySet:
         surface.blit(s, (panel_rect.x, panel_rect.y))
 
         # Título
-        title_surf = CONF.ALG_UI.TITLE_FONT.render("ENEMY SET", True, CONF.ALG_UI.TITLE_COLOR)
+        title_surf = CONF.ALG_UI.TITLE_FONT.render(CONF.ALG_UI.TITLE, True, CONF.ALG_UI.TITLE_COLOR)
         surface.blit(title_surf, (CONF.ALG_UI.PADDING, CONF.ALG_UI.PADDING))
 
         # Botones
@@ -60,7 +60,7 @@ class EnemySet:
             rect = b["rect"]
             hovered = rect.collidepoint((mx, my))
             
-            if b["key"] == CONF.ALG_UI.SELECTED_ALGORITHM:
+            if b["key"] == CONF.ALG_UI.SELECTED:
                 color = CONF.ALG_UI.BUTTON_ACTIVE
             else:
                 color = CONF.ALG_UI.BUTTON_HOVER if hovered else CONF.ALG_UI.BUTTON_COLOR
