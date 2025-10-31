@@ -872,6 +872,26 @@ enemy_all = [
     enemy_follow_path_rect[0],
 ]
 
+list_of_enemies_data = {
+    CONF.ALG.ALGORITHM.SEEK_KINEMATIC: enemy_seek_kinematic,
+    CONF.ALG.ALGORITHM.FLEE_KINEMATIC: enemy_flee_kinematic,
+    CONF.ALG.ALGORITHM.ARRIVE_KINEMATIC: enemy_arrive_kinematic,
+    CONF.ALG.ALGORITHM.WANDER_KINEMATIC: enemy_wander_kinematic,
+    CONF.ALG.ALGORITHM.SEEK_DYNAMIC: enemy_seek_dynamic,
+    CONF.ALG.ALGORITHM.FLEE_DYNAMIC: enemy_flee_dynamic,
+    CONF.ALG.ALGORITHM.ARRIVE_DYNAMIC: enemy_arrive_dynamic,
+    CONF.ALG.ALGORITHM.ALIGN: enemy_align,
+    CONF.ALG.ALGORITHM.VELOCITY_MATCH: enemy_velocity_match,
+    CONF.ALG.ALGORITHM.PURSUE: enemy_pursue,
+    CONF.ALG.ALGORITHM.EVADE: enemy_evade,
+    CONF.ALG.ALGORITHM.FACE: enemy_face,
+    CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING: enemy_look_where,
+    CONF.ALG.ALGORITHM.WANDER_DYNAMIC: enemy_wander_dynamic,
+    CONF.ALG.ALGORITHM.PATH_FOLLOWING: enemy_follow_path_circle + enemy_follow_path_rect,
+    "ALL": enemy_all,
+    "NOTHING": [],
+}
+
 paths_1_group = {
     "zone 1" : {
         "type": "circle",
@@ -945,24 +965,9 @@ map_1_group = [
     },
 ]
 
+map_2_group = map_1_group
 
-list_of_enemies_data = {
-    CONF.ALG.ALGORITHM.SEEK_KINEMATIC: enemy_seek_kinematic,
-    CONF.ALG.ALGORITHM.FLEE_KINEMATIC: enemy_flee_kinematic,
-    CONF.ALG.ALGORITHM.ARRIVE_KINEMATIC: enemy_arrive_kinematic,
-    CONF.ALG.ALGORITHM.WANDER_KINEMATIC: enemy_wander_kinematic,
-    CONF.ALG.ALGORITHM.SEEK_DYNAMIC: enemy_seek_dynamic,
-    CONF.ALG.ALGORITHM.FLEE_DYNAMIC: enemy_flee_dynamic,
-    CONF.ALG.ALGORITHM.ARRIVE_DYNAMIC: enemy_arrive_dynamic,
-    CONF.ALG.ALGORITHM.ALIGN: enemy_align,
-    CONF.ALG.ALGORITHM.VELOCITY_MATCH: enemy_velocity_match,
-    CONF.ALG.ALGORITHM.PURSUE: enemy_pursue,
-    CONF.ALG.ALGORITHM.EVADE: enemy_evade,
-    CONF.ALG.ALGORITHM.FACE: enemy_face,
-    CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING: enemy_look_where,
-    CONF.ALG.ALGORITHM.WANDER_DYNAMIC: enemy_wander_dynamic,
-    CONF.ALG.ALGORITHM.PATH_FOLLOWING: enemy_follow_path_circle + enemy_follow_path_rect,
-    "ALL": enemy_all,
-    "NOTHING": [],
-    CONF.MAP.LEVELS[1]: map_1_group,
+map_levels_enemies_data = {
+    1 : map_1_group,
+    2 : map_2_group,
 }
