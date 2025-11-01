@@ -3,7 +3,7 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "maps/level_1.tmx",
+    "activeFile": "maps/level_2.tmx",
     "expandedProjectPaths": [
         "maps",
         "."
@@ -44,17 +44,32 @@
             "scaleInDock": 2,
             "scaleInEditor": 3
         },
+        "maps/Dungeon_Tileset1.tsx": {
+            "scaleInDock": 1.5,
+            "scaleInEditor": 1
+        },
         "maps/level_1.tmx": {
-            "scale": 1.5,
-            "selectedLayer": 2,
+            "scale": 1,
+            "selectedLayer": 1,
             "viewCenter": {
-                "x": 299.66666666666663,
-                "y": 406.33333333333337
+                "x": 512.5,
+                "y": 479.5
             }
         },
         "maps/level_1.tmx#Dungeon_Tileset": {
             "scaleInDock": 2,
             "scaleInEditor": 4
+        },
+        "maps/level_2.tmx": {
+            "scale": 1,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 468.5,
+                "y": 341.5
+            }
+        },
+        "maps/level_2.tmx#Dungeon_Tileset": {
+            "scaleInDock": 1
         },
         "maps/map.tmx": {
             "scale": 1,
@@ -88,12 +103,15 @@
     "map.tileWidth": 16,
     "map.width": 60,
     "openFiles": [
-        "maps/level_1.tmx"
+        "maps/level_1.tmx",
+        "maps/level_2.tmx"
     ],
     "project": "dexel_survival_dungeon.tiled-project",
     "property.type": "object",
     "recentFiles": [
         "maps/level_1.tmx",
+        "maps/level_2.tmx",
+        "maps/Dungeon_Tileset1.tsx",
         "maps/Dungeon_Tileset.tsx",
         "maps/presentacion-1.tmx",
         "maps/map.tmx",
