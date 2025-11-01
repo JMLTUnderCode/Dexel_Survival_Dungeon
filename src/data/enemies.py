@@ -905,11 +905,11 @@ paths_1_group = {
     "zone 2" : {
         "type": "rectangle",
         "params": {
-            "width": 500.0, 
-            "height": 340.0, 
+            "width": 540.0, 
+            "height": 320.0, 
             "segments": 30, 
-            "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 10 + CONF.MAIN_WIN.RENDER_TILE_SIZE // 2, 
-                       CONF.MAIN_WIN.RENDER_TILE_SIZE * 7 + CONF.MAIN_WIN.RENDER_TILE_SIZE // 2)},
+            "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 9 + CONF.MAIN_WIN.RENDER_TILE_SIZE, 
+                       CONF.MAIN_WIN.RENDER_TILE_SIZE * 6 + CONF.MAIN_WIN.RENDER_TILE_SIZE)},
         "offset": 3,
     }
 }
