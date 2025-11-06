@@ -183,12 +183,7 @@ class NavMesh:
         for node in self.nodes.values():
             # Ajustar los puntos del polígono a la vista de la cámara
             points_on_camera = [(p[0] - camera_x, p[1] - camera_z) for p in node.polygon]
-            
-            """ # Dibujar el polígono del nodo con transparencia
-            poly_surface = pygame.Surface(surface.get_size(), pygame.SRCALPHA)
-            pygame.draw.polygon(poly_surface, (0, 100, 255, 100), points_on_camera)
-            surface.blit(poly_surface, (0,0))
-            """
+
             pygame.draw.polygon(surface, (255, 255, 0), points_on_camera, 2) # Borde
             
             center_on_camera = (node.center[0] - camera_x, node.center[1] - camera_z)
