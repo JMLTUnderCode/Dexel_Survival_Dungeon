@@ -17,4 +17,4 @@ PARSING_BUTTONS = {
     "1" : "Level 1",
     "2" : "Level 2",
 }
-SELECTED = 1
+SELECTED = 2
