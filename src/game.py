@@ -87,11 +87,8 @@ class Game:
         self.game_map = Map(level=level_number)
         
         # 2. Recrear el pathfinder con el nuevo navmesh
-        self.pathfinder = None
         if self.game_map.navmesh:
             pass
-            #self.pathfinder = Pathfinder(self.game_map.navmesh)
-        #self.entity_manager.pathfinder = self.pathfinder # Actualizar referencia en el manager
 
         # 3. Crear las entidades para el nuevo nivel
         self.entity_manager.create_player()
