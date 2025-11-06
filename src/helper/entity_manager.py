@@ -64,6 +64,12 @@ class EntityManager:
     def create_enemy_group(self, group_key: str, group_type: str) -> None:
         """
         Crea un grupo de enemigos basado en una clave del diccionario de datos y el tipo de grupo.
+        
+        Args:
+            group_key (str): Clave para identificar el grupo de enemigos en los datos.
+            group_type (str): Tipo de grupo de enemigos a crear. Puede ser:
+                - "map": Crea enemigos usando los datos de `map_levels_enemies_data`.
+                - "alg": Crea enemigos usando los datos de `list_of_enemies_data`.
         """
         self.enemies.clear()
         enemy_group_data = []
