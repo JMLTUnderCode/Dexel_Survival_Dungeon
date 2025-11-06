@@ -77,6 +77,8 @@ class Game:
     def load_level(self, level_number: int):
         """
         Carga un nivel específico, reconstruyendo el mapa, el navmesh y las entidades.
+        
+        :param level_number: Número del nivel a cargar.
         """
         if CONF.DEV.DEBUG:
             print(f"[Game] Cargando nivel {level_number}...")
