@@ -2,6 +2,7 @@ import os
 import pygame
 from pytmx.util_pygame import load_pygame
 from utils.resource_path_dir import resource_path_dir
+from .navmesh import NavMesh
 from configs.package import CONF
 
 class Map:
@@ -13,6 +14,7 @@ class Map:
         * width: ancho del mapa en píxeles (ya escalado)
         * height: alto del mapa en píxeles (ya escalado)
         * collision_rects: lista de pygame.Rect que representan las áreas de colisión
+        * navmesh: instancia de NavMesh para pathfinding
     * Métodos:
         * load(level): carga el mapa TMX y procesa colisionadores
         * next_level(): carga el siguiente nivel del mapa
@@ -25,6 +27,7 @@ class Map:
         self.width = 0
         self.height = 0
         self.collision_rects = []
+        self.navmesh: NavMesh | None = None
 
         self.load()
 
@@ -45,47 +48,54 @@ class Map:
         self.width = self.tmx_data.width * CONF.MAIN_WIN.RENDER_TILE_SIZE   # Ancho total del mapa en píxeles
         self.height = self.tmx_data.height * CONF.MAIN_WIN.RENDER_TILE_SIZE # Alto total del mapa en píxeles
 
-        # --- Procesar colisionadores ---
-        # Busca el índice de la capa llamada "walls" (donde están los tiles de colisión)
-        walls_layer = None
-        for i, layer in enumerate(self.tmx_data.layers):
-            if hasattr(layer, 'name') and layer.name == "walls":
-                walls_layer = i
-
-        if walls_layer is None:
-            raise Exception("No se encontró la capa 'walls' en el mapa.")
-
-        # Obtiene todos los colisionadores definidos en el tileset (como objectgroup en Tiled)
+        # --- Procesar colisionadores y NavMesh ---
         self.collision_rects = []
-        colliders_gen = self.tmx_data.get_tile_colliders()
-        colliders_list = list(colliders_gen)
+        navmesh_objects = []
 
-        # Para cada tile del tileset que tiene colisionador (objectgroup)
-        for i, (tile_id_local, obj_group) in enumerate(colliders_list):
-            if obj_group is not None:
-                # Para cada objeto de colisión dentro del objectgroup (puede haber varios por tile)
-                for obj in obj_group:
-                    # Recorre todo el mapa buscando las posiciones donde ese tile está colocado
-                    for y in range(self.tmx_data.height):
-                        for x in range(self.tmx_data.width):
-                            gid = self.tmx_data.get_tile_gid(x, y, walls_layer)
-                            # Si el GID del tile en el mapa coincide con el tile_id_local del colisionador
-                            if gid == tile_id_local:
-                                # Crea un rectángulo de colisión en coordenadas absolutas del mapa
-                                rect = pygame.Rect(
-                                    int(x * CONF.MAIN_WIN.RENDER_TILE_SIZE + obj.x),
-                                    int(y * CONF.MAIN_WIN.RENDER_TILE_SIZE + obj.y),
-                                    int(obj.width * CONF.MAIN_WIN.ZOOM),
-                                    int(obj.height * CONF.MAIN_WIN.ZOOM)
-                                )
-                                self.collision_rects.append(rect)
+        for layer_id, layer in enumerate(self.tmx_data.layers):
+            # Cargar colisionadores de la capa "walls"
+            if layer.name == "walls":
+                # Obtiene todos los colisionadores definidos en el tileset (como objectgroup en Tiled)
+                self.collision_rects = []
+                colliders_gen = self.tmx_data.get_tile_colliders()
+                colliders_list = list(colliders_gen)
+
+                # Para cada tile del tileset que tiene colisionador (objectgroup)
+                for i, (tile_id_local, obj_group) in enumerate(colliders_list):
+                    if obj_group is not None:
+                        # Para cada objeto de colisión dentro del objectgroup (puede haber varios por tile)
+                        for obj in obj_group:
+                            # Recorre todo el mapa buscando las posiciones donde ese tile está colocado
+                            for y in range(self.tmx_data.height):
+                                for x in range(self.tmx_data.width):
+                                    gid = self.tmx_data.get_tile_gid(x, y, layer_id)
+                                    # Si el GID del tile en el mapa coincide con el tile_id_local del colisionador
+                                    if gid == tile_id_local:
+                                        # Crea un rectángulo de colisión en coordenadas absolutas del mapa
+                                        rect = pygame.Rect(
+                                            int(x * CONF.MAIN_WIN.RENDER_TILE_SIZE + obj.x),
+                                            int(y * CONF.MAIN_WIN.RENDER_TILE_SIZE + obj.y),
+                                            int(obj.width * CONF.MAIN_WIN.ZOOM),
+                                            int(obj.height * CONF.MAIN_WIN.ZOOM)
+                                        )
+                                        self.collision_rects.append(rect)
+            
+            # Recopilar objetos para NavMesh de la capa "graph"
+            if layer.name == "graph":
+                navmesh_objects.extend(list(layer))
+        
+        # Construir el NavMesh si se encontraron objetos
+        if navmesh_objects:
+            self.navmesh = NavMesh(navmesh_objects, CONF.MAIN_WIN.ZOOM)
+            if CONF.DEV.DEBUG:
+                print(f"[Map] NavMesh construido con {len(self.navmesh.nodes)} nodos.")
+
         if CONF.DEV.DEBUG:
             print(f"[Map] Mapa cargado: '{CONF.MAP.LEVELS[self.level]}'")
             print(f"[Map] Nivel actual: {self.level}.")
             print(f"[Map] Tamaño del tile: {CONF.MAIN_WIN.RENDER_TILE_SIZE}x{CONF.MAIN_WIN.RENDER_TILE_SIZE} píxeles.")
             print(f"[Map] Tamaño del mapa en tiles: {self.tmx_data.width}x{self.tmx_data.height} tiles.")
             print(f"[Map] Tamaño del mapa en píxeles: {self.width}x{self.height} píxeles.")
-            print(f"[Map] Número de capas en el mapa: {len(self.tmx_data.layers)}.")
             print(f"[Map] Número de colisionadores: {len(self.collision_rects)}.")
 
     def next_level(self) -> None:
@@ -131,6 +141,9 @@ class Map:
 
         if CONF.DEV.DEBUG:
             self.draw_collision_rects(screen, camera_x, camera_z, camera_width, camera_height)
+            # Dibujar el NavMesh si existe
+            if self.navmesh:
+                self.navmesh.draw(screen, camera_x, camera_z)
 
     def draw_collision_rects(self, screen: pygame.Surface, camera_x: int, camera_z: int, camera_width: int, camera_height: int):
         """

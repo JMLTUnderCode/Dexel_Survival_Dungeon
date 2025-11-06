@@ -50,6 +50,11 @@ class Kinematic:
         self.velocity = velocity        # Velocidad de desplazamiento en x e y.
         self.rotation = rotation        # Velocidad de rotacion
 
+        # Nodo del NavMesh donde se encuentra actualmente la entidad (NavMeshNode o node id).
+        # Debe inicializarse cuando la entidad se crea (p. ej. EntityManager.create_player/create_enemy_from_data)
+        # o puede permanecer None (se buscará la primera vez).
+        self.node_location = None
+
     def is_a_collision(
         self, 
         pos: tuple[float, float],
