@@ -17,7 +17,7 @@ class NavMeshNode:
 
     def contains_point(self, point: Tuple[float, float]) -> bool:
         """
-        Devuelve True si `point` (x, y) está dentro del polígono de este nodo..
+        Devuelve True si `point` (x, y) está dentro del polígono de este nodo.
         """
         return bool(self.figure.contains_point(point))
     
