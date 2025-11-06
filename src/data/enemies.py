@@ -896,9 +896,9 @@ paths_1_group = {
     "zone 1" : {
         "type": "circle",
         "params": {
-            "radius": 240, 
+            "radius": 260, 
             "segments": 35, 
-            "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 14 + CONF.MAIN_WIN.RENDER_TILE_SIZE // 2, 
+            "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 15, 
                        CONF.MAIN_WIN.RENDER_TILE_SIZE * 49 + CONF.MAIN_WIN.RENDER_TILE_SIZE // 2)},
         "offset": 2,
     },
