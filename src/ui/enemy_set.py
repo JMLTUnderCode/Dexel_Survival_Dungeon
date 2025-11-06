@@ -19,7 +19,6 @@ class EnemySet:
                             escenas cuando el usuario selecciona un nuevo conjunto.
         """
         self.entity_manager = entity_manager
-        self._init_fonts()
         self._build_buttons()
 
     def handle_event(self, event: pygame.event.Event) -> bool:
@@ -81,18 +80,3 @@ class EnemySet:
             rect = pygame.Rect(CONF.ALG_UI.PADDING, y, CONF.ALG_UI.PANEL_WIDTH - CONF.ALG_UI.PADDING*2, CONF.ALG_UI.BUTTON_HEIGHT)
             CONF.ALG_UI.BUTTONS.append({"key": k, "rect": rect})
             y += CONF.ALG_UI.BUTTON_HEIGHT + 8
-
-    def _init_fonts(self, title_font_name: str = "Segoe UI", title_size: int = 20, font_name: str = "Segoe UI", font_size: int = 16):
-        """Inicializa las fuentes usadas por la UI."""
-        if not pygame.get_init():
-            pygame.init()
-
-        try:
-            CONF.ALG_UI.TITLE_FONT = pygame.font.SysFont(title_font_name, title_size, bold=True)
-        except Exception:
-            CONF.ALG_UI.TITLE_FONT = pygame.font.Font(None, title_size + 4) # Fallback con más tamaño
-        
-        try:
-            CONF.ALG_UI.FONT = pygame.font.SysFont(font_name, font_size, bold=False)
-        except Exception:
-            CONF.ALG_UI.FONT = pygame.font.Font(None, font_size)

@@ -19,7 +19,6 @@ class MapSet:
         """
         self.game_instance = game_instance
         self.entity_manager = entity_manager
-        self._init_fonts()
         self._build_buttons()
 
     def handle_event(self, event: pygame.event.Event) -> bool:
@@ -81,18 +80,3 @@ class MapSet:
             rect = pygame.Rect(CONF.MAP_UI.PADDING, y, CONF.MAP_UI.PANEL_WIDTH - CONF.MAP_UI.PADDING*2, CONF.MAP_UI.BUTTON_HEIGHT)
             CONF.MAP_UI.BUTTONS.append({"key": k, "rect": rect})
             y += CONF.MAP_UI.BUTTON_HEIGHT + 8
-
-    def _init_fonts(self, title_font_name: str = "Segoe UI", title_size: int = 20, font_name: str = "Segoe UI", font_size: int = 16):
-        """Inicializa las fuentes usadas por la UI."""
-        if not pygame.get_init():
-            pygame.init()
-
-        try:
-            CONF.MAP_UI.TITLE_FONT = pygame.font.SysFont(title_font_name, title_size, bold=True)
-        except Exception:
-            CONF.MAP_UI.TITLE_FONT = pygame.font.Font(None, title_size + 4) # Fallback con más tamaño
-        
-        try:
-            CONF.MAP_UI.FONT = pygame.font.SysFont(font_name, font_size, bold=False)
-        except Exception:
-            CONF.MAP_UI.FONT = pygame.font.Font(None, font_size)
