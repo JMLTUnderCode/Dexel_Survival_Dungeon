@@ -5,8 +5,8 @@
     },
     "activeFile": "maps/level_2.tmx",
     "expandedProjectPaths": [
-        "maps",
-        "."
+        ".",
+        "maps"
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
@@ -18,11 +18,14 @@
             "scaleInDock": 1
         },
         "C:/Users/junio/Desktop/mapa/mapa.tmx": {
-            "scale": 0.4787109375,
-            "selectedLayer": 0,
+            "expandedObjectLayers": [
+                8
+            ],
+            "scale": 2,
+            "selectedLayer": 3,
             "viewCenter": {
-                "x": 1001.6483068135457,
-                "y": 567.1481028151775
+                "x": 764.25,
+                "y": 582.75
             }
         },
         "Dungeon_Tileset.tsx": {
@@ -53,7 +56,7 @@
             "selectedLayer": 1,
             "viewCenter": {
                 "x": 512.5,
-                "y": 479.5
+                "y": 480
             }
         },
         "maps/level_1.tmx#Dungeon_Tileset": {
@@ -61,15 +64,18 @@
             "scaleInEditor": 4
         },
         "maps/level_2.tmx": {
-            "scale": 1,
+            "expandedObjectLayers": [
+                25
+            ],
+            "scale": 4,
             "selectedLayer": 3,
             "viewCenter": {
-                "x": 468.5,
-                "y": 341.5
+                "x": 514.375,
+                "y": 457.875
             }
         },
         "maps/level_2.tmx#Dungeon_Tileset": {
-            "scaleInDock": 1
+            "scaleInDock": 2
         },
         "maps/map.tmx": {
             "scale": 1,
@@ -111,11 +117,11 @@
     "recentFiles": [
         "maps/level_1.tmx",
         "maps/level_2.tmx",
+        "C:/Users/junio/Desktop/mapa/mapa.tmx",
         "maps/Dungeon_Tileset1.tsx",
         "maps/Dungeon_Tileset.tsx",
         "maps/presentacion-1.tmx",
         "maps/map.tmx",
-        "C:/Users/junio/Desktop/mapa/mapa.tmx",
         "Dungeon_Tileset.tsx",
         "map.tmx"
     ],
