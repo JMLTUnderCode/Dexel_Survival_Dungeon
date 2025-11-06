@@ -15,6 +15,7 @@ class MapSet:
         
         Args:
             game_instance: La instancia principal de la clase Game.
+            entity_manager: El gestor de entidades del juego.
         """
         self.game_instance = game_instance
         self.entity_manager = entity_manager
