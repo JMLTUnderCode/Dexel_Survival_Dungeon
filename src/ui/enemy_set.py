@@ -19,7 +19,6 @@ class EnemySet:
                             escenas cuando el usuario selecciona un nuevo conjunto.
         """
         self.entity_manager = entity_manager
-        self._init_fonts()
         self._build_buttons()
 
     def handle_event(self, event: pygame.event.Event) -> bool:
@@ -34,8 +33,8 @@ class EnemySet:
             mx, my = event.pos
             for b in CONF.ALG_UI.BUTTONS:
                 if b["rect"].collidepoint((mx, my)):
-                    CONF.ALG_UI.SELECTED_ALGORITHM = b["key"]
-                    self.entity_manager.create_enemy_group(b["key"])
+                    CONF.ALG_UI.SELECTED = b["key"]
+                    self.entity_manager.create_enemy_group(b["key"], "alg")
                     return True  # Evento manejado
         return False  # Evento no manejado
 
@@ -51,7 +50,7 @@ class EnemySet:
         surface.blit(s, (panel_rect.x, panel_rect.y))
 
         # Título
-        title_surf = CONF.ALG_UI.TITLE_FONT.render("ENEMY SET", True, CONF.ALG_UI.TITLE_COLOR)
+        title_surf = CONF.ALG_UI.TITLE_FONT.render(CONF.ALG_UI.TITLE, True, CONF.ALG_UI.TITLE_COLOR)
         surface.blit(title_surf, (CONF.ALG_UI.PADDING, CONF.ALG_UI.PADDING))
 
         # Botones
@@ -60,7 +59,7 @@ class EnemySet:
             rect = b["rect"]
             hovered = rect.collidepoint((mx, my))
             
-            if b["key"] == CONF.ALG_UI.SELECTED_ALGORITHM:
+            if b["key"] == CONF.ALG_UI.SELECTED:
                 color = CONF.ALG_UI.BUTTON_ACTIVE
             else:
                 color = CONF.ALG_UI.BUTTON_HOVER if hovered else CONF.ALG_UI.BUTTON_COLOR
@@ -81,18 +80,3 @@ class EnemySet:
             rect = pygame.Rect(CONF.ALG_UI.PADDING, y, CONF.ALG_UI.PANEL_WIDTH - CONF.ALG_UI.PADDING*2, CONF.ALG_UI.BUTTON_HEIGHT)
             CONF.ALG_UI.BUTTONS.append({"key": k, "rect": rect})
             y += CONF.ALG_UI.BUTTON_HEIGHT + 8
-
-    def _init_fonts(self, title_font_name: str = "Segoe UI", title_size: int = 20, font_name: str = "Segoe UI", font_size: int = 16):
-        """Inicializa las fuentes usadas por la UI."""
-        if not pygame.get_init():
-            pygame.init()
-
-        try:
-            CONF.ALG_UI.TITLE_FONT = pygame.font.SysFont(title_font_name, title_size, bold=True)
-        except Exception:
-            CONF.ALG_UI.TITLE_FONT = pygame.font.Font(None, title_size + 4) # Fallback con más tamaño
-        
-        try:
-            CONF.ALG_UI.FONT = pygame.font.SysFont(font_name, font_size, bold=False)
-        except Exception:
-            CONF.ALG_UI.FONT = pygame.font.Font(None, font_size)

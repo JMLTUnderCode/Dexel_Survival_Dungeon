@@ -2,7 +2,7 @@ from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
 from characters.player import Player
 from characters.enemy import Enemy
-from data.enemies import list_of_enemies_data
+from data.enemies import list_of_enemies_data, map_levels_enemies_data
 from configs.package import CONF
 
 if TYPE_CHECKING:
@@ -61,15 +61,26 @@ class EntityManager:
         self.enemies.append(enemy)
         return enemy
 
-    def create_enemy_group(self, group_key: str):
+    def create_enemy_group(self, group_key: str, group_type: str) -> None:
         """
-        Crea un grupo de enemigos basado en una clave del diccionario de datos.
+        Crea un grupo de enemigos basado en una clave del diccionario de datos y el tipo de grupo.
+        
+        Args:
+            group_key (str): Clave para identificar el grupo de enemigos en los datos.
+            group_type (str): Tipo de grupo de enemigos a crear. Puede ser:
+                - "map": Crea enemigos usando los datos de `map_levels_enemies_data`.
+                - "alg": Crea enemigos usando los datos de `list_of_enemies_data`.
         """
         self.enemies.clear()
-        if group_key in list_of_enemies_data:
+        enemy_group_data = []
+        if group_type == "map" and group_key in map_levels_enemies_data:
+            enemy_group_data = map_levels_enemies_data[group_key]
+        
+        if group_type == "alg" and group_key in list_of_enemies_data:
             enemy_group_data = list_of_enemies_data[group_key]
-            for enemy_data in enemy_group_data:
-                self.create_enemy_from_data(enemy_data)
+        
+        for enemy_data in enemy_group_data:
+            self.create_enemy_from_data(enemy_data)
 
     def clear_all(self):
         """Elimina todas las entidades."""

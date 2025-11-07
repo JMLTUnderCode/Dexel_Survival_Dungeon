@@ -1,4 +1,9 @@
-ACTIVE = True
+import pygame
+
+if not pygame.get_init():
+    pygame.init()
+
+ACTIVE = False
 PANEL_WIDTH = 200
 PADDING = 12
 BUTTON_HEIGHT = 36
@@ -7,9 +12,10 @@ BUTTON_COLOR = (50, 50, 50)
 BUTTON_HOVER = (70, 70, 70)
 BUTTON_ACTIVE = (132, 87, 69)
 TEXT_COLOR = (230, 230, 230)
+TITLE = "ENEMY SET"
 TITLE_COLOR = (180, 220, 255)
-TITLE_FONT = None
-FONT = None
+TITLE_FONT = pygame.font.SysFont("Segoe UI", 20, bold=True)
+FONT = pygame.font.SysFont("Segoe UI", 16)
 
 BUTTONS = []
 PARSING_BUTTONS = {
@@ -31,4 +37,4 @@ PARSING_BUTTONS = {
     "ALL"                             : "ALL",
     "NOTHING"                         : "NOTHING"
 }
-SELECTED_ALGORITHM = "NOTHING"
+SELECTED = "NOTHING"

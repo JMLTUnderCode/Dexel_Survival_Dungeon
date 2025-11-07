@@ -3,10 +3,10 @@
         "height": 4300,
         "width": 2
     },
-    "activeFile": "maps/level_1.tmx",
+    "activeFile": "maps/level_2.tmx",
     "expandedProjectPaths": [
-        "maps",
-        "."
+        ".",
+        "maps"
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
@@ -18,11 +18,14 @@
             "scaleInDock": 1
         },
         "C:/Users/junio/Desktop/mapa/mapa.tmx": {
-            "scale": 0.4787109375,
-            "selectedLayer": 0,
+            "expandedObjectLayers": [
+                8
+            ],
+            "scale": 2,
+            "selectedLayer": 3,
             "viewCenter": {
-                "x": 1001.6483068135457,
-                "y": 567.1481028151775
+                "x": 764.25,
+                "y": 582.75
             }
         },
         "Dungeon_Tileset.tsx": {
@@ -44,17 +47,35 @@
             "scaleInDock": 2,
             "scaleInEditor": 3
         },
+        "maps/Dungeon_Tileset1.tsx": {
+            "scaleInDock": 1.5,
+            "scaleInEditor": 1
+        },
         "maps/level_1.tmx": {
-            "scale": 1.5,
-            "selectedLayer": 2,
+            "scale": 1,
+            "selectedLayer": 1,
             "viewCenter": {
-                "x": 299.66666666666663,
-                "y": 406.33333333333337
+                "x": 512.5,
+                "y": 480
             }
         },
         "maps/level_1.tmx#Dungeon_Tileset": {
             "scaleInDock": 2,
             "scaleInEditor": 4
+        },
+        "maps/level_2.tmx": {
+            "expandedObjectLayers": [
+                25
+            ],
+            "scale": 4,
+            "selectedLayer": 3,
+            "viewCenter": {
+                "x": 514.375,
+                "y": 457.875
+            }
+        },
+        "maps/level_2.tmx#Dungeon_Tileset": {
+            "scaleInDock": 2
         },
         "maps/map.tmx": {
             "scale": 1,
@@ -88,16 +109,19 @@
     "map.tileWidth": 16,
     "map.width": 60,
     "openFiles": [
-        "maps/level_1.tmx"
+        "maps/level_1.tmx",
+        "maps/level_2.tmx"
     ],
     "project": "dexel_survival_dungeon.tiled-project",
     "property.type": "object",
     "recentFiles": [
         "maps/level_1.tmx",
+        "maps/level_2.tmx",
+        "C:/Users/junio/Desktop/mapa/mapa.tmx",
+        "maps/Dungeon_Tileset1.tsx",
         "maps/Dungeon_Tileset.tsx",
         "maps/presentacion-1.tmx",
         "maps/map.tmx",
-        "C:/Users/junio/Desktop/mapa/mapa.tmx",
         "Dungeon_Tileset.tsx",
         "map.tmx"
     ],
