@@ -187,12 +187,8 @@ class Game:
             for entity in self.entity_manager.enemies + [self.entity_manager.player]:
                 node = getattr(entity, "node_location", None)
                 if node and getattr(node, "polygon", None):
-                    try:
-                        pts = [(int(p[0] - self.camera_x), int(p[1] - self.camera_z)) for p in node.polygon]
-                        if len(pts) >= 3:
-                            pygame.draw.polygon(self.game_surface, (255, 0, 0), pts, 2)
-                    except Exception:
-                        pass
+                    pts = [(int(p[0] - self.camera_x), int(p[1] - self.camera_z)) for p in node.polygon]
+                    pygame.draw.polygon(self.game_surface, (255, 0, 0), pts, 2)
 
         # 2. Dibujar todos los enemigos
         for enemy in self.entity_manager.enemies:
