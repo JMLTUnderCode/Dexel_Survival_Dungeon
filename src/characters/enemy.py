@@ -217,7 +217,7 @@ class Enemy(Kinematic):
             max_angular_accel=max_angular_accel, # Aceleración angular máxima
         )
 
-        # instantiate FollowPath delegate
+        # Instanciar el algoritmo de Follow Path
         if algorithm == CONF.ALG.ALGORITHM.PATH_FOLLOWING and path is not None:
             self.follow_path = FollowPath(
                 character=self, 
