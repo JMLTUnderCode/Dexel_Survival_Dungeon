@@ -58,7 +58,7 @@ class EntityManager:
         """
         alive_list = []
         for e in self.enemies:
-            if getattr(e, "alive", True):
+            if e.alive:
                 alive_list.append(e)
             else:
                 self.kills += 1
