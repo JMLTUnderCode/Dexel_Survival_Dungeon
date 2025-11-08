@@ -79,9 +79,6 @@ class Enemy(Kinematic):
             rotation=0.0
         )
         # Vida custom por enemigo (puede ajustarse desde datos)
-        self.max_health = getattr(self, "max_health", 100.0)
-        self.health = self.max_health
-        self.alive = True
 
         # comportamiento de ataque (melee)
         self.attack_cooldown = 1.0  # segundos entre ataques
