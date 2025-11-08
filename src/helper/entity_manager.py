@@ -4,7 +4,6 @@ from characters.player import Player
 from characters.enemy import Enemy
 from data.enemies import list_of_enemies_data, map_levels_enemies_data
 from helper.paths import PolylinePath
-from kinematics.path_following import FollowPath
 from map.pathfinder import Pathfinder
 from configs.package import CONF
 
