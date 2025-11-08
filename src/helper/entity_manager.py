@@ -39,7 +39,7 @@ class EntityManager:
                 wx, wz = wave.x, wave.z
                 r = wave.max_radius
                 for enemy in list(self.enemies):
-                    if not getattr(enemy, "alive", True):
+                    if not enemy.alive:
                         continue
                     ex, ez = enemy.get_pos()
                     dist = math.hypot(ex - wx, ez - wz)
