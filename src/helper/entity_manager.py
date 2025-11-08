@@ -1,5 +1,6 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
+import math
 from characters.player import Player
 from characters.enemy import Enemy
 from data.enemies import list_of_enemies_data, map_levels_enemies_data
@@ -19,6 +20,49 @@ class EntityManager:
         self.player: Optional[Player] = None
         self.enemies: list[Enemy] = []
         self.pathfinder: Optional[Pathfinder] = None
+        self.kills: int = 0
+
+    def process_player_attacks(self) -> None:
+        """
+        Recorre las attack_waves del jugador y aplica daño a enemigos cercanos
+        la primera vez que la onda es procesada (evita aplicar repetidamente).
+        Daño: 25% de la vida máxima del enemigo.
+        """
+        if not self.player:
+            return
+        if not self.enemies:
+            return
+
+        for wave in list(self.player.attack_waves):
+            if not getattr(wave, "applied", False):
+                # aplicar daño a enemigos dentro del radio de la onda
+                wx, wz = wave.x, wave.z
+                r = wave.max_radius
+                for enemy in list(self.enemies):
+                    if not getattr(enemy, "alive", True):
+                        continue
+                    ex, ez = enemy.get_pos()
+                    dist = math.hypot(ex - wx, ez - wz)
+                    if dist <= r:
+                        dmg = 0.25 * getattr(enemy, "max_health", 100.0)
+                        enemy.take_damage(dmg)
+                # marcar la onda como aplicada para no volver a dañar
+                try:
+                    wave.mark_applied()
+                except Exception:
+                    pass
+
+    def remove_dead_enemies(self) -> None:
+        """
+        Elimina enemigos muertos de la lista `self.enemies`.
+        """
+        alive_list = []
+        for e in self.enemies:
+            if getattr(e, "alive", True):
+                alive_list.append(e)
+            else:
+                self.kills += 1
+        self.enemies = alive_list
 
     def create_player(self, **kwargs) -> Player:
         """

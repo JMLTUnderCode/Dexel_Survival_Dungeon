@@ -78,6 +78,16 @@ class Enemy(Kinematic):
             velocity=(0,0), 
             rotation=0.0
         )
+        # Vida custom por enemigo (puede ajustarse desde datos)
+        self.max_health = getattr(self, "max_health", 100.0)
+        self.health = self.max_health
+        self.alive = True
+
+        # comportamiento de ataque (melee)
+        self.attack_cooldown = 1.0  # segundos entre ataques
+        self._attack_timer = 0.0
+        self.attack_range = 40.0    # pixels distancia para pegar
+
         self.type = type
         self.target = target
         self.algorithm = algorithm
@@ -240,6 +250,25 @@ class Enemy(Kinematic):
         rect = rotated.get_rect(center=(sx, sz))
         surface.blit(rotated, rect)
 
+        # Dibujar barra de vida encima del sprite
+        try:
+            sx = int(self.position[0] - camera_x)
+            sz = int(self.position[1] - camera_z)
+            bar_w = 44
+            bar_h = 6
+            bar_x = sx - bar_w // 2
+            bar_y = sz - (self.current_animation.get_size()[1] // 2) - 12
+            # fondo (gris)
+            pygame.draw.rect(surface, (50, 50, 50), (bar_x, bar_y, bar_w, bar_h))
+            # vida (verde)
+            hp_ratio = max(0.0, min(1.0, getattr(self, "health", 0.0) / getattr(self, "max_health", 100.0)))
+            fill_w = int(bar_w * hp_ratio)
+            pygame.draw.rect(surface, (0, 200, 0), (bar_x, bar_y, fill_w, bar_h))
+            # borde
+            pygame.draw.rect(surface, (0,0,0), (bar_x, bar_y, bar_w, bar_h), 1)
+        except Exception:
+            pass
+
         if CONF.DEV.DEBUG:
             # Mostrar arriba del sprite el algoritmo activo en VERDE, NEGRITA y MAYÚSCULAS
             # Cachear la fuente en la clase para no recrearla cada frame
@@ -352,4 +381,36 @@ class Enemy(Kinematic):
             else:
                 set_animation_state(self, CONF.ENEMY.ACTIONS.ATTACK)
 
+                # Actualizar timer de ataque
+        if self._attack_timer > 0.0:
+            self._attack_timer = max(0.0, self._attack_timer - dt)
+
+        # Intentar ataque melee si hay target (player)
+        try:
+            if self.target and getattr(self.target, "is_alive", lambda: True)():
+                tx, tz = self.target.get_pos()
+                sx, sz = self.get_pos()
+                dist = math.hypot(tx - sx, tz - sz)
+                if dist <= self.attack_range and self._attack_timer == 0.0:
+                    # daño: 5% de la vida máxima del jugador
+                    dmg = 0.05 * getattr(self.target, "max_health", 100.0)
+                    try:
+                        self.target.take_damage(dmg)
+                    except Exception:
+                        pass
+                    self._attack_timer = self.attack_cooldown
+        except Exception:
+            pass
+
         self.current_animation.update(dt)      # Actualizar animación
+
+    def die(self) -> None:
+        """
+        Override die: marcar muerto y dejar que EntityManager lo limpie.
+        """
+        self.alive = False
+        # opcional: cambiar estado de animación a muerte, disable behaviors, etc.
+        try:
+            set_animation_state(self, CONF.ENEMY.ACTIONS.DEATH_0)
+        except Exception:
+            pass

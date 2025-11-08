@@ -122,10 +122,8 @@ class Game:
                     world_x = mx - self.ui_panel_width + self.camera_x
                     world_z = my + self.camera_z
                     self.entity_manager.update_enemy_paths_to((world_x, world_z))
-
-                # Si no es click de testing, pasar evento al jugador (ajustando coordenadas)
-                else:
-                    self._forward_event_to_player(event)
+            
+                self._forward_event_to_player(event)
 
             # 3. Si evento no tiene pos, delegar normalmente
             elif not ui_handled:
@@ -177,6 +175,13 @@ class Game:
 
         # 2. Actualizar la lógica de las entidades
         player.update(self.game_map.collision_rects, self.dt)
+
+        # Procesar ataques del jugador (aplicar daño desde attack_waves)
+        try:
+            self.entity_manager.process_player_attacks()
+        except Exception:
+            pass
+
         # Actualizar nodo del jugador usando BFS local en NavMesh (si existe)
         if self.game_map.navmesh:
             new_node = self.game_map.navmesh.find_node_from(player.node_location, player.get_pos())
@@ -187,6 +192,12 @@ class Game:
             if self.game_map.navmesh:
                 # mantener id o nodo según convenga; aquí guardamos el NavMeshNode objeto
                 enemy.node_location = self.game_map.navmesh.find_node_from(enemy.node_location, enemy.get_pos())
+
+        # Limpiar enemigos muertos
+        try:
+            self.entity_manager.remove_dead_enemies()
+        except Exception:
+            pass
 
     def _render(self):
         """
