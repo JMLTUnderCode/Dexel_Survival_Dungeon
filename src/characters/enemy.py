@@ -390,7 +390,7 @@ class Enemy(Kinematic):
                 dist = math.hypot(tx - sx, tz - sz)
                 if dist <= self.attack_range and self._attack_timer == 0.0:
                     # daño: 5% de la vida máxima del jugador
-                    dmg = 0.05 * getattr(self.target, "max_health", 100.0)
+                    dmg = 0.05 * self.target.max_health
                     try:
                         self.target.take_damage(dmg)
                     except Exception:
