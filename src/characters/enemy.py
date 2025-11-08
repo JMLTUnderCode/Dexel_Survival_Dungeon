@@ -384,7 +384,7 @@ class Enemy(Kinematic):
 
         # Intentar ataque melee si hay target (player)
         try:
-            if self.target and getattr(self.target, "is_alive", lambda: True)():
+            if self.target and self.target.is_alive():
                 tx, tz = self.target.get_pos()
                 sx, sz = self.get_pos()
                 dist = math.hypot(tx - sx, tz - sz)
