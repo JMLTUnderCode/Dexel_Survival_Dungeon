@@ -158,7 +158,7 @@ class Player(Kinematic):
             bar_x = sx - bar_w // 2
             bar_y = sz - (self.current_animation.get_size()[1] // 2) - 18
             pygame.draw.rect(surface, (50, 50, 50), (bar_x, bar_y, bar_w, bar_h))
-            hp_ratio = max(0.0, min(1.0, getattr(self, "health", 0.0) / getattr(self, "max_health", 100.0)))
+            hp_ratio = max(0.0, min(1.0, self.health / self.max_health))
             fill_w = int(bar_w * hp_ratio)
             pygame.draw.rect(surface, (0, 200, 0), (bar_x, bar_y, fill_w, bar_h))
             pygame.draw.rect(surface, (0,0,0), (bar_x, bar_y, bar_w, bar_h), 1)
