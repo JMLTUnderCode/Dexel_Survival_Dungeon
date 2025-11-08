@@ -98,6 +98,8 @@ class EntityManager:
         for enemy in self.enemies:
             try:
                 start = enemy.get_pos()
+                if not self.pathfinder:
+                    continue
                 pts = self.pathfinder.find_path(start, target_pos)
                 if not pts:
                     continue
