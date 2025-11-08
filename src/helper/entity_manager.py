@@ -44,7 +44,7 @@ class EntityManager:
                     ex, ez = enemy.get_pos()
                     dist = math.hypot(ex - wx, ez - wz)
                     if dist <= r:
-                        dmg = 0.25 * getattr(enemy, "max_health", 100.0)
+                        dmg = 0.25 * enemy.max_health
                         enemy.take_damage(dmg)
                 # marcar la onda como aplicada para no volver a dañar
                 try:
