@@ -51,8 +51,8 @@ class Game:
         self.game_map = None
         self.entity_manager = EntityManager()
         
-        self.group_key = None
-        self.group_type = None
+        self.group_key = CONF.MAP_UI.SELECTED
+        self.group_type = "map"
         if CONF.ALG_UI.ACTIVE: 
             self.group_key = CONF.ALG_UI.SELECTED
             self.group_type = "alg"
