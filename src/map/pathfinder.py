@@ -124,8 +124,11 @@ class Pathfinder:
         if not node_path:
             return None
 
+        # If the path is only one node, just go from start_pos to end_pos
+        if len(node_path) == 1:
+            return [start_pos, end_pos]
         points: List[Tuple[float, float]] = [start_pos]
-        for n in node_path:
+        for n in node_path[1:-1]:  # Skip first and last nodes
             points.append(n.center)
         points.append(end_pos)
         return points
