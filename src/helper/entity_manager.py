@@ -94,7 +94,6 @@ class EntityManager:
         """
         Calcula y asigna un nuevo path (PolylinePath) a todos los enemigos.
         - target_pos: posición world-space (x, z) objetivo del click.
-        - pathfinder: instancia de Pathfinder; si None usa self.pathfinder si existe.
         """
         for enemy in self.enemies:
             try:
