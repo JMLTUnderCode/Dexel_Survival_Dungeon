@@ -34,7 +34,7 @@ class MapSet:
             for b in CONF.MAP_UI.BUTTONS:
                 if b["rect"].collidepoint((mx, my)):
                     CONF.MAP_UI.SELECTED = b["key"]
-                    self.game_instance.load_level(b["key"])
+                    self.game_instance.load_level(b["key"], b["key"], "map")
                     return True  # Evento manejado
         return False  # Evento no manejado
 
