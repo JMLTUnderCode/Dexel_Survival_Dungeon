@@ -87,10 +87,11 @@ class Game:
         self.pathfinder = None
         if self.game_map.navmesh:
             self.pathfinder = Pathfinder(self.game_map.navmesh)
-            # Exponer al EntityManager para que las entidades puedan pedir rutas
-            self.entity_manager.pathfinder = self.pathfinder
 
-        # 3. Crear las entidades para el nuevo nivel
+        # 3. Exponer al EntityManager para que las entidades puedan pedir rutas
+        self.entity_manager.pathfinder = self.pathfinder
+
+        # 4. Crear las entidades para el nuevo nivel
         self.entity_manager.create_player()
         self.entity_manager.create_enemy_group(g_key, g_type)
 
