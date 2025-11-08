@@ -3,6 +3,9 @@ from typing import TYPE_CHECKING, Optional
 from characters.player import Player
 from characters.enemy import Enemy
 from data.enemies import list_of_enemies_data, map_levels_enemies_data
+from helper.paths import PolylinePath
+from kinematics.path_following import FollowPath
+from map.pathfinder import Pathfinder
 from configs.package import CONF
 
 if TYPE_CHECKING:
@@ -16,6 +19,7 @@ class EntityManager:
     def __init__(self):
         self.player: Optional[Player] = None
         self.enemies: list[Enemy] = []
+        self.pathfinder: Optional[Pathfinder] = None
 
     def create_player(self, **kwargs) -> Player:
         """
@@ -54,9 +58,8 @@ class EntityManager:
             max_acceleration=enemy_data.get("max_acceleration", 300.0),
             max_rotation=enemy_data.get("max_rotation", 1.0),
             max_angular_accel=enemy_data.get("max_angular_accel", 8.0),
-            path_type=enemy_data.get("path_type"),
-            path_params=enemy_data.get("path_params"),
-            path_offset=enemy_data.get("path_offset", 12.0),
+            path=enemy_data.get("path"),
+            path_offset=enemy_data.get("path_offset", 4.0),
         )
         self.enemies.append(enemy)
         return enemy
@@ -86,3 +89,22 @@ class EntityManager:
         """Elimina todas las entidades."""
         self.player = None
         self.enemies.clear()
+
+    def update_enemy_paths_to(self, target_pos: tuple[float, float]) -> None:
+        """
+        Calcula y asigna un nuevo path (PolylinePath) a todos los enemigos.
+        - target_pos: posición world-space (x, z) objetivo del click.
+        - pathfinder: instancia de Pathfinder; si None usa self.pathfinder si existe.
+        """
+        for enemy in self.enemies:
+            try:
+                start = enemy.get_pos()
+                pts = self.pathfinder.find_path(start, target_pos)
+                if not pts:
+                    continue
+                poly = PolylinePath(pts, closed=False)
+                if getattr(enemy, "follow_path", None):
+                    enemy.follow_path.path = poly
+            except Exception:
+                # no romper el bucle por fallo en un enemigo concreto
+                continue

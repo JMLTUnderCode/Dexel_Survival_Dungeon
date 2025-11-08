@@ -1,4 +1,5 @@
 from configs.package import CONF
+from helper.paths import make_circle_path, make_rectangle_path
 
 # Todos los atributos obligatorios para crear un enemigo
 # - type: tipo de enemigo (string)
@@ -894,25 +895,33 @@ list_of_enemies_data = {
 
 paths_1_group = {
     "zone 1" : {
-        "type": "circle",
-        "params": {
-            "radius": 260, 
-            "segments": 35, 
-            "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 15, 
-                       CONF.MAIN_WIN.RENDER_TILE_SIZE * 49 + CONF.MAIN_WIN.RENDER_TILE_SIZE // 2)},
-        "offset": 2,
+        "radius": 260, 
+        "segments": 35, 
+        "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 15, 
+                   CONF.MAIN_WIN.RENDER_TILE_SIZE * 49 + CONF.MAIN_WIN.RENDER_TILE_SIZE // 2),
+        "offset": 1,
     },
     "zone 2" : {
-        "type": "rectangle",
-        "params": {
-            "width": 540.0, 
-            "height": 320.0, 
-            "segments": 30, 
-            "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 9 + CONF.MAIN_WIN.RENDER_TILE_SIZE, 
-                       CONF.MAIN_WIN.RENDER_TILE_SIZE * 6 + CONF.MAIN_WIN.RENDER_TILE_SIZE)},
-        "offset": 3,
+        "width": 540.0, 
+        "height": 320.0, 
+        "segments": 30, 
+        "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 9 + CONF.MAIN_WIN.RENDER_TILE_SIZE, 
+                   CONF.MAIN_WIN.RENDER_TILE_SIZE * 6 + CONF.MAIN_WIN.RENDER_TILE_SIZE),
+        "offset": 1,
     }
 }
+
+path_zone_1 = make_circle_path(
+   radius=paths_1_group["zone 1"]["radius"], 
+   center=paths_1_group["zone 1"]["center"], 
+   segments=paths_1_group["zone 1"]["segments"]
+)
+path_zone_2 = make_rectangle_path(
+    width=paths_1_group["zone 2"]["width"], 
+    height=paths_1_group["zone 2"]["height"],
+    center=paths_1_group["zone 2"]["center"], 
+    segments=paths_1_group["zone 2"]["segments"]
+)
 
 map_1_group = [
     {
@@ -920,7 +929,7 @@ map_1_group = [
         "position": (CONF.MAIN_WIN.RENDER_TILE_SIZE*3, CONF.MAIN_WIN.RENDER_TILE_SIZE*16),
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PURSUE,
-        "max_speed": 200.0,
+        "max_speed": 120.0,
         "target_radius": 40.0,
         "slow_radius": 180.0,
         "time_to_target": 0.15,
@@ -938,12 +947,11 @@ map_1_group = [
         "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
         "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
-        "max_acceleration": 200.0,
+        "max_acceleration": 320.0,
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": paths_1_group["zone 1"]["type"],
-        "path_params": paths_1_group["zone 1"]["params"],
+        "path": path_zone_1,
         "path_offset": paths_1_group["zone 1"]["offset"],
     },
     {
@@ -951,16 +959,15 @@ map_1_group = [
         "position": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 10, CONF.MAIN_WIN.RENDER_TILE_SIZE * 7),
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
-        "max_speed": 120.0,
+        "max_speed": 100.0,
         "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
         "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
-        "max_acceleration": 200.0,
+        "max_acceleration": 320.0,
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": paths_1_group["zone 2"]["type"],
-        "path_params": paths_1_group["zone 2"]["params"],
+        "path": path_zone_2,
         "path_offset": paths_1_group["zone 2"]["offset"],
     },
 ]

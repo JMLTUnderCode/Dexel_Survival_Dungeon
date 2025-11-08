@@ -1,6 +1,7 @@
 import pygame
 import sys
 from map.map import Map
+from map.pathfinder import Pathfinder
 from ui.enemy_set import EnemySet
 from ui.map_set import MapSet
 from helper.entity_manager import EntityManager
@@ -47,22 +48,20 @@ class Game:
         self.running = True
 
         # --- Gestor de Entidades y Estado del Juego ---
-        self.game_map = Map(level=CONF.MAP_UI.SELECTED)
+        self.game_map = None
         self.entity_manager = EntityManager()
         
-        # Crear entidades iniciales
-        self.entity_manager.create_player()
-        initial_group = None
-        type_group = None
+        self.group_key = None
+        self.group_type = None
         if CONF.ALG_UI.ACTIVE: 
-            initial_group = CONF.ALG_UI.SELECTED
-            type_group = "alg"
+            self.group_key = CONF.ALG_UI.SELECTED
+            self.group_type = "alg"
         if CONF.MAP_UI.ACTIVE: 
-            initial_group = CONF.MAP_UI.SELECTED
-            type_group = "map"
-        if initial_group and type_group:
-            self.entity_manager.create_enemy_group(initial_group, type_group)
-        
+            self.group_key = CONF.MAP_UI.SELECTED
+            self.group_type = "map" 
+
+        self.load_level(level_number=CONF.MAP_UI.SELECTED, g_key=self.group_key, g_type=self.group_type)
+
         self.camera_x = 0
         self.camera_z = 0
 
@@ -74,11 +73,9 @@ class Game:
         if CONF.MAP_UI.ACTIVE:
             self.map_set_ui = MapSet(self, self.entity_manager)
 
-    def load_level(self, level_number: int):
+    def load_level(self, level_number: int, g_key: int, g_type: str):
         """
         Carga un nivel específico, reconstruyendo el mapa, el navmesh y las entidades.
-        
-        :param level_number: Número del nivel a cargar.
         """
         if CONF.DEV.DEBUG:
             print(f"[Game] Cargando nivel {level_number}...")
@@ -87,12 +84,15 @@ class Game:
         self.game_map = Map(level=level_number)
         
         # 2. Recrear el pathfinder con el nuevo navmesh
+        self.pathfinder = None
         if self.game_map.navmesh:
-            pass
+            self.pathfinder = Pathfinder(self.game_map.navmesh)
+            # Exponer al EntityManager para que las entidades puedan pedir rutas
+            self.entity_manager.pathfinder = self.pathfinder
 
         # 3. Crear las entidades para el nuevo nivel
         self.entity_manager.create_player()
-        self.entity_manager.create_enemy_group(level_number, "map")
+        self.entity_manager.create_enemy_group(g_key, g_type)
 
     def _handle_events(self):
         """
@@ -104,15 +104,30 @@ class Game:
                 self.running = False
                 return
 
-            # Delegar evento a las UIs
+            # 1. Intentar que la UI maneje el evento.
             ui_handled = False
             if self.enemy_set_ui:
                 ui_handled = self.enemy_set_ui.handle_event(event)
             if not ui_handled and self.map_set_ui:
                 ui_handled = self.map_set_ui.handle_event(event)
 
-            # Si no fue manejado por la UI, pasarlo al jugador
-            if not ui_handled:
+            # 2. Si la UI no manejó el evento, procesamos clicks en el área de juego.
+            if not ui_handled and hasattr(event, "pos"):
+                mx, my = event.pos
+
+                # Si el click fue dentro del área de juego (a la derecha del panel UI)
+                if CONF.DEV.DEBUG and mx >= self.ui_panel_width and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                    # Convertir coords de pantalla -> coords world (game_surface)
+                    world_x = mx - self.ui_panel_width + self.camera_x
+                    world_z = my + self.camera_z
+                    self.entity_manager.update_enemy_paths_to((world_x, world_z))
+
+                # Si no es click de testing, pasar evento al jugador (ajustando coordenadas)
+                else:
+                    self._forward_event_to_player(event)
+
+            # 3. Si evento no tiene pos, delegar normalmente
+            elif not ui_handled:
                 self._forward_event_to_player(event)
 
     def _forward_event_to_player(self, event: pygame.event.Event):
