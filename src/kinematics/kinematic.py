@@ -50,10 +50,40 @@ class Kinematic:
         self.velocity = velocity        # Velocidad de desplazamiento en x e y.
         self.rotation = rotation        # Velocidad de rotacion
 
+        self.max_health: float = 100.0
+        self.health: float = self.max_health
+        self.alive: bool = True
+
         # Nodo del NavMesh donde se encuentra actualmente la entidad (NavMeshNode o node id).
         # Debe inicializarse cuando la entidad se crea (p. ej. EntityManager.create_player/create_enemy_from_data)
         # o puede permanecer None (se buscará la primera vez).
         self.node_location = None
+
+    def take_damage(self, amount: float) -> float:
+        """
+        Aplica `amount` de daño (valor absoluto) a esta entidad.
+        Retorna la vida actual tras aplicar el daño.
+        """
+        if not self.alive:
+            return self.health
+        self.health = max(0.0, self.health - amount)
+        if self.health <= 0.0:
+            self.alive = False
+            try:
+                # hook que cada subclase puede implementar
+                self.die()
+            except Exception:
+                pass
+        return self.health
+
+    def is_alive(self) -> bool:
+        return bool(self.alive)
+
+    def die(self) -> None:
+        """
+        Hook por defecto: marca como no vivo. Subclases pueden sobreescribir para efectos.
+        """
+        self.alive = False
 
     def is_a_collision(
         self, 

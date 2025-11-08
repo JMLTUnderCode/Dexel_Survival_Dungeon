@@ -11,6 +11,15 @@ class AttackWave:
         self.frame = 0               # Frame actual (cuenta cuántos frames ha estado activa)
         self.alive = True            # Estado de vida: True si la onda sigue activa, False si debe eliminarse
 
+        self._applied = False        # Marca si el daño ya fue aplicado
+
+    @property
+    def applied(self) -> bool:
+        return self._applied
+
+    def mark_applied(self) -> None:
+        self._applied = True
+
     def update(self):
         # Avanza un frame la animación de la onda
         self.frame += 1
