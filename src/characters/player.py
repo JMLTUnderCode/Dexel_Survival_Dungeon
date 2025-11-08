@@ -149,7 +149,7 @@ class Player(Kinematic):
         for wave in self.attack_waves:
             wave.draw(surface, camera_x, camera_z)
 
-                # Dibujar barra de vida del jugador en modo debug siempre visible
+                # Dibujar barra de vida del jugador (siempre visible)
         try:
             sx = int(self.position[0] - camera_x)
             sz = int(self.position[1] - camera_z)
