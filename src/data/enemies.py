@@ -923,6 +923,164 @@ path_zone_2 = make_rectangle_path(
     segments=paths_1_group["zone 2"]["segments"]
 )
 
+
+HUNTER_BEHAVIOR = {
+    "name": "hunter",
+    "debug": {
+        "show_state_over_entity": True,   # renderer will draw active HSM stack above enemy
+        "color_by_level": True
+    },
+    "params": {
+        "vision_range": 400.0,        # px
+        "vision_fov_deg": 120.0,      # if your LOS uses FOV
+        "attack_range": 48.0,         # px, melee threshold
+        "flee_threshold": 0.30,       # health fraction -> enter Huyendo
+        "restore_threshold": 0.70,    # health fraction -> restore EstadoVida (deep history)
+        "heal_rate_per_sec": 0.05,    # fraction of max_health healed per second (10%/s)
+        "safe_distance": 450.0,       # px, distance considered "safe" from player
+        "player_lost_timeout": 2.0,   # seconds to wait before switching from Atacar->Cazar when player not visible
+        "patrol_path_nodes": 20,      # desired minimum number of navemesh nodes for patrol path
+        "face_range_multiplier": 1.5, # multiplier applied to vision_range for Face behaviour (e.g. 1.5 -> 150%) 
+        "check_los_throttle": 0.12    # seconds between expensive LOS checks
+    },
+
+    # Top-level HSM:
+    # Root has three level-1 states: EstadoVida (composite with sub-states), Huyendo, Curarse
+    "states": {
+        "root": {
+            "type": "composite",
+            "initial": "EstadoVida",
+            "substates": ["EstadoVida", "Huyendo", "Curarse"],
+            "entry": ["hsm_noop"],
+            "exit": ["hsm_noop"]
+        },
+
+        # Nivel 1: Estado de Vida (subMáquina)
+        "EstadoVida": {
+            "type": "composite",
+            "initial": "Cazar",
+            "history": "deep",   # enable deep history for this composite
+            "substates": ["Cazar", "Atacar"],
+            "entry": ["record_last_state_start"],   # optional bookkeeping
+            "exit": []
+        },
+
+        # Nivel 0 dentro de EstadoVida: Cazar (patrullar / buscar)
+        "EstadoVida.Cazar": {
+            "type": "leaf",
+            "entry": ["start_random_patrol"],   # action: request patrol path / FollowPath
+            "update": ["patrol_tick", "throttle_check_player_visibility"],
+            "exit": ["stop_patrol"],
+            "transitions": [
+                {
+                    "to": "EstadoVida.Atacar",
+                    "cond": "PlayerVisible",
+                    "cond_params": {"max_dist_key": "vision_range", "fov_key": "vision_fov_deg"},
+                    "priority": 100
+                },
+                {
+                    "to": "Huyendo",
+                    "cond": "HealthBelow",
+                    "cond_params": {"threshold": "flee_threshold"},
+                    "priority": 200
+                }
+            ]
+        },
+
+        # Nivel 0 dentro de EstadoVida: Atacar (perseguir y golpear)
+        "EstadoVida.Atacar": {
+            "type": "leaf",
+            "entry": ["start_pursue_target"],
+            "update": ["pursue_tick", "try_melee_attack", "throttle_check_player_visibility"],
+            "exit": ["stop_pursue"],
+            "transitions": [
+                {
+                    "to": "EstadoVida.Cazar",
+                    "cond": "PlayerNotVisibleFor",
+                    "cond_params": {"timeout_key": "player_lost_timeout"},
+                    "priority": 50
+                },
+                {
+                    "to": "Huyendo",
+                    "cond": "HealthBelow",
+                    "cond_params": {"threshold": "flee_threshold"},
+                    "priority": 200
+                }
+            ]
+        },
+
+        # Nivel 1: Huyendo (evadir)
+        "Huyendo": {
+            "type": "leaf",
+            "entry": ["start_evade_from_player", "set_behavior_flag_fleeing"],
+            "update": ["evade_tick", "evaluate_safe_distance"],
+            "exit": ["stop_evade", "clear_behavior_flag_fleeing"],
+            "transitions": [
+                {
+                    "to": "Curarse",
+                    "cond": "PlayerFarAndNoThreat",
+                    "cond_params": {"safe_distance_key": "safe_distance", "no_enemies_radius": 300.0},
+                    "priority": 150
+                },
+                # allow immediate interrupt to Curarse if health is already very low and safe condition met
+            ]
+        },
+
+        # Nivel 1: Curarse (quedarse estático, Face, curar)
+        "Curarse": {
+            "type": "leaf",
+            "entry": ["face_towards_safe_anchor", "stop_movement", "start_heal_tick"],
+            "update": ["face_towards_safe_anchor", "heal_tick", "monitor_player_presence"],
+            "exit": ["stop_heal_tick", "clear_safe_anchor"],
+            "transitions": [
+                {
+                    "to": "EstadoVida",
+                    "cond": "HealthAbove",
+                    "cond_params": {"threshold": "restore_threshold"},
+                    "priority": 200,
+                    "restore_history": True   # instruct builder/runtime to restore deep history of EstadoVida
+                },
+                {
+                    "to": "Huyendo",
+                    "cond": "PlayerVisible",
+                    "cond_params": {"max_dist_key": "vision_range"},
+                    "priority": 300   # if enemy reappears, interrupt healing and flee
+                }
+            ]
+        }
+    },
+
+    # Convenience: map of action keys -> human description (for implementers)
+    # (actual implementation will be provided in src/ai/actions.py)
+    "actions_doc": {
+        "start_random_patrol": "Request pathfinder a random waypoint and attach FollowPath",
+        "patrol_tick": "Ensure FollowPath active and refresh if stuck",
+        "stop_patrol": "Stop FollowPath and clear waypoint",
+        "start_pursue_target": "Start Pursue steering toward last known player",
+        "pursue_tick": "Tick pursue steering and update last_known_player_pos",
+        "stop_pursue": "Stop pursue steering",
+        "try_melee_attack": "If within attack_range attempt attack (use existing attack logic)",
+        "start_evade_from_player": "Activate Evade steering using player's predicted position",
+        "evade_tick": "Tick evade, update distance checks",
+        "stop_evade": "Stop evade steering",
+        "face_towards_safe_anchor": "Use Face steering to look toward safe anchor point",
+        "stop_movement": "Zero velocities / disable steering outputs",
+        "start_heal_tick": "Begin periodic heal that increases health by heal_rate_per_sec",
+        "heal_tick": "Apply fractional healing each second",
+        "stop_heal_tick": "Stop healing timer",
+        "record_last_state_start": "Internal bookkeeping to store last substate on entry"
+    },
+
+    # Conditions doc: map cond key -> human description (to implement in src/ai/conditions.py)
+    "conditions_doc": {
+        "PlayerVisible": "True if player within vision_range and (optional) FOV and LOS",
+        "PlayerNotVisibleFor": "True if player hasn't been visible for configured timeout",
+        "PlayerFarAndNoThreat": "True if player distance > safe_distance and no other enemies within radius",
+        "HealthBelow": "True if entity.health / entity.max_health < threshold (threshold may be key->param)",
+        "HealthAbove": "True if entity.health / entity.max_health >= threshold"
+    }
+}
+
 map_1_group = [
     {
         "type": "gargant-soldier",
@@ -930,13 +1088,14 @@ map_1_group = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PURSUE,
         "max_speed": 120.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
-        "time_to_target": 0.15,
+        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "time_to_target": 0.1,
         "max_acceleration": 300.0,
-        "max_rotation": 1.0,
-        "max_angular_accel": 1.0,
-        "max_prediction": 0.5,
+        "max_rotation": 2.0,
+        "max_angular_accel": 30.0,
+        "max_prediction": 1.0,
+        "behavior": HUNTER_BEHAVIOR,
     },
     {
         "type": "gargant-lord",

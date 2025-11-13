@@ -1,11 +1,14 @@
 from __future__ import annotations
 from typing import TYPE_CHECKING, Optional
 import math
+import traceback
+import importlib
 from characters.player import Player
 from characters.enemy import Enemy
 from data.enemies import list_of_enemies_data, map_levels_enemies_data
 from helper.paths import PolylinePath
 from map.pathfinder import Pathfinder
+from ai.behavior import Behavior
 from configs.package import CONF
 
 if TYPE_CHECKING:
@@ -102,8 +105,34 @@ class EntityManager:
             max_rotation=enemy_data.get("max_rotation", 1.0),
             max_angular_accel=enemy_data.get("max_angular_accel", 8.0),
             path=enemy_data.get("path"),
-            path_offset=enemy_data.get("path_offset", 4.0),
+            path_offset=enemy_data.get("path_offset", 1.0),
         )
+
+        # Attach behavior if spec present in data
+        behavior_spec = enemy_data.get("behavior")
+        if behavior_spec:
+            try:
+                # If spec is a string, try to resolve it as a symbol in data.enemies
+                if isinstance(behavior_spec, str):
+                    try:
+                        data_mod = importlib.import_module("data.enemies")
+                        resolved = getattr(data_mod, behavior_spec, None)
+                        if resolved is not None:
+                            behavior_spec = resolved
+                    except Exception:
+                        # fallback: leave behavior_spec as-is; builder will likely fail and we will log
+                        pass
+
+                # Expecting a dict spec; call builder
+                enemy.behavior = Behavior.from_spec(behavior_spec, enemy, self)
+                if enemy.behavior is None:
+                    print(f"[EntityManager] Behavior.from_spec returned None for enemy '{enemy.type}'")
+            except Exception as exc:
+                print(f"[EntityManager] Error building behavior for enemy '{enemy.type}': {exc}")
+                print(traceback.format_exc())
+                # keep behavior None but continue creation
+                enemy.behavior = None
+
         self.enemies.append(enemy)
         return enemy
 

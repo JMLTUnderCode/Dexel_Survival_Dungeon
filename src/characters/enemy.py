@@ -17,8 +17,8 @@ from kinematics.evade import Evade
 from kinematics.face import Face
 from kinematics.look_where_youre_going import LookWhereYoureGoing
 from kinematics.path_following import FollowPath
-from helper.paths import make_circle_path, make_rectangle_path
 from characters.animation import Animation, load_animations, set_animation_state
+from ai.behavior import Behavior
 from configs.package import CONF
 
 class Enemy(Kinematic):
@@ -70,7 +70,7 @@ class Enemy(Kinematic):
         max_angular_accel: float = 8.0,
         max_prediction: float = 1.0, 
         path: object = None,
-        path_offset: float = 12.0,
+        path_offset: float = 1.0,
     ) -> None:
         super().__init__(
             position=position, 
@@ -233,6 +233,8 @@ class Enemy(Kinematic):
                 current_param=0.0,
                 max_acceleration=max_acceleration
             )
+        
+        self.behavior: Behavior | None = None  # Comportamiento AI (Behavior) adjunto, si existe
 
     def draw(self, surface: pygame.Surface, camera_x: float, camera_z: float):
         """
@@ -263,6 +265,22 @@ class Enemy(Kinematic):
             pygame.draw.rect(surface, (0, 200, 0), (bar_x, bar_y, fill_w, bar_h))
             # borde
             pygame.draw.rect(surface, (0,0,0), (bar_x, bar_y, bar_w, bar_h), 1)
+        except Exception:
+            pass
+
+        # Draw HSM debug stack if present
+        try:
+            if getattr(self, "behavior", None):
+                stack = self.behavior.get_active_stack()
+                if stack:
+                    font = pygame.font.SysFont("Segoe UI", 16)
+                    # compose text: topmost (leaf) first
+                    txt = " > ".join(stack[-3:]) if len(stack) > 3 else " > ".join(stack)
+                    sx = int(self.position[0] - camera_x)
+                    sz = int(self.position[1] - camera_z)
+                    text_surf = font.render(txt, True, (255, 255, 255))
+                    tsw, tsh = text_surf.get_size()
+                    surface.blit(text_surf, (sx - tsw // 2, sz - (self.current_animation.get_size()[1] // 2) - 28 - tsh))
         except Exception:
             pass
 
@@ -315,6 +333,13 @@ class Enemy(Kinematic):
         Actualiza la posición, velocidad y orientación del enemigo para perseguir al jugador.
         Utiliza el algoritmo de movimiento especificado en "algorithm" para calcular el steering adecuado.
         """
+        if getattr(self, "behavior", None) is not None:
+            try:
+                self.behavior.tick(dt)
+            except Exception:
+                # no queremos que un fallo en la IA rompa el update principal
+                pass
+
         # Calcular el steering según el algoritmo seleccionado
         steering: Union[SteeringOutput, KinematicSteeringOutput] = SteeringOutput(linear=(0, 0), angular=0)
         match (self.algorithm):
