@@ -10,8 +10,10 @@ from helper.paths import make_circle_path, make_rectangle_path
 
 # Atributos algoritmicos
 # - max_speed: velocidad máxima (float)
-# - target_radius: radio de llegada (float)
-# - slow_radius: radio de desaceleración (float)
+# - target_radius_dist: radio de llegada (float)
+# - slow_radius_dist: radio de desaceleración (float)
+# - target_radius_deg: umbral de orientación (float)
+# - slow_radius_deg: umbral de desaceleración (float)
 # - time_to_target: tiempo para alcanzar el objetivo (float)
 # - max_acceleration: aceleración máxima (float)
 # - max_rotation: rotación máxima (float)
@@ -32,8 +34,10 @@ enemy_seek_kinematic = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.SEEK_KINEMATIC,
         "max_speed": 200.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
@@ -52,8 +56,10 @@ enemy_flee_kinematic = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.FLEE_KINEMATIC,
         "max_speed": 140.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
@@ -65,7 +71,7 @@ enemy_flee_kinematic = [
 # Para Kinematic Arrive
 # Atributos relevantes:
 # - max_speed: velocidad máxima (float)
-# - target_radius: radio de llegada (float)
+# - target_radius_dist: radio de llegada (float)
 # - time_to_target: tiempo para alcanzar el objetivo (float)
 enemy_arrive_kinematic = [
     {
@@ -74,8 +80,10 @@ enemy_arrive_kinematic = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.ARRIVE_KINEMATIC,
         "max_speed": 200.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 1,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
@@ -95,8 +103,10 @@ enemy_wander_kinematic = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.WANDER_KINEMATIC,
         "max_speed": 60.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 5.0,
@@ -109,8 +119,10 @@ enemy_wander_kinematic = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.WANDER_KINEMATIC,
         "max_speed": 60.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 5.0,
@@ -123,8 +135,10 @@ enemy_wander_kinematic = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.WANDER_KINEMATIC,
         "max_speed": 60.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 5.0,
@@ -137,8 +151,10 @@ enemy_wander_kinematic = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.WANDER_KINEMATIC,
         "max_speed": 60.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 5.0,
@@ -151,8 +167,10 @@ enemy_wander_kinematic = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.WANDER_KINEMATIC,
         "max_speed": 60.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 5.0,
@@ -172,8 +190,10 @@ enemy_seek_dynamic = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.SEEK_DYNAMIC,
         "max_speed": 200.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
@@ -193,8 +213,10 @@ enemy_flee_dynamic = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.FLEE_DYNAMIC,
         "max_speed": 140.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
@@ -206,8 +228,8 @@ enemy_flee_dynamic = [
 # Para Dynamic Arrive
 # Atributos relevantes:
 # - max_speed: velocidad máxima (float)
-# - target_radius: radio de llegada (float)
-# - slow_radius: radio de desaceleración (float)
+# - target_radius_dist: radio de llegada (float)
+# - slow_radius_dist: radio de desaceleración (float)
 # - time_to_target: tiempo para alcanzar el objetivo (float)
 # - max_acceleration: aceleración máxima (float)
 enemy_arrive_dynamic = [
@@ -217,8 +239,10 @@ enemy_arrive_dynamic = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.ARRIVE_DYNAMIC,
         "max_speed": 200.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
@@ -229,8 +253,8 @@ enemy_arrive_dynamic = [
 
 # Para Align
 # Atributos relevantes:
-# - target_radius: umbral de orientación (float)
-# - slow_radius: radio de desaceleración (float)
+# - target_radius_deg: umbral de orientación (float)
+# - slow_radius_deg: umbral de desaceleración (float)
 # - time_to_target: tiempo para alcanzar la rotación objetivo (float)
 # - max_rotation: velocidad angular máxima (float)
 # - max_angular_accel: aceleración angular máxima (float)
@@ -241,8 +265,10 @@ enemy_align = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.ALIGN,
         "max_speed": 180.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -255,8 +281,10 @@ enemy_align = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.ALIGN,
         "max_speed": 180.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -276,8 +304,10 @@ enemy_velocity_match = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.VELOCITY_MATCH,
         "max_speed": 250.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 550.0,
         "max_rotation": 1.0,
@@ -290,8 +320,10 @@ enemy_velocity_match = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.VELOCITY_MATCH,
         "max_speed": 250.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 550.0,
         "max_rotation": 1.0,
@@ -303,8 +335,8 @@ enemy_velocity_match = [
 # Para Pursue
 # Atributos relevantes:
 # - max_speed: velocidad máxima (float)
-# - target_radius: radio de llegada (float)
-# - slow_radius: radio de desaceleración (float)
+# - target_radius_dist: radio de llegada (float)
+# - slow_radius_dist: radio de desaceleración (float)
 # - time_to_target: tiempo para alcanzar el objetivo (float)
 # - max_acceleration: aceleración máxima (float)
 # - max_prediction: tiempo máximo de predicción (float)
@@ -315,8 +347,10 @@ enemy_pursue = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PURSUE,
         "max_speed": 200.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
@@ -329,8 +363,10 @@ enemy_pursue = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.ARRIVE_DYNAMIC,
         "max_speed": 200.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
@@ -351,8 +387,10 @@ enemy_evade = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.EVADE,
         "max_speed": 180.0,
-        "target_radius": 40.0,
-        "slow_radius": 180.0,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 300.0,
         "max_rotation": 1.0,
@@ -363,8 +401,8 @@ enemy_evade = [
 
 # Para Face
 # Atributos relevantes:
-# - target_radius: umbral de orientación (float)
-# - slow_radius: radio de desaceleración (float)
+# - target_radius_deg: umbral de orientación (float)
+# - slow_radius_deg: umbral de desaceleración (float)
 # - time_to_target: tiempo para alcanzar la rotación objetivo (float)
 # - max_rotation: velocidad angular máxima (float)
 # - max_angular_accel: aceleración angular máxima (float)
@@ -375,8 +413,10 @@ enemy_face = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.FACE,
         "max_speed": 180.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -389,8 +429,10 @@ enemy_face = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.FACE,
         "max_speed": 180.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -403,8 +445,10 @@ enemy_face = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.FACE,
         "max_speed": 180.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -417,8 +461,10 @@ enemy_face = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.FACE,
         "max_speed": 180.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -431,8 +477,10 @@ enemy_face = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.FACE,
         "max_speed": 180.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -445,8 +493,10 @@ enemy_face = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.FACE,
         "max_speed": 180.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -459,8 +509,10 @@ enemy_face = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.FACE,
         "max_speed": 180.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -473,8 +525,10 @@ enemy_face = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.FACE,
         "max_speed": 180.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -487,8 +541,10 @@ enemy_face = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.FACE,
         "max_speed": 180.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -501,8 +557,10 @@ enemy_face = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.FACE,
         "max_speed": 180.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -515,8 +573,10 @@ enemy_face = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.FACE,
         "max_speed": 180.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -529,8 +589,10 @@ enemy_face = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.FACE,
         "max_speed": 180.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -541,8 +603,8 @@ enemy_face = [
 
 # Para Look Where You're Going (junto a Evade)
 # Atributos relevantes:
-# - target_radius: umbral de orientación (float)
-# - slow_radius: radio de desaceleración (float)
+# - target_radius_deg: umbral de orientación (float)
+# - slow_radius_deg: umbral de desaceleración (float)
 # - time_to_target: tiempo para alcanzar la rotación objetivo (float)
 # - max_rotation: velocidad angular máxima (float)
 # - max_angular_accel: aceleración angular máxima (float)
@@ -553,8 +615,10 @@ enemy_look_where = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING,
         "max_speed": 200.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -565,8 +629,8 @@ enemy_look_where = [
 
 # Para Dynamic Wander
 # Atributos relevantes:
-# - target_radius: umbral de orientación (float)
-# - slow_radius: radio de desaceleración (float)
+# - target_radius_deg: umbral de orientación (float)
+# - slow_radius_deg: umbral de desaceleración (float)
 # - time_to_target: tiempo para alcanzar la rotación objetivo (float)
 # - max_acceleration: aceleración máxima (float)
 # - max_rotation: velocidad angular máxima (float)
@@ -582,8 +646,10 @@ enemy_wander_dynamic = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.WANDER_DYNAMIC,
         "max_speed": 100.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -596,8 +662,10 @@ enemy_wander_dynamic = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.WANDER_DYNAMIC,
         "max_speed": 100.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -610,8 +678,10 @@ enemy_wander_dynamic = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.WANDER_DYNAMIC,
         "max_speed": 100.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -624,8 +694,10 @@ enemy_wander_dynamic = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.WANDER_DYNAMIC,
         "max_speed": 100.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -638,8 +710,10 @@ enemy_wander_dynamic = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.WANDER_DYNAMIC,
         "max_speed": 100.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -661,6 +735,28 @@ PATH_CONFIGS = {
     },
 }
 
+paths_configs = {
+    "zone 1" : {
+        "radius": 300, 
+        "segments": 48, 
+        "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 30, CONF.MAIN_WIN.RENDER_TILE_SIZE * 30),
+        "offset": 2,
+    },
+    "zone 2" : {
+        "width": 700.0, 
+        "height": 700.0, 
+        "segments": 70, 
+        "center": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 30, CONF.MAIN_WIN.RENDER_TILE_SIZE * 30),
+        "offset": 3,
+    }
+}
+
+path_circle = make_circle_path(
+   radius=paths_configs["zone 1"]["radius"], 
+   center=paths_configs["zone 1"]["center"], 
+   segments=paths_configs["zone 1"]["segments"]
+)
+
 enemy_follow_path_circle = [
     {
         "type": "gargant-berserker",
@@ -668,16 +764,17 @@ enemy_follow_path_circle = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 200.0,
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": PATH_CONFIGS["circle"]["type"],
-        "path_params": PATH_CONFIGS["circle"]["params"],
-        "path_offset": PATH_CONFIGS["circle"]["offset"],
+        "path": path_circle,
+        "path_offset": paths_configs["zone 1"]["offset"],
     },
     {
         "type": "gargant-berserker",
@@ -685,16 +782,17 @@ enemy_follow_path_circle = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 200.0,
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": PATH_CONFIGS["circle"]["type"],
-        "path_params": PATH_CONFIGS["circle"]["params"],
-        "path_offset": PATH_CONFIGS["circle"]["offset"],
+        "path": path_circle,
+        "path_offset": paths_configs["zone 1"]["offset"],
     },
     {
         "type": "gargant-berserker",
@@ -702,16 +800,17 @@ enemy_follow_path_circle = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 200.0,
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": PATH_CONFIGS["circle"]["type"],
-        "path_params": PATH_CONFIGS["circle"]["params"],
-        "path_offset": PATH_CONFIGS["circle"]["offset"],
+        "path": path_circle,
+        "path_offset": paths_configs["zone 1"]["offset"],
     },
     {
         "type": "gargant-berserker",
@@ -719,16 +818,17 @@ enemy_follow_path_circle = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 200.0,
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": PATH_CONFIGS["circle"]["type"],
-        "path_params": PATH_CONFIGS["circle"]["params"],
-        "path_offset": PATH_CONFIGS["circle"]["offset"],
+        "path": path_circle,
+        "path_offset": paths_configs["zone 1"]["offset"],
     },
     {
         "type": "gargant-berserker",
@@ -736,18 +836,26 @@ enemy_follow_path_circle = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 200.0,
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": PATH_CONFIGS["circle"]["type"],
-        "path_params": PATH_CONFIGS["circle"]["params"],
-        "path_offset": PATH_CONFIGS["circle"]["offset"],
+        "path": path_circle,
+        "path_offset": paths_configs["zone 1"]["offset"],
     },
 ]
+
+path_rectangle = make_rectangle_path(
+    width=paths_configs["zone 2"]["width"], 
+    height=paths_configs["zone 2"]["height"],
+    center=paths_configs["zone 2"]["center"], 
+    segments=paths_configs["zone 2"]["segments"]
+)
 
 enemy_follow_path_rect = [
     {
@@ -756,16 +864,17 @@ enemy_follow_path_rect = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 200.0,
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": PATH_CONFIGS["rectangle"]["type"],
-        "path_params": PATH_CONFIGS["rectangle"]["params"],
-        "path_offset": PATH_CONFIGS["rectangle"]["offset"],
+        "path": path_rectangle,
+        "path_offset": paths_configs["zone 2"]["offset"],
     },
     {
         "type": "gargant-lord",
@@ -773,16 +882,17 @@ enemy_follow_path_rect = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 200.0,
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": PATH_CONFIGS["rectangle"]["type"],
-        "path_params": PATH_CONFIGS["rectangle"]["params"],
-        "path_offset": PATH_CONFIGS["rectangle"]["offset"],
+        "path": path_rectangle,
+        "path_offset": paths_configs["zone 2"]["offset"],
     },
     {
         "type": "gargant-lord",
@@ -790,16 +900,17 @@ enemy_follow_path_rect = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 200.0,
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": PATH_CONFIGS["rectangle"]["type"],
-        "path_params": PATH_CONFIGS["rectangle"]["params"],
-        "path_offset": PATH_CONFIGS["rectangle"]["offset"],
+        "path": path_rectangle,
+        "path_offset": paths_configs["zone 2"]["offset"],
     },
     {
         "type": "gargant-lord",
@@ -807,16 +918,17 @@ enemy_follow_path_rect = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 200.0,
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": PATH_CONFIGS["rectangle"]["type"],
-        "path_params": PATH_CONFIGS["rectangle"]["params"],
-        "path_offset": PATH_CONFIGS["rectangle"]["offset"],
+        "path": path_rectangle,
+        "path_offset": paths_configs["zone 2"]["offset"],
     },
     {
         "type": "gargant-lord",
@@ -824,16 +936,17 @@ enemy_follow_path_rect = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 200.0,
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": PATH_CONFIGS["rectangle"]["type"],
-        "path_params": PATH_CONFIGS["rectangle"]["params"],
-        "path_offset": PATH_CONFIGS["rectangle"]["offset"],
+        "path": path_rectangle,
+        "path_offset": paths_configs["zone 2"]["offset"],
     },
     {
         "type": "gargant-lord",
@@ -841,16 +954,17 @@ enemy_follow_path_rect = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 200.0,
         "max_rotation": 2.0,
         "max_angular_accel": 4.0,
         "max_prediction": 0.5,
-        "path_type": PATH_CONFIGS["rectangle"]["type"],
-        "path_params": PATH_CONFIGS["rectangle"]["params"],
-        "path_offset": PATH_CONFIGS["rectangle"]["offset"],
+        "path": path_rectangle,
+        "path_offset": paths_configs["zone 2"]["offset"],
     },
 ]
 
@@ -922,7 +1036,6 @@ path_zone_2 = make_rectangle_path(
     center=paths_1_group["zone 2"]["center"], 
     segments=paths_1_group["zone 2"]["segments"]
 )
-
 
 HUNTER_BEHAVIOR = {
     "name": "hunter",
@@ -1088,8 +1201,10 @@ map_1_group = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PURSUE,
         "max_speed": 120.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
@@ -1103,8 +1218,10 @@ map_1_group = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 320.0,
         "max_rotation": 2.0,
@@ -1119,8 +1236,10 @@ map_1_group = [
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         "max_speed": 100.0,
-        "target_radius": 5 * CONF.CONST.CONVERT_TO_RAD,
-        "slow_radius": 60 * CONF.CONST.CONVERT_TO_RAD,
+        "target_radius_dist": 40.0,
+        "slow_radius_dist": 180.0,
+        "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
+        "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.15,
         "max_acceleration": 320.0,
         "max_rotation": 2.0,
