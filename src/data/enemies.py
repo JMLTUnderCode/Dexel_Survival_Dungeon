@@ -1037,48 +1037,96 @@ path_zone_2 = make_rectangle_path(
     segments=paths_1_group["zone 2"]["segments"]
 )
 
+"""
+DOCUMENTACIÓN: HUNTER_BEHAVIOR
+
+Resumen
+    Comportamiento 'hunter' (cazador) para enemigos. Diseñado como una HSM (máquina de estados
+    jerárquica) con tres estados de alto nivel: EstadoVida (submáquina: Cazar/Atacar), Huyendo y Curarse.
+    Objetivo: patrullar/buscar al jugador, perseguir y atacar si se detecta, huir cuando la vida es baja,
+    y curarse/esperar en un anchor seguro hasta recuperarse.
+
+Parámetros principales (params)
+    - vision_range (px): distancia máxima para ver al jugador.
+    - vision_fov_deg (deg): ángulo del cono de visión.
+    - attack_range (px): distancia de melee/ataque.
+    - flee_threshold (0..1): fracción de vida para entrar en Huyendo.
+    - restore_threshold (0..1): fracción de vida para salir de Curarse (restaurar historial).
+    - heal_rate_per_sec: fracción de max_health curada por segundo durante Curarse.
+    - safe_distance (px): distancia objetivo para calcular safe_anchor (sitio seguro).
+    - player_lost_timeout (s): tiempo para considerar que el jugador se perdió.
+    - patrol_path_nodes (int): número mínimo de nodos deseados para patrulla aleatoria.
+    - face_range_multiplier: multiplica vision_range para decidir cuándo "mirar" al jugador.
+    - check_los_throttle (s): throttling para checks de línea de visión.
+
+Estados y semántica
+  Root (nivel superior)
+    - initial: EstadoVida
+    - Submáquinas: EstadoVida, Huyendo, Curarse
+
+  EstadoVida (composite, history=deep)
+    - Subestados: Cazar (patrullar / vigilar), Atacar (perseguir / golpear)
+    - Guarda historial profundo para restaurar comportamiento tras Curarse.
+
+  EstadoVida.Cazar (Vigilar / patrullar)
+    - Patrulla (navmesh o ruta aleatoria) y chequea visibilidad del jugador.
+    - No sustituye la ruta guardian (si existe) a menos que corresponda.
+
+  EstadoVida.Atacar
+    - Persecución activa del jugador; intenta ataques cuerpo a cuerpo en rango.
+    - Si se pierde visión por un tiempo, vuelve a patrullar.
+
+  Huyendo
+    - Evadir cuando hp bajo. Guarda prev_algorithm para restaurar.
+    - Monitoriza distancia al jugador para decidir cuándo detener huida.
+
+  Curarse
+    - Permanece estático (o mirando hacia jugador/anchor), se cura progresivamente.
+    - Monitoriza presencia del jugador para interrumpir si aparece amenaza.
+
+Transiciones críticas (resumen práctico)
+    - Vigilar + PlayerVisible -> Atacar
+    - Vigilar + IsFarFromProtectionZone -> RegresarAZona (si hay path guardian)
+    - Atacar + PlayerNotVisibleFor + IsAtProtectionZone -> Vigilar
+    - Atacar + PlayerNotVisibleFor + IsFarFromProtectionZone -> RegresarAZona
+    - RegresarAZona + IsAtProtectionZone -> Vigilar
+    - RegresarAZona + PlayerVisible -> Atacar
+    - Huyendo + PlayerFar -> Curarse
+    - Curarse + PlayerVisible -> Huyendo
+    - Curarse + HealthAbove -> EstadoVida (restaurando historial previo)
+"""
 HUNTER_BEHAVIOR = {
     "name": "hunter",
     "debug": {"show_state_over_entity": True},
     "params": {
-        "vision_range": 300.0,        # px
-        "vision_fov_deg": 120.0,      # if your LOS uses FOV
-        "attack_range": 48.0,         # px, melee threshold
-        "flee_threshold": 0.30,       # health fraction -> enter Huyendo
-        "restore_threshold": 0.70,    # health fraction -> restore EstadoVida (deep history)
-        "heal_rate_per_sec": 0.05,    # fraction of max_health healed per second (10%/s)
-        "safe_distance": 450.0,       # px, distance considered "safe" from player
-        "player_lost_timeout": 2.0,   # seconds to wait before switching from Atacar->Cazar when player not visible
-        "patrol_path_nodes": 20,      # desired minimum number of navemesh nodes for patrol path
-        "face_range_multiplier": 1.5, # multiplier applied to vision_range for Face behaviour (e.g. 1.5 -> 150%) 
-        "check_los_throttle": 0.12    # seconds between expensive LOS checks
+        "vision_range": 300.0,
+        "vision_fov_deg": 120.0,
+        "attack_range": 48.0,
+        "flee_threshold": 0.30,
+        "restore_threshold": 0.70,
+        "heal_rate_per_sec": 0.05,
+        "safe_distance": 450.0,
+        "player_lost_timeout": 2.0,
+        "patrol_path_nodes": 20,
+        "face_range_multiplier": 2,
+        "check_los_throttle": 0.12
     },
-
-    # Top-level HSM:
-    # Root has three level-1 states: EstadoVida (composite with sub-states), Huyendo, Curarse
+    "root": "EstadoVida",
     "states": {
-        "root": {
-            "type": "composite",
-            "initial": "EstadoVida",
-            "substates": ["EstadoVida", "Huyendo", "Curarse"],
-            "entry": [],
-            "exit": []
-        },
-
         # Nivel 1: Estado de Vida (subMáquina)
         "EstadoVida": {
             "type": "composite",
             "initial": "Cazar",
-            "history": "deep",   # enable deep history for this composite
+            "history": "deep",
             "substates": ["Cazar", "Atacar"],
-            "entry": ["record_last_state_start"],   # optional bookkeeping
+            "entry": ["record_last_state_start"],
             "exit": []
         },
 
         # Nivel 0 dentro de EstadoVida: Cazar (patrullar / buscar)
         "EstadoVida.Cazar": {
             "type": "leaf",
-            "entry": ["start_random_patrol"],   # action: request patrol path / FollowPath
+            "entry": ["start_random_patrol"],
             "update": ["patrol_tick", "throttle_check_player_visibility"],
             "exit": ["stop_patrol"],
             "transitions": [
@@ -1106,7 +1154,7 @@ HUNTER_BEHAVIOR = {
             "update": ["evade_tick"],
             "exit": ["stop_evade", "clear_behavior_flag_fleeing"],
             "transitions": [
-                {"to": "Curarse", "cond": "PlayerFarAndNoThreat", "priority": 200}
+                {"to": "Curarse", "cond": "PlayerFar", "priority": 200}
             ]
         },
         
@@ -1124,6 +1172,72 @@ HUNTER_BEHAVIOR = {
     },
 }
 
+"""
+DOCUMENTACIÓN: GUARDIAN_BEHAVIOR
+
+Resumen
+    Comportamiento 'guardian' para enemigos. Diseñado para proteger un camino (PolylinePath)
+    que representa la "zona" defendida. El guardian patrulla sobre un path definido (si existe)
+    y gestiona retorno cuando se aleja del camino. Si no hay path, se comporta como patrulla
+    aleatoria. Incluye lógica de persecución/ataque, huida y curado similar a HUNTER pero
+    con énfasis en mantener/volver al path protegido.
+
+Parámetros principales (params)
+    - vision_range (px): distancia máxima para ver al jugador.
+    - vision_fov_deg (deg): ángulo del cono de visión.
+    - attack_range (px): distancia de melee/ataque.
+    - flee_threshold (0..1): fracción de vida para entrar en Huyendo.
+    - restore_threshold (0..1): fracción de vida para salir de Curarse.
+    - heal_rate_per_sec: fracción de max_health curada por segundo durante Curarse.
+    - safe_distance (px): distancia objetivo para calcular safe_anchor (sitio seguro).
+    - player_lost_timeout (s): tiempo para considerar que el jugador se perdió.
+    - patrol_path_nodes (int): nodos deseados para patrulla aleatoria.
+    - face_range_multiplier: multiplica vision_range para decidir cuándo "mirar" al jugador.
+    - check_los_throttle (s): throttling para checks de línea de visión.
+    - protection_margin (px): distancia al punto MÁS CERCANO del PolylinePath que define
+        si la entidad está "sobre" su ruta patrulla (p.ej. 40 px).
+    - arrival_threshold (px): umbral de llegada usado por la ruta de retorno (p.ej. 40 px).
+
+Estados y semántica
+  EstadoVida (composite, history=deep)
+    - Subestados: Vigilar, Atacar, RegresarAZona
+    - Guarda historial profundo para restaurar comportamiento tras Curarse.
+
+  EstadoVida.Vigilar (Patrulla guardian / Vigilar)
+    - Si la entidad tiene un PolylinePath (entity.path) lo usa como ruta guardian.
+    - is_on_guardian_path = True indica que la entidad sigue el path protegido.
+    - Si la entidad se aleja más que protection_margin del punto MÁS CERCANO del path,
+      la condición IsFarFromProtectionZone dispara el retorno.
+
+  EstadoVida.Atacar
+    - Igual que hunter: perseguir y atacar, pero al perder objetivo decide volver
+      al path guardian si está lejos de él.
+
+  EstadoVida.RegresarAZona (volver al camino protegido)
+    - Genera un FollowPath temporal (entity.temp_follow_path) desde la posición actual
+      hacia el punto MÁS CERCANO del PolylinePath guardian_original_path.
+    - Usa arrival_threshold para decidir llegada por proximidad; al llegar restaura
+      PATH_FOLLOWING sobre el path guardian.
+
+  Huyendo
+    - Evadir cuando hp bajo. Guarda prev_algorithm para restaurar.
+    - Monitoriza distancia al jugador para decidir cuándo detener huida.
+
+  Curarse
+    - Permanece estático (o mirando hacia jugador/anchor), se cura progresivamente.
+    - Monitoriza presencia del jugador para interrumpir si aparece amenaza.
+
+Transiciones críticas (resumen práctico)
+    - Vigilar + PlayerVisible -> Atacar
+    - Vigilar + IsFarFromProtectionZone -> RegresarAZona
+    - Atacar + PlayerNotVisibleAndAtProtectionZone -> Vigilar
+    - Atacar + PlayerNotVisibleAndFarFromProtectionZone -> RegresarAZona
+    - RegresarAZona + IsAtProtectionZone -> Vigilar
+    - RegresarAZona + PlayerVisible -> Atacar
+    - Huyendo + PlayerFar -> Curarse
+    - Curarse + PlayerVisible -> Huyendo
+    - Curarse + HealthAbove -> EstadoVida (restaurando historial)
+"""
 GUARDIAN_BEHAVIOR = {
     "name": "guardian",
     "debug": {"show_state_over_entity": True},
@@ -1136,21 +1250,13 @@ GUARDIAN_BEHAVIOR = {
         "heal_rate_per_sec": 0.05,
         "safe_distance": 450.0,
         "player_lost_timeout": 2.0,
-        "face_range_multiplier": 1.5,
-        "check_los_throttle": 0.25,   #
-        "protection_margin": 40.0,    # px; distancia al punto más cercano del path para considerarse 'on path'
-        "arrival_threshold": 24.0     # px; threshold para considerar llegada al return_target_pos
+        "face_range_multiplier": 2,
+        "check_los_throttle": 0.25,
+        "protection_margin": 40.0,
+        "arrival_threshold": 40.0
     },
-    "root": "root",
+    "root": "EstadoVida",
     "states": {
-        "root": {
-            "type": "composite",
-            "initial": "EstadoVida",
-            "substates": ["EstadoVida", "Huyendo", "Curarse"],
-            "entry": [],
-            "exit": []
-        },
-        
         # Nivel 1: Estado de Vida (subMáquina)
         "EstadoVida": {
             "type": "composite",
@@ -1207,7 +1313,7 @@ GUARDIAN_BEHAVIOR = {
             "update": ["evade_tick"],
             "exit": ["stop_evade", "clear_behavior_flag_fleeing"],
             "transitions": [
-                {"to": "Curarse", "cond": "PlayerFarAndNoThreat", "priority": 200}
+                {"to": "Curarse", "cond": "PlayerFar", "priority": 200}
             ]
         },
 

@@ -171,7 +171,7 @@ def PlayerNotVisibleFor(hinst: HSMInstance, entity: Any) -> bool:
 # Safe anchor / curado
 # --------------------
 @condition
-def PlayerFarAndNoThreat(hinst: HSMInstance, entity: Any) -> bool:
+def PlayerFar(hinst: HSMInstance, entity: Any) -> bool:
     """
     Descripción
         CONDICIÓN: True si el jugador está suficientemente lejos (>= safe_distance),
