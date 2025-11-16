@@ -1,13 +1,94 @@
 """
-HSM runtime core.
+Hierarchical State Machine (HSM) — documentación general
 
+Propósito
+---------
+Este módulo implementa la representación en tiempo de ejecución de una
+Máquina de Estados Jerárquica (HSM) usada por los componentes de IA.
 Proporciona:
-- StatePrototype, TransitionPrototype: estructuras inmutables creadas por el builder.
-- HSMInstance: runtime que mantiene la pila activa (deep history support) y ejecuta
-  entry/update/exit actions (callables) y evalúa transiciones.
+- Tipos de prototipos (StatePrototype, TransitionPrototype, HSMPrototype).
+- Runtime (HSMInstance) que mantiene la pila activa, el blackboard y la historia
+  ("deep history") de composites.
+- API mínima para arrancar, actualizar y consultar el estado activo.
 
-Diseño ligero: acciones y condiciones son callables pasados por el builder.
+PD: Para efecto de ejemplificación se toma el GUARDIAN_BEHAVIOR descrito en
+src/data/enemies.py
+
+Conceptos clave
+---------------
+- Spec declarativa: la HSM se describe con un diccionario (spec) en
+  src/data/enemies.py. El builder (ai/hsm_builder.py) transforma esa spec en
+  HSMPrototype, resolviendo acciones y condiciones definidas en
+  src/ai/actions.py y src/ai/conditions.py.
+
+- StatePrototype:
+  - stype: "leaf" o "composite".
+  - entry/update/exit: listas de acciones (callables con firma (hinst, entity)).
+  - substates: nombres relativos (no fully-qualified) para composites.
+  - initial: subestado inicial (nombre relativo).
+  - transitions: lista de TransitionPrototype.
+  - history: "deep" | "shallow" | None (soporta restauración deep de composites).
+
+- TransitionPrototype:
+  - to: ruta destino (puede ser fully-qualified o relativa).
+  - cond: función condición (hinst, entity) -> bool o None (default = siempre true).
+  - priority: prioridad numérica (mayor = más prioridad).
+  - cond_params: parámetros que se exponen temporalmente en blackboard durante la evaluación.
+  - restore_history: si true, al entrar se restaura la historia del composite destino.
+
+- HSMInstance (runtime):
+  - active_stack: lista de rutas desde root hasta la hoja activa (p.ej. ["root", "root.EstadoVida", "root.EstadoVida.Vigilar"]).
+  - blackboard: dict compartido entre acciones/condiciones; inicializado con
+    `_spec_params`, `manager`, `entity`, etc.
+  - history: snapshots para composites con history="deep".
+  - Entradas:
+    - _enter_path(path): entra en la ruta indicada, ejecutando entry actions y descendiendo por `initial` o restaurando history.
+    - _exit_to_common_ancestor(target_path): ejecuta exit actions y guarda snapshots deep cuando corresponda.
+  - update(entity, dt):
+    - Ejecuta actions `update` desde la hoja hacia la raíz (bottom-up).
+    - Evalúa transiciones hoja→raíz, exponiendo `cond_params` en `_last_transition_cond_params`.
+    - Escoge la transición de mayor prioridad y aplica la transición (exit→enter).
+
+Patrones y buenas prácticas
+---------------------------
+- Acciones/condiciones:
+  - Firma: fn(hinst, entity). Usar el blackboard para compartir datos y params.
+  - No hacer operaciones pesadas en condiciones; cachear en blackboard si es necesario.
+- Restore history:
+  - Usar `restore_history=True` en la transición Curarse->EstadoVida para que la
+    HSM restaure la subruta previa (deep history) y deje que el subestado restaurado
+    evalúe sus propias transiciones (p.ej. Atacar -> RegresarAZona).
+- Blackboard keys recomendadas:
+  - `_spec_params`: parámetros del spec.
+  - `manager`, `entity_manager`: accesos a servicios (pathfinder, player).
+  - `return_target_pos`, `is_returning_to_zone`, `is_at_protection_zone`: convenciones para acciones de retorno.
+
+Ejemplo de flujo (guardian)
+---------------------------
+1. root -> EstadoVida (composite) -> EstadoVida.Vigilar (leaf).
+2. Si `PlayerVisible` en Vigilar -> transición a EstadoVida.Atacar.
+3. Si en Atacar `IsFarFromProtectionZone` -> transición a EstadoVida.RegresarAZona.
+4. En RegresarAZona la acción `return_to_protection_zone` crea `entity.temp_follow_path`
+   y asigna `entity.algorithm = "TEMP_PATH_FOLLOWING"`. `check_return_path_finished`
+   marca `is_at_protection_zone` al llegar.
+5. Si en cualquier leaf `HealthBelow` -> transición a Huyendo (nivel 1).
+6. Curarse emplea `restore_history=True` para volver a EstadoVida y reanudar el subestado previo.
+
+Extensibilidad
+--------------
+- Añadir acciones/condiciones: registrar en `src/ai/actions.py` / `src/ai/conditions.py`.
+- Para nuevas transiciones complejas, usar `_last_transition_cond_params` para pasar
+  parámetros por transición y evitar hardcoding en condiciones.
+
+Referencias rápidas en el workspace
+----------------------------------
+- Spec / ejemplos: src/data/enemies.py
+- Builder: src/ai/hsm_builder.py
+- Actions registry: src/ai/actions.py
+- Conditions registry: src/ai/conditions.py
+- Componente Behavior: src/ai/behavior.py
 """
+
 from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any, Callable, Dict, List, Optional, Tuple
@@ -17,339 +98,313 @@ Condition = Callable[[Any, Any], bool]   # (hinst, entity)
 
 @dataclass
 class TransitionPrototype:
-    to: str                              # path string, e.g. "EstadoVida.Atacar" or "EstadoVida"
+    """
+    Representación de una transición en el prototipo de HSM.
+
+    Atributos:
+      - to: ruta del estado destino (string).
+      - cond: función condición (hinst, entity) -> bool o None.
+      - priority: prioridad numérica (mayor = más prioridad).
+      - cond_params: parámetros auxiliares expuestos en blackboard durante la evaluación.
+      - restore_history: si true indica que al entrar se debe restaurar history del composite destino.
+    """
+    to: str
     cond: Optional[Condition] = None
     priority: int = 100
     cond_params: Dict[str, Any] = field(default_factory=dict)
     restore_history: bool = False
 
+
 @dataclass
 class StatePrototype:
+    """
+    Prototipo de estado.
+
+    Campos:
+      - name: nombre de la clave en el spec.
+      - stype: "leaf" | "composite".
+      - entry, update, exit: listas de acciones (callables).
+      - substates: nombres relativos de subestados.
+      - initial: nombre relativo del subestado inicial.
+      - transitions: lista de TransitionPrototype.
+      - history: "deep" | "shallow" | None.
+    """
     name: str
-    stype: str = "leaf"                  # "leaf" | "composite"
+    stype: str = "leaf"
     entry: List[Action] = field(default_factory=list)
     update: List[Action] = field(default_factory=list)
     exit: List[Action] = field(default_factory=list)
     substates: List[str] = field(default_factory=list)
     initial: Optional[str] = None
     transitions: List[TransitionPrototype] = field(default_factory=list)
-    history: Optional[str] = None        # "deep" | "shallow" | None
+    history: Optional[str] = None
+
 
 @dataclass
 class HSMPrototype:
+    """
+    Contenedor del spec construido por el builder.
+    """
     name: str
     params: Dict[str, Any]
     states: Dict[str, StatePrototype]
     root: str = "root"
 
-class StateInstance:
-    def __init__(self, proto: StatePrototype, path: str):
-        self.proto = proto
-        self.path = path     # full path e.g. "EstadoVida.Atacar"
-        self.children: List[StateInstance] = []
 
 class HSMInstance:
     """
-    Runtime HSM instance.
-    - prototype: HSMPrototype
-    - blackboard: dict (contains _dt, _spec_params)
-    - active_stack: list of state path strings from root -> leaf
-    - history: mapping state_path -> saved active stack fragment (for deep history)
+    Instancia en ejecución de la HSM.
+
+    Responsabilidades:
+      - Mantener prototype (HSMPrototype).
+      - Mantener blackboard (datos compartidos).
+      - Mantener active_stack: rutas activas desde root hasta la hoja.
+      - Mantener history para deep history de composites.
+
+    Nota:
+      - Todas las acciones/condiciones se ejecutan con la firma (hinst, entity).
     """
-    def __init__(self, prototype: HSMPrototype, blackboard: Optional[Dict[str,Any]] = None):
+
+    def __init__(self, prototype: HSMPrototype, blackboard: Optional[Dict[str, Any]] = None):
         self.prototype = prototype
-        self.blackboard: Dict[str,Any] = {} if blackboard is None else dict(blackboard)
+        self.blackboard: Dict[str, Any] = dict(blackboard or {})
+        # asegurar que los params del spec estén accesibles
         self.blackboard.setdefault("_spec_params", prototype.params)
         self.active_stack: List[str] = []
-        self.history: Dict[str, List[str]] = {}   # deep history: state_path -> stack fragment
-        # initialize root
-        self._enter_path(self.prototype.root)
+        self.history: Dict[str, List[str]] = {}
+        # iniciar en root (desciende hasta hoja inicial)
+        try:
+            self._enter_path(self.prototype.root)
+        except Exception as e:
+            print(f"[HSM INIT] Error al inicializar HSM: {e}")
 
-    # internal helpers
-    def _enter_initial(self):
-        root = self.proto.root_path
-        self._enter_state_by_path(root)
-
+    # --------------------
+    # Utilitarios / búsquedas
+    # --------------------
     def _get_state_proto(self, path: str) -> StatePrototype:
-        # try exact key first
+        """
+        Resuelve una ruta a un StatePrototype con varias heurísticas:
+          - clave exacta en prototype.states
+          - último segmento (p. ej. "root.X" -> "X")
+          - si inicia con "root." intentar la parte sin prefijo
+        Lanza KeyError si no encuentra el prototipo.
+        """
         if path in self.prototype.states:
             return self.prototype.states[path]
-        # fallback 1: try last segment (e.g. "root.EstadoVida" -> "EstadoVida")
         last = path.split(".")[-1]
         if last in self.prototype.states:
             return self.prototype.states[last]
-        # fallback 2: if path starts with root prefix, try stripping it
         root_prefix = f"{self.prototype.root}."
         if path.startswith(root_prefix):
             alt = path[len(root_prefix):]
             if alt in self.prototype.states:
                 return self.prototype.states[alt]
-        # not found -> raise original KeyError
         raise KeyError(path)
 
     def _split_path(self, path: str) -> List[str]:
         return path.split(".")
 
-    def _enter_state_by_path(self, path: str):
-        # enter path components from nearest existing prefix
-        # find deepest common prefix with current stack to avoid double-exit/enter
-        cur = self.active_stack[:]
-        # compute target full stack
-        target_stack = []
-        parts = path.split(".")
-        acc = []
-        for p in parts:
-            acc.append(p if not acc else f"{acc[-1]}.{p}" )
-        # if path might be absolute stored as full path already use it
-        if path in self.proto.states:
-            # build ancestors list
-            anc = []
-            comp = path.split(".")
-            for i in range(len(comp)):
-                anc_path = ".".join(comp[:i+1])
-                anc.append(anc_path)
-            target_stack = anc
+    # --------------------
+    # Ejecución de acciones
+    # --------------------
+    def _call_actions(self, actions: List[Action], entity: Any, kind: str):
+        for act in actions:
+            try:
+                act(self, entity)
+            except Exception as err:
+                print(f"[HSM {kind}] Error en acción {act}: {err}")
+
+    def _call_entry_actions(self, state_path: str, entity: Any = None):
+        try:
+            proto = self._get_state_proto(state_path)
+        except KeyError:
+            return
+        self._call_actions(proto.entry, entity, "ENTRY")
+
+    def _call_update_actions(self, state_path: str, entity: Any = None):
+        try:
+            proto = self._get_state_proto(state_path)
+        except KeyError:
+            return
+        self._call_actions(proto.update, entity, "UPDATE")
+
+    def _call_exit_actions(self, state_path: str, entity: Any = None):
+        try:
+            proto = self._get_state_proto(state_path)
+        except KeyError:
+            return
+        # ejecutar exits en orden declarado
+        self._call_actions(proto.exit, entity, "EXIT")
+
+    # --------------------
+    # Entradas / salidas de estados
+    # --------------------
+    def _enter_path(self, path: str):
+        """
+        Entra en la ruta 'path' (puede ser fully-qualified o relativa).
+        Realiza:
+          - calcular la secuencia de nodos a introducir en la pila
+          - ejecutar entry actions y descender por initial si el estado es composite
+          - restaurar history deep cuando corresponda
+        """
+        parts = self._split_path(path)
+        # construir la lista de rutas acumuladas: ["root", "root.X", "root.X.Y", ...] si corresponde
+        accum: List[str] = []
+        for i, part in enumerate(parts):
+            if i == 0:
+                accum.append(part)
+            else:
+                accum.append(f"{accum[-1]}.{part}")
+
+        # si la ruta exacta está registrada como prototipo, usamos la cadena completa de ancestros
+        target_stack: List[str]
+        if path in self.prototype.states:
+            target_stack = accum
         else:
-            # fallback: treat path as direct key if present
+            # si no, tratar path como un nodo simple (ej: "EstadoVida.Vigilar") y entrar tal cual
             target_stack = [path]
 
-        # find common prefix length
+        # hallar prefijo común con la pila actual
+        cur = self.active_stack[:]
         common = 0
         for a, b in zip(cur, target_stack):
             if a == b:
                 common += 1
             else:
                 break
-        # exit from current top down to common+1
+
+        # ejecutar exit actions de los estados que se van a dejar
         for s in reversed(cur[common:]):
             self._call_exit_actions(s)
-        # enter missing states from common -> end
+
+        # entrar en los estados faltantes
         for s in target_stack[common:]:
             self.active_stack.append(s)
-            self._call_entry_actions(s)
-            # if composite with initial and not yet at leaf, descend to its initial
-            sp = self.proto.states.get(s)
-            if sp and sp.type == "composite":
-                init = sp.initial or (sp.substates[0] if sp.substates else None)
-                if init:
-                    # construct child full path
-                    child_path = f"{s}.{init}"
-                    self._enter_state_by_path(child_path)
-                    # after recursive entry, stop (entry recursive handled)
-                    return
-
-    def _call_entry_actions(self, state_path: str, entity: Any = None):
-        sp = self.proto.states.get(state_path)
-        if not sp:
-            return
-        for act in sp.entry:
+            self._call_entry_actions(s, self.blackboard.get("entity"))
+            # si es composite, gestionar initial / history
             try:
-                act(self, entity)
-            except Exception:
+                proto = self._get_state_proto(s)
+            except KeyError:
                 continue
-
-    def _call_update_actions(self, state_path: str, entity: Any = None):
-        sp = self.proto.states.get(state_path)
-        if not sp:
-            return
-        for act in sp.update:
-            try:
-                act(self, entity)
-            except Exception:
-                continue
-
-    def _call_exit_actions(self, state_path: str, entity: Any = None):
-        sp = self.proto.states.get(state_path)
-        if not sp:
-            return
-        for act in sp.exit:
-            try:
-                act(self, entity)
-            except Exception:
-                continue
-
-    def _current_leaf(self) -> Optional[str]:
-        return self.active_stack[-1] if self.active_stack else None
-
-
-    def _enter_path(self, path: str):
-        """
-        Enter a state path from its parent context. Will push initial substates as needed.
-        """
-        parts = self._split_path(path)
-        accum = []
-        for i, part in enumerate(parts):
-            accum.append(part if i==0 else f"{accum[-1]}.{part}")
-            p = accum[-1]
-            if p in self.active_stack:
-                continue
-            proto = self._get_state_proto(p)
-            # run entry actions
-            for a in proto.entry:
-                try:
-                    a(self, self.blackboard.get("entity"))
-                except Exception:
-                    pass
-            self.active_stack.append(p)
-            # descend into initial if composite
             if proto.stype == "composite":
-                # decide initial: history or explicit initial
-                if proto.history == "deep" and self.history.get(p):
-                    # restore deep history
-                    for sub in self.history[p]:
-                        self._enter_path(sub)
+                # restaurar deep history si existe
+                if proto.history == "deep" and self.history.get(s):
+                    # insertar la secuencia histórica
+                    for hist_sub in self.history[s]:
+                        self._enter_path(hist_sub)
                     return
-                initial = proto.initial
-                if initial:
-                    child_path = f"{p}.{initial}"
+                # descender por initial si hay
+                if proto.initial:
+                    child_path = f"{s}.{proto.initial}"
                     self._enter_path(child_path)
                     return
 
     def _exit_to_common_ancestor(self, target_path: str):
         """
-        Exit active states until reaching common ancestor with target_path.
-        Save deep history as required.
+        Sale de los estados activos hasta alcanzar el ancestro común con target_path.
+        Guarda snapshots de deep history cuando corresponde.
+        Ejecuta exit actions durante el proceso.
         """
-        # find common prefix
         target_parts = self._split_path(target_path)
         while self.active_stack:
             cur = self.active_stack[-1]
             cur_parts = self._split_path(cur)
-            # if cur is ancestor of target -> stop
+            # si cur es ancestro de target -> detener
             if len(cur_parts) <= len(target_parts) and target_parts[:len(cur_parts)] == cur_parts:
                 break
-            # else exit cur
-            proto = self._get_state_proto(cur)
-            # save deep history if parent has history="deep"
+            # si el padre del estado actual declara history="deep" guardamos snapshot
+            try:
+                proto = self._get_state_proto(cur)
+            except KeyError:
+                self.active_stack.pop()
+                continue
             parent = ".".join(cur_parts[:-1]) if len(cur_parts) > 1 else cur_parts[0]
             if parent in self.prototype.states:
-                parent_proto = self._get_state_proto(parent)
-                if parent_proto.history == "deep":
-                    # store copy of active stack fragment under parent
-                    self.history[parent] = list(filter(lambda s: s.startswith(parent + "."), self.active_stack))
-            # run exit actions
-            for a in reversed(proto.exit):
                 try:
-                    a(self, self.blackboard.get("entity"))
-                except Exception:
+                    parent_proto = self._get_state_proto(parent)
+                    if parent_proto.history == "deep":
+                        # guardamos la porción activa que pertenece al parent
+                        self.history[parent] = [s for s in self.active_stack if s.startswith(parent + ".")]
+                except KeyError:
                     pass
+            # ejecutar exit actions del estado actual
+            self._call_exit_actions(cur, self.blackboard.get("entity"))
             self.active_stack.pop()
 
-    def _reconstruct_path_chain(self, to_path: str) -> List[str]:
-        """
-        Ensure the full chain to `to_path` exists in prototypes (sanity).
-        Returns list of path levels to enter (from shallow to deep).
-        """
-        return self._split_path(to_path)
-    
+    # --------------------
+    # Ciclo de actualización
+    # --------------------
     def update(self, entity: Any, dt: float):
         """
-        One tick update: set _dt, run updates from deepest active state upward,
-        and evaluate transitions (deepest first).
+        Actualización por tick:
+          - registra dt y entity en blackboard
+          - ejecuta update actions desde la hoja hacia arriba
+          - evalúa transiciones (hoja -> raíz) y aplica la de mayor prioridad
         """
         self.blackboard["_dt"] = dt
         self.blackboard["entity"] = entity
-        # 1) run update actions from deepest to shallowest
+
+        # 1) ejecutar update actions hoja->arriba
         for state_path in reversed(self.active_stack):
-            proto = self._get_state_proto(state_path)
-            for u in proto.update:
+            try:
+                proto = self._get_state_proto(state_path)
+            except KeyError:
+                continue
+            for act in proto.update:
                 try:
-                    u(self, entity)
-                except Exception:
-                    pass
-        # 2) evaluate transitions: deepest first; respect priority
-        # collect transitions along active stack
-        transitions_candidates: List[Tuple[int, TransitionPrototype, str]] = []
+                    act(self, entity)
+                except Exception as err:
+                    print(f"[HSM UPDATE] Error en action {act}: {err}")
+
+        # 2) evaluar transiciones: desde la hoja hacia la raíz
+        candidates: List[Tuple[int, TransitionPrototype, str]] = []
         for state_path in reversed(self.active_stack):
-            proto = self._get_state_proto(state_path)
+            try:
+                proto = self._get_state_proto(state_path)
+            except KeyError:
+                continue
             for t in proto.transitions:
-                # ensure transition cond params are available to condition functions
+                # exponer parámetros de la transición para condiciones
                 self.blackboard["_last_transition_cond_params"] = getattr(t, "cond_params", {}) or {}
                 if t.cond is None:
-                    transitions_candidates.append((t.priority, t, state_path))
+                    candidates.append((t.priority, t, state_path))
                 else:
                     try:
                         if t.cond(self, entity):
-                            transitions_candidates.append((t.priority, t, state_path))
-                    except Exception:
-                        # if condition raises, ignore this transition
-                        pass
-        # clear last_transition_cond_params after evaluation
+                            candidates.append((t.priority, t, state_path))
+                    except Exception as err:
+                        print(f"[HSM TRANSITION] Error evaluando condición {t}: {err}")
+                        # ignorar condición con error
+                        continue
+        # limpiar parámetros transitorios
         self.blackboard["_last_transition_cond_params"] = {}
-        if not transitions_candidates:
+
+        if not candidates:
             return
-        # pick highest priority
-        transitions_candidates.sort(key=lambda x: -x[0])
-        _, chosen_t, origin = transitions_candidates[0]
-        # perform transition to chosen_t.to (string)
-        target = chosen_t.to
-        # exit until common ancestor
-        self._exit_to_common_ancestor(target)
-        # enter target path
-        self._enter_path(target)
 
-    def _execute_transition(self, from_state: str, transition: TransitionPrototype, entity: Any):
-        # save history for composite ancestors if needed
-        # find common ancestor path for from_state and to_state
-        to_path = transition.to_path
-        # exit from current leaf up to the ancestor where diverge
-        target_parts = to_path.split(".")
-        # normalize target full path: try to expand if target refers to nested child without full path
-        if to_path not in self.proto.states:
-            # attempt to resolve relative path (simple case)
-            pass
-        # compute stacks
-        cur = self.active_stack[:]
-        # compute target_stack similarly to enter helper
-        target_stack = []
-        comp = to_path.split(".")
-        for i in range(len(comp)):
-            anc_path = ".".join(comp[:i+1])
-            target_stack.append(anc_path)
-        # find common prefix
-        common = 0
-        for a, b in zip(cur, target_stack):
-            if a == b:
-                common += 1
-            else:
-                break
-        # before exiting, if any composite in cur[common-1] has history enabled, save snapshot
-        for idx in range(common, len(cur)):
-            parent = ".".join(cur[idx].split(".")[:-1])
-            # save deep history for any ancestor that declares history
-            # we'll store snapshots at composite paths
-        # exit states from top down to common
-        for s in reversed(cur[common:]):
-            self._call_exit_actions(s, entity)
-            self.active_stack.pop()
-        # if transition requests restore_history and target is composite with history, attempt to restore
-        if transition.restore_history:
-            # apply deep history restore for target composite if exists
-            # if history snapshot exists, push it; otherwise enter initial
-            hist = self.history.get(target_stack[0])
-            if hist:
-                for s in hist:
-                    self.active_stack.append(s)
-                    self._call_entry_actions(s, entity)
-                return
-        # otherwise enter target stack missing parts
-        for s in target_stack[common:]:
-            self.active_stack.append(s)
-            self._call_entry_actions(s, entity)
-            sp = self.proto.states.get(s)
-            if sp and sp.type == "composite":
-                init = sp.initial or (sp.substates[0] if sp.substates else None)
-                if init:
-                    child_path = f"{s}.{init}"
-                    self._enter_state_by_path(child_path)
-                    return
+        # escoger la transición de mayor prioridad (si empatan, la primera encontrada)
+        candidates.sort(key=lambda x: -x[0])
+        _, chosen, origin = candidates[0]
+        target = chosen.to
 
-    # helpers for external use
+        # ejecutar salida hasta ancestro común y entrar en target
+        try:
+            self._exit_to_common_ancestor(target)
+            self._enter_path(target)
+        except Exception as err:
+            print(f"[HSM] Error al aplicar transición a {target}: {err}")
+
+    # --------------------
+    # API pública sencilla
+    # --------------------
     def get_active_stack(self) -> List[str]:
+        """Devuelve la pila activa (copia)."""
         return list(self.active_stack)
 
     def set_blackboard(self, key: str, val: Any):
+        """Asigna un valor en el blackboard."""
         self.blackboard[key] = val
 
     def get_blackboard(self, key: str, default: Any = None):
+        """Obtiene un valor del blackboard."""
         return self.blackboard.get(key, default)

@@ -1039,12 +1039,9 @@ path_zone_2 = make_rectangle_path(
 
 HUNTER_BEHAVIOR = {
     "name": "hunter",
-    "debug": {
-        "show_state_over_entity": True,   # renderer will draw active HSM stack above enemy
-        "color_by_level": True
-    },
+    "debug": {"show_state_over_entity": True},
     "params": {
-        "vision_range": 400.0,        # px
+        "vision_range": 300.0,        # px
         "vision_fov_deg": 120.0,      # if your LOS uses FOV
         "attack_range": 48.0,         # px, melee threshold
         "flee_threshold": 0.30,       # health fraction -> enter Huyendo
@@ -1064,8 +1061,8 @@ HUNTER_BEHAVIOR = {
             "type": "composite",
             "initial": "EstadoVida",
             "substates": ["EstadoVida", "Huyendo", "Curarse"],
-            "entry": ["hsm_noop"],
-            "exit": ["hsm_noop"]
+            "entry": [],
+            "exit": []
         },
 
         # Nivel 1: Estado de Vida (subMáquina)
@@ -1085,18 +1082,8 @@ HUNTER_BEHAVIOR = {
             "update": ["patrol_tick", "throttle_check_player_visibility"],
             "exit": ["stop_patrol"],
             "transitions": [
-                {
-                    "to": "EstadoVida.Atacar",
-                    "cond": "PlayerVisible",
-                    "cond_params": {"max_dist_key": "vision_range", "fov_key": "vision_fov_deg"},
-                    "priority": 100
-                },
-                {
-                    "to": "Huyendo",
-                    "cond": "HealthBelow",
-                    "cond_params": {"threshold": "flee_threshold"},
-                    "priority": 200
-                }
+                {"to": "EstadoVida.Atacar", "cond": "PlayerVisible", "priority": 100},
+                {"to": "Huyendo", "cond": "HealthBelow", "priority": 200}
             ]
         },
 
@@ -1107,18 +1094,8 @@ HUNTER_BEHAVIOR = {
             "update": ["pursue_tick", "try_melee_attack", "throttle_check_player_visibility"],
             "exit": ["stop_pursue"],
             "transitions": [
-                {
-                    "to": "EstadoVida.Cazar",
-                    "cond": "PlayerNotVisibleFor",
-                    "cond_params": {"timeout_key": "player_lost_timeout"},
-                    "priority": 50
-                },
-                {
-                    "to": "Huyendo",
-                    "cond": "HealthBelow",
-                    "cond_params": {"threshold": "flee_threshold"},
-                    "priority": 200
-                }
+                {"to": "EstadoVida.Cazar", "cond": "PlayerNotVisibleFor", "priority": 50},
+                {"to": "Huyendo", "cond": "HealthBelow", "priority": 200}
             ]
         },
 
@@ -1126,19 +1103,13 @@ HUNTER_BEHAVIOR = {
         "Huyendo": {
             "type": "leaf",
             "entry": ["start_evade_from_player", "set_behavior_flag_fleeing"],
-            "update": ["evade_tick", "evaluate_safe_distance"],
+            "update": ["evade_tick"],
             "exit": ["stop_evade", "clear_behavior_flag_fleeing"],
             "transitions": [
-                {
-                    "to": "Curarse",
-                    "cond": "PlayerFarAndNoThreat",
-                    "cond_params": {"safe_distance_key": "safe_distance", "no_enemies_radius": 300.0},
-                    "priority": 150
-                },
-                # allow immediate interrupt to Curarse if health is already very low and safe condition met
+                {"to": "Curarse", "cond": "PlayerFarAndNoThreat", "priority": 200}
             ]
         },
-
+        
         # Nivel 1: Curarse (quedarse estático, Face, curar)
         "Curarse": {
             "type": "leaf",
@@ -1146,51 +1117,111 @@ HUNTER_BEHAVIOR = {
             "update": ["face_towards_safe_anchor", "heal_tick", "monitor_player_presence"],
             "exit": ["stop_heal_tick", "clear_safe_anchor"],
             "transitions": [
-                {
-                    "to": "EstadoVida",
-                    "cond": "HealthAbove",
-                    "cond_params": {"threshold": "restore_threshold"},
-                    "priority": 200,
-                    "restore_history": True   # instruct builder/runtime to restore deep history of EstadoVida
-                },
-                {
-                    "to": "Huyendo",
-                    "cond": "PlayerVisible",
-                    "cond_params": {"max_dist_key": "vision_range"},
-                    "priority": 300   # if enemy reappears, interrupt healing and flee
-                }
+                {"to": "EstadoVida", "cond": "HealthAbove", "priority": 300, "restore_history": True},
+                {"to": "Huyendo", "cond": "PlayerVisible", "priority": 600}
             ]
-        }
+        },
     },
+}
 
-    # Convenience: map of action keys -> human description (for implementers)
-    # (actual implementation will be provided in src/ai/actions.py)
-    "actions_doc": {
-        "start_random_patrol": "Request pathfinder a random waypoint and attach FollowPath",
-        "patrol_tick": "Ensure FollowPath active and refresh if stuck",
-        "stop_patrol": "Stop FollowPath and clear waypoint",
-        "start_pursue_target": "Start Pursue steering toward last known player",
-        "pursue_tick": "Tick pursue steering and update last_known_player_pos",
-        "stop_pursue": "Stop pursue steering",
-        "try_melee_attack": "If within attack_range attempt attack (use existing attack logic)",
-        "start_evade_from_player": "Activate Evade steering using player's predicted position",
-        "evade_tick": "Tick evade, update distance checks",
-        "stop_evade": "Stop evade steering",
-        "face_towards_safe_anchor": "Use Face steering to look toward safe anchor point",
-        "stop_movement": "Zero velocities / disable steering outputs",
-        "start_heal_tick": "Begin periodic heal that increases health by heal_rate_per_sec",
-        "heal_tick": "Apply fractional healing each second",
-        "stop_heal_tick": "Stop healing timer",
-        "record_last_state_start": "Internal bookkeeping to store last substate on entry"
+GUARDIAN_BEHAVIOR = {
+    "name": "guardian",
+    "debug": {"show_state_over_entity": True},
+    "params": {
+        "vision_range": 300.0,
+        "vision_fov_deg": 120.0,
+        "attack_range": 48.0,
+        "flee_threshold": 0.30,
+        "restore_threshold": 0.70,
+        "heal_rate_per_sec": 0.05,
+        "safe_distance": 450.0,
+        "player_lost_timeout": 2.0,
+        "face_range_multiplier": 1.5,
+        "check_los_throttle": 0.25,   #
+        "protection_margin": 40.0,    # px; distancia al punto más cercano del path para considerarse 'on path'
+        "arrival_threshold": 24.0     # px; threshold para considerar llegada al return_target_pos
     },
+    "root": "root",
+    "states": {
+        "root": {
+            "type": "composite",
+            "initial": "EstadoVida",
+            "substates": ["EstadoVida", "Huyendo", "Curarse"],
+            "entry": [],
+            "exit": []
+        },
+        
+        # Nivel 1: Estado de Vida (subMáquina)
+        "EstadoVida": {
+            "type": "composite",
+            "initial": "Vigilar",
+            "history": "deep",
+            "substates": ["Vigilar", "Atacar", "RegresarAZona"],
+            "entry": ["record_last_state_start"],
+            "update": ["monitor_player_presence"],
+        },
 
-    # Conditions doc: map cond key -> human description (to implement in src/ai/conditions.py)
-    "conditions_doc": {
-        "PlayerVisible": "True if player within vision_range and (optional) FOV and LOS",
-        "PlayerNotVisibleFor": "True if player hasn't been visible for configured timeout",
-        "PlayerFarAndNoThreat": "True if player distance > safe_distance and no other enemies within radius",
-        "HealthBelow": "True if entity.health / entity.max_health < threshold (threshold may be key->param)",
-        "HealthAbove": "True if entity.health / entity.max_health >= threshold"
+        # Nivel 0 dentro de EstadoVida: Patrulla y vigila
+        "EstadoVida.Vigilar": {
+            "type": "leaf",
+            "entry": ["start_guardian_patrol"],
+            "update": ["patrol_tick", "throttle_check_player_visibility"],
+            "exit": ["stop_patrol"],
+            "transitions": [
+                {"to": "EstadoVida.Atacar", "cond": "PlayerVisible", "priority": 150},
+                {"to": "EstadoVida.RegresarAZona", "cond": "IsFarFromProtectionZone", "priority": 350},
+                {"to": "Huyendo", "cond": "HealthBelow", "priority": 500}
+            ]
+        },
+
+        # Nivel 0 dentro de EstadoVida: Atacar (perseguir y golpear al enemigo)
+        "EstadoVida.Atacar": {
+            "type": "leaf",
+            "entry": ["start_pursue_target"],
+            "update": ["pursue_tick", "try_melee_attack", "throttle_check_player_visibility"],
+            "exit": ["stop_pursue"],
+            "transitions": [
+                {"to": "EstadoVida.Vigilar", "cond": "PlayerNotVisibleAndAtProtectionZone", "priority": 300},
+                {"to": "EstadoVida.RegresarAZona", "cond": "PlayerNotVisibleAndFarFromProtectionZone", "priority": 400},
+                {"to": "Huyendo", "cond": "HealthBelow", "priority": 600}
+            ]
+        },
+
+        # Nivel 0 dentro de EstadoVida: Regresar a Zona (volver al camino de patrullaje)
+        "EstadoVida.RegresarAZona": {
+            "type": "leaf",
+            "entry": ["return_to_protection_zone"],
+            "update": ["check_return_path_finished"],
+            "exit": [],
+            "transitions": [
+                {"to": "EstadoVida.Vigilar", "cond": "IsAtProtectionZone", "priority": 200},
+                {"to": "EstadoVida.Atacar", "cond": "PlayerVisible", "priority": 350},
+                {"to": "Huyendo", "cond": "HealthBelow", "priority": 600}
+            ]
+        },
+
+        # Nivel 1: Huyendo (evadir al enemigo)
+        "Huyendo": {
+            "type": "leaf",
+            "entry": ["start_evade_from_player", "set_behavior_flag_fleeing"],
+            "update": ["evade_tick"],
+            "exit": ["stop_evade", "clear_behavior_flag_fleeing"],
+            "transitions": [
+                {"to": "Curarse", "cond": "PlayerFarAndNoThreat", "priority": 200}
+            ]
+        },
+
+        # Nivel 1: Curarse (quedarse estático, Face al enemigo, curarse)
+        "Curarse": {
+            "type": "leaf",
+            "entry": ["face_towards_safe_anchor", "stop_movement", "start_heal_tick"],
+            "update": ["face_towards_safe_anchor", "heal_tick", "monitor_player_presence"],
+            "exit": ["stop_heal_tick", "clear_safe_anchor"],
+            "transitions": [
+                {"to": "EstadoVida", "cond": "HealthAbove", "priority": 300, "restore_history": True},
+                {"to": "Huyendo", "cond": "PlayerVisible", "priority": 600}
+            ]
+        },
     }
 }
 
@@ -1202,14 +1233,14 @@ map_1_group = [
         "algorithm": CONF.ALG.ALGORITHM.PURSUE,
         "max_speed": 120.0,
         "target_radius_dist": 40.0,
-        "slow_radius_dist": 180.0,
+        "slow_radius_dist": 140.0,
         "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
         "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
         "time_to_target": 0.1,
         "max_acceleration": 300.0,
         "max_rotation": 2.0,
         "max_angular_accel": 30.0,
-        "max_prediction": 1.0,
+        "max_prediction": 0.25,
         "behavior": HUNTER_BEHAVIOR,
     },
     {
@@ -1217,34 +1248,35 @@ map_1_group = [
         "position": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 28, CONF.MAIN_WIN.RENDER_TILE_SIZE * 49),
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
-        "max_speed": 100.0,
+        "max_speed": 120.0,
         "target_radius_dist": 40.0,
-        "slow_radius_dist": 180.0,
+        "slow_radius_dist": 140.0,
         "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
         "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
-        "time_to_target": 0.15,
-        "max_acceleration": 320.0,
+        "time_to_target": 0.1,
+        "max_acceleration": 300.0,
         "max_rotation": 2.0,
-        "max_angular_accel": 4.0,
-        "max_prediction": 0.5,
+        "max_angular_accel": 30.0,
+        "max_prediction": 0.25,
         "path": path_zone_1,
         "path_offset": paths_1_group["zone 1"]["offset"],
+        "behavior": GUARDIAN_BEHAVIOR,
     },
     {
         "type": "gargant-berserker",
         "position": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 10, CONF.MAIN_WIN.RENDER_TILE_SIZE * 7),
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         "algorithm": CONF.ALG.ALGORITHM.PATH_FOLLOWING,
-        "max_speed": 100.0,
+        "max_speed": 120.0,
         "target_radius_dist": 40.0,
-        "slow_radius_dist": 180.0,
+        "slow_radius_dist": 140.0,
         "target_radius_deg": 5 * CONF.CONST.CONVERT_TO_RAD,
         "slow_radius_deg": 60 * CONF.CONST.CONVERT_TO_RAD,
-        "time_to_target": 0.15,
-        "max_acceleration": 320.0,
+        "time_to_target": 0.1,
+        "max_acceleration": 300.0,
         "max_rotation": 2.0,
-        "max_angular_accel": 4.0,
-        "max_prediction": 0.5,
+        "max_angular_accel": 30.0,
+        "max_prediction": 0.25,
         "path": path_zone_2,
         "path_offset": paths_1_group["zone 2"]["offset"],
     },
