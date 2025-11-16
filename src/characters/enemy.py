@@ -24,24 +24,25 @@ from configs.package import CONF
 class Enemy(Kinematic):
     """
     Clase que representa un enemigo que persigue al jugador.
+    
     Atributos:
-        type: tipo de enemigo (puede usarse para diferentes sprites o comportamientos)
-        position: posición inicial del enemigo (x, y)
-        collider_box: dimensiones de la caja de colisión del enemigo (ancho, alto)
-        target: referencia al objeto target (objetivo a seguir)
-        algorithm: algoritmo de búsqueda cinemática ("ARRIVE" o "SEEK")
-        max_speed: velocidad máxima del enemigo
-        target_radius_dist: radio de llegada al objetivo
-        slow_radius_dist: radio de desaceleración
-        target_radius_deg: umbral objetivo de aliniación (radianes)
-        slow_radius_deg: umbral de inicio de desaceleración (radianes)
-        time_to_target: tiempo para alcanzar el objetivo
-        max_acceleration: aceleración máxima permitida (unidades/segundo²)
-        max_rotation: velocidad angular máxima (radianes/segundo)
-        max_angular_accel: aceleración angular máxima (radianes/segundo²)
-        max_prediction: tiempo máximo de predicción para Pursue/Evade
-        path: camino a seguir (objeto Path)
-        path_offset: puntos de offset para el seguimiento del camino
+        - type: tipo de enemigo (puede usarse para diferentes sprites o comportamientos)
+        - position: posición inicial del enemigo (x, y)
+        - collider_box: dimensiones de la caja de colisión del enemigo (ancho, alto)
+        - target: referencia al objeto target (objetivo a seguir)
+        - algorithm: algoritmo de búsqueda cinemática ("ARRIVE" o "SEEK")
+        - max_speed: velocidad máxima del enemigo
+        - target_radius_dist: radio de llegada al objetivo
+        - slow_radius_dist: radio de desaceleración
+        - target_radius_deg: umbral objetivo de aliniación (radianes)
+        - slow_radius_deg: umbral de inicio de desaceleración (radianes)
+        - time_to_target: tiempo para alcanzar el objetivo
+        - max_acceleration: aceleración máxima permitida (unidades/segundo²)
+        - max_rotation: velocidad angular máxima (radianes/segundo)
+        - max_angular_accel: aceleración angular máxima (radianes/segundo²)
+        - max_prediction: tiempo máximo de predicción para Pursue/Evade
+        - path: camino a seguir (objeto Path)
+        - path_offset: puntos de offset para el seguimiento del camino
 
     Algoritmos:
         - KinematicSeek: Persigue al objetivo de manera directa.
@@ -58,6 +59,7 @@ class Enemy(Kinematic):
         - Evade: Huye del objetivo anticipando su movimiento.
         - Face: Gira para mirar al objetivo.
         - LookWhereYoureGoing: Gira en la dirección del movimiento.
+        - PathFollow: Sigue un camino predefinido.
     """
     def __init__(
         self, 
@@ -75,7 +77,7 @@ class Enemy(Kinematic):
         max_acceleration: float = 300.0,
         max_rotation: float = 1.0,
         max_angular_accel: float = 8.0,
-        max_prediction: float = 1.0, 
+        max_prediction: float = 0.25, 
         path: object = None,
         path_offset: float = 1.0,
     ) -> None:
@@ -90,13 +92,24 @@ class Enemy(Kinematic):
         # comportamiento de ataque (melee)
         self.attack_cooldown = 1.0  # segundos entre ataques
         self._attack_timer = 0.0
-        self.attack_range = 40.0    # pixels distancia para pegar
+        self.attack_range = target_radius_dist    # pixels distancia para pegar
 
         self.type = type
         self.target = target
         self.algorithm = algorithm
         self.max_speed = max_speed
-
+        self.target_radius_dist = target_radius_dist
+        self.slow_radius_dist = slow_radius_dist
+        self.target_radius_deg = target_radius_deg
+        self.slow_radius_deg = slow_radius_deg
+        self.time_to_target = time_to_target
+        self.max_acceleration = max_acceleration
+        self.max_rotation = max_rotation
+        self.max_angular_accel = max_angular_accel
+        self.max_prediction = max_prediction
+        self.path = path
+        self.path_offset = path_offset
+        
         # Instanciar atributos de animación
         self.state = CONF.ENEMY.ACTIONS.MOVE
         self.animations : dict[str, Animation] = load_animations(
@@ -232,16 +245,17 @@ class Enemy(Kinematic):
         )
 
         # Instanciar el algoritmo de Follow Path
-        if algorithm == CONF.ALG.ALGORITHM.PATH_FOLLOWING and path is not None:
-            self.follow_path = FollowPath(
-                character=self,                   # Quien sigue el camino
-                path=path,                        # Camino a seguir
-                path_offset=path_offset,          # Punto de offset para seguir el camino
-                current_param=0.0,                # Punto inicial del camino
-                max_acceleration=max_acceleration # Aceleración máxima
-            )
+        self.follow_path = FollowPath(
+            character=self,                     # Quien sigue el camino
+            path=path,                          # Camino a seguir
+            path_offset=path_offset,            # Punto de offset para seguir el camino
+            current_param=0.0,                  # Punto inicial del camino
+            max_acceleration=max_acceleration   # Aceleración máxima
+        )
+        self.temp_follow_path: FollowPath | None = None # Para caminos temporales y mantener original.
         
-        self.behavior: Behavior | None = None  # Comportamiento AI (Behavior) adjunto, si existe
+        # Comportamiento AI (Behavior) adjunto, si existe
+        self.behavior: Behavior | None = None
 
     def draw(self, surface: pygame.Surface, camera_x: float, camera_z: float):
         """
@@ -321,6 +335,12 @@ class Enemy(Kinematic):
                     # Path.draw espera surface, camera_x, camera_z, opcionales...
                     path.draw(surface, camera_x, camera_z, color=(0,255,0), width=2)
 
+            if hasattr(self, "temp_follow_path") and self.temp_follow_path is not None:
+                path = getattr(self.temp_follow_path, "path", None)
+                if path is not None:
+                    # Path.draw espera surface, camera_x, camera_z, opcionales...
+                    path.draw(surface, camera_x, camera_z, color=(0,0,255), width=2)
+
     def draw_collision_box(self, surface: pygame.Surface, camera_x: float, camera_z: float):
         """
         Dibuja el cuadro de colisión del enemigo para depuración.
@@ -387,6 +407,8 @@ class Enemy(Kinematic):
                 )
             case CONF.ALG.ALGORITHM.PATH_FOLLOWING:
                 steering = self.follow_path.get_steering()
+            case "TEMP_PATH_FOLLOWING":
+                steering = self.temp_follow_path.get_steering()
 
         # Aplicar el steering y actualizar la cinemática
         if isinstance(steering, SteeringOutput):

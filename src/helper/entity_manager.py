@@ -1,8 +1,9 @@
 from __future__ import annotations
-from typing import TYPE_CHECKING, Optional
 import math
 import traceback
 import importlib
+from typing import Optional
+from kinematics.kinematic import Kinematic
 from characters.player import Player
 from characters.enemy import Enemy
 from data.enemies import list_of_enemies_data, map_levels_enemies_data
@@ -10,9 +11,6 @@ from helper.paths import PolylinePath
 from map.pathfinder import Pathfinder
 from ai.behavior import Behavior
 from configs.package import CONF
-
-if TYPE_CHECKING:
-    from kinematics.kinematic import Kinematic
 
 class EntityManager:
     """
@@ -97,17 +95,18 @@ class EntityManager:
             collider_box=enemy_data["collider_box"],
             target=target,
             algorithm=enemy_data["algorithm"],
-            max_speed=enemy_data.get("max_speed", 200.0),
+            max_speed=enemy_data.get("max_speed", 120.0),
             target_radius_dist=enemy_data.get("target_radius_dist", 40.0),
-            slow_radius_dist=enemy_data.get("slow_radius_dist", 180.0),
+            slow_radius_dist=enemy_data.get("slow_radius_dist", 150.0),
             target_radius_deg=enemy_data.get("target_radius_deg", 5 * CONF.CONST.CONVERT_TO_RAD),
             slow_radius_deg=enemy_data.get("slow_radius_deg", 60 * CONF.CONST.CONVERT_TO_RAD),
-            time_to_target=enemy_data.get("time_to_target", 0.15),
+            time_to_target=enemy_data.get("time_to_target", 0.1),
             max_acceleration=enemy_data.get("max_acceleration", 300.0),
-            max_rotation=enemy_data.get("max_rotation", 1.0),
-            max_angular_accel=enemy_data.get("max_angular_accel", 8.0),
+            max_rotation=enemy_data.get("max_rotation", 2.0),
+            max_angular_accel=enemy_data.get("max_angular_accel", 30.0),
+            max_prediction=enemy_data.get("max_prediction", 0.25),
             path=enemy_data.get("path"),
-            path_offset=enemy_data.get("path_offset", 1.0),
+            path_offset=enemy_data.get("path_offset", 1),
         )
 
         # Attach behavior if spec present in data
