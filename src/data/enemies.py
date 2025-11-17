@@ -1588,7 +1588,7 @@ map_1_group = [
         "type": "gargant-boss",
         "position": (CONF.MAIN_WIN.RENDER_TILE_SIZE*55, CONF.MAIN_WIN.RENDER_TILE_SIZE*47),
         "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
-        "algorithm": None,
+        "algorithm": CONF.ALG.ALGORITHM.FACE,
         "max_speed": 100.0,
         "target_radius_dist": 40.0,
         "slow_radius_dist": 140.0,

@@ -28,7 +28,6 @@ class Map:
         self.height = 0
         self.collision_rects = []
         self.navmesh: NavMesh | None = None
-
         self.load()
 
     def load(self) -> None:
@@ -106,7 +105,6 @@ class Map:
             self.level += 1
             self.load()
 
-
     def draw(self, screen: pygame.Surface, camera_x: int, camera_z: int, camera_width: int, camera_height: int):
         """
         Dibuja todas las capas visibles del mapa en la superficie 'screen',
@@ -139,11 +137,11 @@ class Map:
                         if -CONF.MAIN_WIN.RENDER_TILE_SIZE < sx < camera_width and -CONF.MAIN_WIN.RENDER_TILE_SIZE < sz < camera_height:
                             screen.blit(tile_img, (sx, sz))
 
-        if CONF.DEV.DEBUG:
+        """ if CONF.DEV.DEBUG:
             self.draw_collision_rects(screen, camera_x, camera_z, camera_width, camera_height)
             # Dibujar el NavMesh si existe
             if self.navmesh:
-                self.navmesh.draw(screen, camera_x, camera_z)
+                self.navmesh.draw(screen, camera_x, camera_z) """
 
     def draw_collision_rects(self, screen: pygame.Surface, camera_x: int, camera_z: int, camera_width: int, camera_height: int):
         """
