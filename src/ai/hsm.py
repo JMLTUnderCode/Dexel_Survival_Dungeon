@@ -287,14 +287,13 @@ class HSMInstance:
             except KeyError:
                 continue
             if proto.stype == "composite":
-                # restaurar deep history si existe
+                # si existe deep history, restaurarla y exponer en blackboard para debug/visual
                 if proto.history == "deep" and self.history.get(s):
-                    # insertar la secuencia histórica
                     for hist_sub in self.history[s]:
                         self._enter_path(hist_sub)
                     return
                 # descender por initial si hay
-                if proto.initial:
+                elif proto.initial:
                     child_path = f"{s}.{proto.initial}"
                     self._enter_path(child_path)
                     return
@@ -318,14 +317,15 @@ class HSMInstance:
             except KeyError:
                 self.active_stack.pop()
                 continue
-            parent = ".".join(cur_parts[:-1]) if len(cur_parts) > 1 else cur_parts[0]
-            if parent in self.prototype.states:
+            parent = ".".join(cur_parts[:-1]) if len(cur_parts) > 1 else None
+            if parent is not None:
                 try:
                     parent_proto = self._get_state_proto(parent)
                     if parent_proto.history == "deep":
-                        # guardamos la porción activa que pertenece al parent
+                        # guardamos la porción activa que pertenece al parent (antes de pop)
                         self.history[parent] = [s for s in self.active_stack if s.startswith(parent + ".")]
                 except KeyError:
+                    # si no existe el prototipo no hacemos nada
                     pass
             # ejecutar exit actions del estado actual
             self._call_exit_actions(cur, self.blackboard.get("entity"))
