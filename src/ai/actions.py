@@ -345,7 +345,7 @@ def start_pursue_target(hinst, entity):
         - player_visible_since (update): timestamp desde que el jugador fue visto.
 
     Parámetros esperados
-        - Ninguno (usa get_player y parámetros del spec en runtime).
+        - Ninguno
     """
     try:
         # 1) Obtener jugador; si no existe no hay nada que perseguir
@@ -353,15 +353,18 @@ def start_pursue_target(hinst, entity):
         if not player:
             return
 
-        # 2) Configurar algoritmo de la entidad para persecución y apuntar al player
-        entity.algorithm = CONF.ALG.ALGORITHM.PURSUE
-        try:
-            entity.pursue.target = player
-        except Exception:
-            # algunos implementaciones de entity pueden no exponer pursue asignable
-            pass
+        # 2) Limpiar residuos cinemáticos que pueden provocar saltos de orientación
+        entity._pending_steering = SteeringOutput(linear=(0.0, 0.0), angular=0.0)
+        entity.rotation = 0.0
+        # quitar objetivo face si lo hubiera
+        if getattr(entity, "face", None):
+            entity.face.target = None
 
-        # 3) Actualizar blackboard con metadata de persecución
+        # 3) Configurar algoritmo de la entidad para persecución y apuntar al player
+        entity.algorithm = CONF.ALG.ALGORITHM.PURSUE
+        entity.pursue.target = player
+        
+        # 4) Actualizar blackboard con metadata de persecución
         hinst.set_blackboard("pursuing", True)
         hinst.set_blackboard("last_known_player_pos", (float(player.get_pos()[0]), float(player.get_pos()[1])))
         hinst.set_blackboard("player_visible_since", time.time())
@@ -1019,6 +1022,545 @@ def check_return_path_finished(hinst, entity):
         hinst.set_blackboard("is_at_protection_zone", True)
         hinst.set_blackboard("is_returning_to_zone", False)
 
+# --------------------
+# Boss: return / invocation / regen / ranged helpers
+# --------------------
+@_register("start_return_to_boss_position")
+def start_return_to_boss_position(hinst, entity):
+    """
+    Descripción
+        ACCIÓN: Construir y asignar un temp_follow_path desde la posición actual hasta boss_position.
+    
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM que contiene el blackboard y spec.
+        - entity (Any): entidad (Boss) sobre la que opera la acción.
+
+    Blackboard utilizado/modificado
+        - return_target_pos (update): destino calculado en boss_position.
+        - return_path_requested_at (update): timestamp de la petición de ruta.
+        - entity.temp_follow_path (update): FollowPath temporal asignado.
+    
+    Parámetros esperados
+        - boss_position (tuple): posición objetivo (x,z) donde debe reposicionarse el boss.
+        - path_offset (float): offset usado al construir FollowPath (opcional).
+    """
+    # 1) Obtener servicios y parámetros necesarios
+    try:
+        manager = get_manager(hinst)
+        pathfinder = getattr(manager, "pathfinder", None)
+        boss_pos = get_spec_param(hinst, "boss_position", None)
+        if not boss_pos:
+            # 2) Si no hay boss_position, usar posición actual como target seguro
+            hinst.set_blackboard("return_target_pos", tuple(entity.get_pos()))
+            return
+
+        # 3) Normalizar target y solicitar ruta al pathfinder si está disponible
+        target_pos = (float(boss_pos[0]), float(boss_pos[1]))
+        hinst.set_blackboard("return_target_pos", target_pos)
+
+        pts = None
+        if pathfinder is not None:
+            try:
+                pts = pathfinder.find_path(entity.get_pos(), target_pos)
+            except Exception:
+                pts = None
+
+        # 4) Si no hay path válido, crear lista directa start->target
+        if not pts or len(pts) < 2:
+            pts = [tuple(entity.get_pos()), target_pos]
+
+        # 5) Construir PolylinePath y FollowPath temporal y asignarlo a la entidad
+        poly = PolylinePath(pts, closed=False)
+        try:
+            poly.points[0] = tuple(entity.get_pos())
+        except Exception:
+            pass
+
+        start_param = poly.get_param(entity.get_pos(), 0.0)
+        temp_offset = float(get_spec_param(hinst, "path_offset", getattr(entity, "path_offset", 1.0)))
+        entity.follow_path = None
+        entity.temp_follow_path = FollowPath(
+            character=entity,
+            path=poly,
+            path_offset=temp_offset,
+            current_param=start_param,
+            max_acceleration=getattr(entity, "max_acceleration", 300.0)
+        )
+        # 6) Marcar algoritmo temporal y guardar timestamp de la petición
+        entity.algorithm = "TEMP_PATH_FOLLOWING"
+        hinst.set_blackboard("return_path_requested_at", time.time())
+    except Exception as e:
+        exception_print("START RETURN TO BOSS POSITION", entity, str(e))
+
+@_register("return_to_boss_tick")
+def return_to_boss_tick(hinst, entity):
+    """
+    Descripción
+        ACCIÓN: Tick para seguir temp_follow_path hacia boss_position y marcar progreso.
+    
+    Blackboard utilizado/modificado:
+        - none explicit (usa entity.temp_follow_path y return_target_pos)
+    """
+    try:
+        # Reuse check logic similar to check_return_path_finished
+        temp = getattr(entity, "temp_follow_path", None)
+        target = hinst.get_blackboard("return_target_pos", None)
+        arrival_thresh = float(get_spec_param(hinst, "arrival_threshold", 24.0))
+
+        if temp and target:
+            ex, ez = entity.get_pos()
+            tx, tz = float(target[0]), float(target[1])
+            if math.hypot(ex - tx, ez - tz) <= arrival_thresh:
+                # arrived: keep temp_follow_path removal to stop action on exit
+                entity.temp_follow_path = None
+                entity.follow_path = None
+                entity.algorithm = CONF.ALG.ALGORITHM.ARRIVE_KINEMATIC
+                hinst.set_blackboard("return_arrived_at", time.time())
+                return
+            # else: allow FollowPath to move entity (no additional work)
+        else:
+            # if there's no temp path, mark arrived for safety
+            hinst.set_blackboard("return_arrived_at", time.time())
+    except Exception as e:
+        exception_print("RETURN TO BOSS TICK", entity, str(e))
+
+@_register("stop_return_to_boss_position")
+def stop_return_to_boss_position(hinst, entity):
+    """
+    Descripción
+        ACCIÓN: Limpiar temp_follow_path y restaurar algoritmo base.
+    """
+    try:
+        entity.temp_follow_path = None
+        # fallback algorithm
+        entity.algorithm = CONF.ALG.ALGORITHM.WANDER_DYNAMIC
+    except Exception as e:
+        exception_print("STOP RETURN TO BOSS POSITION", entity, str(e))
+
+@_register("start_invocation")
+def start_invocation(hinst, entity):
+    """
+    Descripción
+        ACCIÓN: Iniciar proceso de invocación: spawn gradual de allies_for_invocation.
+    """
+    try:
+        # inicial bookkeeping (existente)
+        hinst.set_blackboard("invocation_started_at", time.time())
+        hinst.set_blackboard("invocation_spawned_count", 0)
+        hinst.set_blackboard("invocation_entities", [])
+        # guardar algoritmo previo para restaurar al salir de invocación
+        hinst.set_blackboard("invocation_prev_algorithm", getattr(entity, "algorithm", None))
+
+        # asegurar que el boss quede estático mirando al player (FACE)
+        entity.velocity = (0.0, 0.0)
+        entity._pending_steering = SteeringOutput(linear=(0.0, 0.0), angular=0.0)
+
+        # setear algoritmo FACE y target al player (si existe)
+        player = get_player(hinst)
+        try:
+            entity.algorithm = CONF.ALG.ALGORITHM.FACE
+            if player:
+                entity.face.target = player
+            else:
+                # fallback: mirar última posición conocida
+                last = hinst.get_blackboard("last_known_player_pos", None)
+                if last:
+                    tgt = Kinematic(position=tuple(last), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
+                    entity.face.target = tgt
+        except Exception as e:
+            exception_print("START INVOCATION", entity, f"Setting face target: {e}")
+    except Exception as e:
+        exception_print("START INVOCATION", entity, str(e))
+
+@_register("invocation_tick")
+def invocation_tick(hinst, entity):
+    """
+    Descripción
+        ACCIÓN: Durante la invocación spawnear aliados gradualmente según time_for_invocation.
+        Mejoras:
+         - Asegurar uso de manager.spawn_enemy si está disponible.
+         - Spawn de soldados con behavior=None y algoritmo PURSUE hacia el player.
+         - Registrar referencias en invocation_entities.
+    """
+    try:
+        mgr = get_manager(hinst)
+        total = int(get_spec_param(hinst, "allies_for_invocation", 3))
+        duration = float(get_spec_param(hinst, "time_for_invocation", 6.0))
+        timeout = float(get_spec_param(hinst, "timeout_invocations", 14.0))
+        start = hinst.get_blackboard("invocation_started_at", None)
+        spawned = int(hinst.get_blackboard("invocation_spawned_count", 0))
+        if not start:
+            return
+
+        elapsed = time.time() - float(start)
+        # schedule: spawn at deterministic intervals to avoid drift
+        if spawned < total:
+            interval = max(1e-6, float(duration) / float(total))
+            # deterministic next spawn time (no accumulation of small drifts)
+            next_spawn_time = float(start) + (spawned + 1) * interval
+            if time.time() >= next_spawn_time:
+                spawned_spec = {
+                    "type": "gargant-soldier",
+                    "algorithm": CONF.ALG.ALGORITHM.PURSUE,
+                    "behavior": None,
+                    "lifetime": timeout
+                }
+                spawned_ref = None
+                try:
+                    if mgr and getattr(mgr, "spawn_enemy", None):
+                        spawned_ref = mgr.spawn_enemy(spawned_spec, entity)
+                    else:
+                        spawned_ref = spawned_spec
+                except Exception as e:
+                    exception_print("INVOCATION SPAWN", entity, f"spawn error: {e}")
+                    spawned_ref = spawned_spec
+
+                arr = hinst.get_blackboard("invocation_entities", []) or []
+                arr.append(spawned_ref)
+                hinst.set_blackboard("invocation_entities", arr)
+                hinst.set_blackboard("invocation_spawned_count", spawned + 1)
+                # keep a reliable last spawn timestamp for diagnostics (but not used for scheduling)
+                hinst.set_blackboard("invocation_last_spawn_at", time.time())
+
+        # Invocation leaves boss static / FACE — no movement changes here
+    except Exception as e:
+        exception_print("INVOCATION TICK", entity, str(e))
+
+@_register("stop_invocation")
+def stop_invocation(hinst, entity):
+    """
+    Descripción
+        ACCIÓN: Finalizar proceso de invocación (cleanup).
+        - Restaurar algoritmo previo y limpiar face target.
+    """
+    try:
+        # restaurar algoritmo previo si existía
+        prev = hinst.get_blackboard("invocation_prev_algorithm", None)
+        if prev:
+            try:
+                entity.algorithm = prev
+            except Exception:
+                entity.algorithm = CONF.ALG.ALGORITHM.WANDER_DYNAMIC
+            try:
+                del hinst.blackboard["invocation_prev_algorithm"]
+            except Exception:
+                pass
+
+        # limpiar face target
+        try:
+            entity.face.target = None
+        except Exception:
+            pass
+
+        # limpiar timers / bookkeeping
+        for k in ("invocation_started_at", "invocation_spawned_count", "invocation_last_spawn_at"):
+            if k in hinst.blackboard:
+                del hinst.blackboard[k]
+    except Exception as e:
+        exception_print("STOP INVOCATION", entity, str(e))
+
+@_register("start_regeneration")
+def start_regeneration(hinst, entity):
+    """
+    Descripción
+      - Inicia regeneración y asegura que la entidad quede estática en boss_position
+        mirando al player (FACE). Evita desplazamientos residuales durante la fase.
+    """
+    try:
+        perc = float(get_spec_param(hinst, "perc_regenerate", 0.18))
+        max_hp = float(getattr(entity, "max_health", 100.0))
+        total = perc * max_hp
+        hinst.set_blackboard("regen_started_at", time.time())
+        hinst.set_blackboard("regen_total_amount", float(total))
+        hinst.set_blackboard("regen_accum", 0.0)
+
+        # limpiar rutas y steering residuales para evitar movimiento
+        entity.velocity = (0.0, 0.0)
+        entity._pending_steering = SteeringOutput(linear=(0.0, 0.0), angular=0.0)
+    
+        # eliminar cualquier follow_path/temp_follow_path activo
+        entity.follow_path = None
+        entity.temp_follow_path = None
+
+        # poner algoritmo FACE y fijar objetivo al player (si existe) para que mire durante regen
+        try:
+            player = get_player(hinst)
+            entity.algorithm = CONF.ALG.ALGORITHM.FACE
+            if player:
+                entity.face.target = player
+            else:
+                # fallback: mirar boss_pos si no hay player
+                boss_pos = get_spec_param(hinst, "boss_position", None)
+                if boss_pos:
+                    tgt = Kinematic(position=(float(boss_pos[0]), float(boss_pos[1])), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
+                    entity.face.target = tgt
+        except Exception as e:
+            exception_print("START REGENERATION", entity, f"Setting face target: {e}")
+
+    except Exception as e:
+        exception_print("START REGENERATION", entity, str(e))
+
+@_register("regen_tick")
+def regen_tick(hinst, entity):
+    """
+    Descripción
+        ACCIÓN: Aplicar curación lineal durante time_for_regeneration hasta completar regen_total_amount.
+        - Usa _dt del blackboard para calcular incrementos.
+    """
+    try:
+        if not hinst.get_blackboard("regen_started_at", None):
+            return
+        total = float(hinst.get_blackboard("regen_total_amount", 0.0) or 0.0)
+        if total <= 0.0:
+            return
+        dt = float(hinst.get_blackboard("_dt", 0.0) or 0.0)
+        if dt <= 0.0:
+            return
+        duration = float(get_spec_param(hinst, "time_for_regeneration", 8.0))
+        # amount per second
+        per_sec = total / max(1e-6, duration)
+        inc = per_sec * dt
+        prev = float(hinst.get_blackboard("regen_accum", 0.0) or 0.0)
+        to_apply = min(inc, total - prev)
+        if to_apply <= 0.0:
+            return
+        # apply to entity health
+        max_hp = float(getattr(entity, "max_health", 100.0) or 100.0)
+        entity.health = min(max_hp, float(getattr(entity, "health", 0.0)) + to_apply)
+        hinst.set_blackboard("regen_accum", prev + to_apply)
+        # mark finished if reached
+        if (hinst.get_blackboard("regen_accum", 0.0) or 0.0) >= total:
+            hinst.set_blackboard("regen_finished_at", time.time())
+    except Exception as e:
+        exception_print("REGEN TICK", entity, str(e))
+
+@_register("stop_regeneration")
+def stop_regeneration(hinst, entity):
+    """
+    Descripción
+        ACCIÓN: Limpiar estado de regeneración y opcionalmente normalizar flags.
+    """
+    try:
+        if "regen_started_at" in hinst.blackboard:
+            del hinst.blackboard["regen_started_at"]
+        if "regen_total_amount" in hinst.blackboard:
+            del hinst.blackboard["regen_total_amount"]
+        if "regen_accum" in hinst.blackboard:
+            del hinst.blackboard["regen_accum"]
+    except Exception as e:
+        exception_print("STOP REGENERATION", entity, str(e))
+
+@_register("reset_lost_health_accum")
+def reset_lost_health_accum(hinst, entity):
+    """
+    Descripción
+        ACCIÓN: Resetea la referencia de vida al final de una regeneración/restauración.
+        - Guarda health_at_last_restore = current health.
+    """
+    try:
+        hp = float(getattr(entity, "health", 0.0))
+        hinst.set_blackboard("health_at_last_restore", float(hp))
+    except Exception as e:
+        exception_print("RESET LOST HEALTH ACCUM", entity, str(e))
+
+@_register("record_health_tick")
+def record_health_tick(hinst, entity):
+    """
+    ACCIÓN: Mantener dos snapshots de vida:
+      - last_health_snapshot_prev : vida al inicio del tick anterior
+      - last_health_snapshot      : vida actual (incluye daño aplicado antes del update)
+    Razonamiento:
+      - Las acciones `update` se ejecutan ANTES de evaluar transiciones. Guardamos la
+        snapshot previa para que condiciones como `RecentlyDamaged` puedan comparar
+        contra el valor del frame anterior.
+    """
+    try:
+        # obtener snapshot actual guardada (valor del tick anterior)
+        prev_snapshot = hinst.get_blackboard("last_health_snapshot", None)
+        if prev_snapshot is None:
+            # si no existía, inicializar prev a la vida actual para evitar disparos falsos
+            prev_snapshot = float(getattr(entity, "health", 0.0) or 0.0)
+        # escribir la snapshot previa en key específica
+        hinst.set_blackboard("last_health_snapshot_prev", float(prev_snapshot))
+
+        # ahora registrar la snapshot actual (daño ya aplicado en esta frame)
+        current_hp = float(getattr(entity, "health", 0.0) or 0.0)
+        hinst.set_blackboard("last_health_snapshot", float(current_hp))
+    except Exception as e:
+        exception_print("RECORD HEALTH TICK", entity, str(e))
+
+# --------------------
+# Attention / Atento helpers
+# --------------------
+@_register("start_attention_facing")
+def start_attention_facing(hinst, entity):
+    """
+    Descripción
+        ACCIÓN: Inicializar el objetivo de facing para el estado 'Atento'.
+        - Lee `attention_direction` (str cardinal) o `attention_angle_deg` (numérico)
+          desde el spec (`_spec_params`) y crea un Kinematic target delante de la entidad.
+        - Guarda el target en blackboard `attention_face_target`.
+        Parámetros esperados en spec:
+            - attention_direction: "N"|"S"|"E"|"W" (opcional)
+            - attention_distance: float (px) distancia del punto objetivo (default 10.0)
+    """
+    try:
+        dir_param = get_spec_param(hinst, "attention_direction", "N")
+        distance = float(get_spec_param(hinst, "attention_distance", 10.0))
+    
+        dd = dir_param.strip().upper()
+        # map cardinal to radians (0 = +x / East)
+        card_map = {"E": 0.0, "N": math.pi/2, "W": math.pi, "S": -math.pi/2}
+        angle_rad = card_map.get(dd, None)
+
+        # fallback: if still None, use entity.orientation (keep facing)
+        if angle_rad is None:
+            angle_rad = float(getattr(entity, "orientation", 0.0))
+
+        # compute target position a small distancia en la dirección angle_rad
+        ex, ez = entity.get_pos()
+        tx = ex + math.cos(angle_rad) * distance
+        tz = ez + math.sin(angle_rad) * distance
+
+        # normalize dynamic state to avoid residual rotation when entering Atento
+        entity._pending_steering = SteeringOutput(linear=(0.0, 0.0), angular=0.0)
+        entity.rotation = 0.0
+
+        # create Kinematic target (Face uses position)
+        try:
+            tgt = Kinematic(position=(float(tx), float(tz)), orientation=angle_rad, velocity=(0.0, 0.0), rotation=0.0)
+            # store target in blackboard for reuse
+            hinst.set_blackboard("attention_face_target", tgt)
+            # set entity to FACE algorithm and target
+            entity.face.target = tgt
+            entity.algorithm = CONF.ALG.ALGORITHM.FACE
+        except Exception as e:
+            exception_print("START ATTENTION FACING", entity, f"Setting face target: {e}")
+    except Exception as e:
+        exception_print("START ATTENTION FACING", entity, str(e))
+
+# --------------------
+# Boss ranged attack
+# --------------------
+@_register("start_boss_range_attack_mode")
+def start_boss_range_attack_mode(hinst, entity):
+    """
+    Descripción
+        ACCIÓN: Inicializar modo de ataque a distancia.
+        - El boss se queda estático (stop movement) y mira al jugador (FACE).
+        - Guarda algoritmo previo para restaurarlo al salir.
+    """
+    try:
+        # cooldown bookkeeping
+        hinst.set_blackboard("boss_range_last_at", 0.0)
+        hinst.set_blackboard("boss_range_cooldown", float(get_spec_param(hinst, "stomp_cooldown", 6.0)))
+
+        # guardar algoritmo previo
+        prev_alg = getattr(entity, "algorithm", None)
+        hinst.set_blackboard("boss_prev_algorithm", prev_alg)
+
+        # detener movimiento inmediatamente
+        entity.velocity = (0.0, 0.0)
+        entity._pending_steering = SteeringOutput(linear=(0.0, 0.0), angular=0.0)
+        entity.rotation = 0.0
+
+        # poner algoritmo FACE y fijar objetivo de mirada al player (si existe)
+        try:
+            player = get_player(hinst)
+            entity.algorithm = CONF.ALG.ALGORITHM.FACE
+            if player:
+                entity.face.target = player
+            else:
+                # fallback: mirar último known pos si existe
+                last = hinst.get_blackboard("last_known_player_pos", None)
+                if last:
+                    tgt = Kinematic(position=tuple(last), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
+                    entity.face.target = tgt
+        except Exception as e:
+            exception_print("START BOSS RANGE ATTACK MODE", entity, f"Setting face target: {e}")
+    except Exception as e:
+        exception_print("START BOSS RANGE ATTACK MODE", entity, str(e))
+
+@_register("boss_range_attack_tick")
+def boss_range_attack_tick(hinst, entity):
+    """
+    Descripción
+        ACCIÓN: Ejecutar ataque de rango AOE simple manteniendo FACE y sin movimiento.
+        - Cada tick asegura que el entity mire al player y aplica el efecto cuando toca cooldown.
+    """
+    try:
+        player = get_player(hinst)
+        if not player:
+            return
+
+        # asegurar estado estático y facing al jugador
+        try:
+            entity.velocity = (0.0, 0.0)
+            entity._pending_steering = SteeringOutput(linear=(0.0, 0.0), angular=0.0)
+        except Exception:
+            pass
+
+        # mantener target de face apuntando al player
+        try:
+            entity.face.target = player
+        except Exception:
+            # fallback: crear kinematic target
+            try:
+                entity.face.target = Kinematic(position=player.get_pos(), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
+            except Exception:
+                pass
+
+        last = float(hinst.get_blackboard("boss_range_last_at", 0.0))
+        cd = float(hinst.get_blackboard("boss_range_cooldown", get_spec_param(hinst, "stomp_cooldown", 6.0)))
+        now = time.time()
+        if now - last < cd:
+            return
+
+        # trigger effect: try manager.spawn_attack_effect or record in blackboard
+        mgr = get_manager(hinst)
+        pos = player.get_pos()
+        try:
+            if mgr and getattr(mgr, "spawn_attack_effect", None):
+                mgr.spawn_attack_effect("boss_aoe_circle", position=pos, radius=float(get_spec_param(hinst, "ranged_attack_range", 220.0)))
+            else:
+                hinst.set_blackboard("last_boss_range_effect", (pos, float(get_spec_param(hinst, "ranged_attack_range", 220.0))))
+        except Exception as e:
+            exception_print("BOSS RANGE ATTACK TICK", entity, f"effect spawn error: {e}")
+
+        hinst.set_blackboard("boss_range_last_at", now)
+    except Exception as e:
+        exception_print("BOSS RANGE ATTACK TICK", entity, str(e))
+
+@_register("stop_boss_range_attack_mode")
+def stop_boss_range_attack_mode(hinst, entity):
+    """
+    Descripción
+        ACCIÓN: Limpiar estado de attack mode range y restaurar algoritmo previo.
+    """
+    try:
+        # Restaurar algoritmo previo si existía
+        prev = hinst.get_blackboard("boss_prev_algorithm", None)
+        if prev:
+            try:
+                entity.algorithm = prev
+            except Exception:
+                entity.algorithm = CONF.ALG.ALGORITHM.WANDER_DYNAMIC
+        else:
+            entity.algorithm = CONF.ALG.ALGORITHM.WANDER_DYNAMIC
+
+        # limpiar face target
+        try:
+            entity.face.target = None
+        except Exception:
+            pass
+
+        # limpiar blackboard keys vinculadas al modo range
+        for k in ("boss_range_last_at", "boss_range_cooldown", "boss_prev_algorithm", "last_boss_range_effect"):
+            if k in hinst.blackboard:
+                del hinst.blackboard[k]
+    except Exception as e:
+        exception_print("STOP BOSS RANGE ATTACK MODE", entity, str(e))
+        
 # ----------------------------
 # Behavior flags / monitoring
 # ----------------------------
