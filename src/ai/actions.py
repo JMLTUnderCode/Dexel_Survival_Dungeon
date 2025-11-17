@@ -1096,13 +1096,23 @@ def start_return_to_boss_position(hinst, entity):
 def return_to_boss_tick(hinst, entity):
     """
     Descripción
-        ACCIÓN: Tick para seguir temp_follow_path hacia boss_position y marcar progreso.
-    
-    Blackboard utilizado/modificado:
-        - none explicit (usa entity.temp_follow_path y return_target_pos)
+        ACCIÓN: Tick que supervisa el progreso del temp_follow_path hacia boss_position.
+        Marca llegada y limpia rutas/algoritmos cuando se alcanza el destino.
+
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad (Boss) que sigue temp_follow_path.
+
+    Blackboard utilizado/modificado
+        - return_target_pos (read): posición objetivo establecida en start_return_to_boss_position.
+        - return_arrived_at (update): timestamp cuando se detecta la llegada.
+        - entity.temp_follow_path / entity.follow_path (update): limpieza al llegar.
+
+    Parámetros esperados
+        - arrival_threshold (float): umbral en px para considerar llegada (default: arrival_threshold spec).
     """
     try:
-        # Reuse check logic similar to check_return_path_finished
+        # 1) Reusar lógica de check: si estamos cerca del target, detener temp path
         temp = getattr(entity, "temp_follow_path", None)
         target = hinst.get_blackboard("return_target_pos", None)
         arrival_thresh = float(get_spec_param(hinst, "arrival_threshold", 24.0))
@@ -1111,15 +1121,14 @@ def return_to_boss_tick(hinst, entity):
             ex, ez = entity.get_pos()
             tx, tz = float(target[0]), float(target[1])
             if math.hypot(ex - tx, ez - tz) <= arrival_thresh:
-                # arrived: keep temp_follow_path removal to stop action on exit
+                # 2) Llegada: limpiar temp path y fijar algoritmo de parada
                 entity.temp_follow_path = None
                 entity.follow_path = None
                 entity.algorithm = CONF.ALG.ALGORITHM.ARRIVE_KINEMATIC
                 hinst.set_blackboard("return_arrived_at", time.time())
                 return
-            # else: allow FollowPath to move entity (no additional work)
         else:
-            # if there's no temp path, mark arrived for safety
+            # 3) Si no hay temp path o target, marcar como arrived por seguridad
             hinst.set_blackboard("return_arrived_at", time.time())
     except Exception as e:
         exception_print("RETURN TO BOSS TICK", entity, str(e))
@@ -1128,11 +1137,21 @@ def return_to_boss_tick(hinst, entity):
 def stop_return_to_boss_position(hinst, entity):
     """
     Descripción
-        ACCIÓN: Limpiar temp_follow_path y restaurar algoritmo base.
+        ACCIÓN: Limpiar temp_follow_path y restaurar algoritmo base al salir del estado Reposicionar.
+
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad (Boss) que termina de reposicionarse.
+
+    Blackboard utilizado/modificado
+        - Ninguno
+
+    Parámetros esperados
+        - Ninguno
     """
     try:
+        # 1) Eliminar temp path y seleccionar algoritmo fallback
         entity.temp_follow_path = None
-        # fallback algorithm
         entity.algorithm = CONF.ALG.ALGORITHM.WANDER_DYNAMIC
     except Exception as e:
         exception_print("STOP RETURN TO BOSS POSITION", entity, str(e))
@@ -1141,28 +1160,41 @@ def stop_return_to_boss_position(hinst, entity):
 def start_invocation(hinst, entity):
     """
     Descripción
-        ACCIÓN: Iniciar proceso de invocación: spawn gradual de allies_for_invocation.
+        ACCIÓN: Inicializar el proceso de invocación.
+        - Prepara bookkeeping y pone al boss en FACE mirando al player mientras spawnan aliados.
+
+    Argumentos
+        - hinst (HSMInstance): instancia HSM que contiene el blackboard y spec.
+        - entity (Any): entidad (Boss) que inicia la invocación.
+
+    Blackboard utilizado/modificado
+        - invocation_started_at (update): timestamp de inicio de invocación.
+        - invocation_spawned_count (update): contador de aliados spawnados.
+        - invocation_entities (update): lista de referencias a aliados spawnados.
+        - invocation_prev_algorithm (update): algoritmo previo guardado para restaurar al salir.
+
+    Parámetros esperados
+        - allies_for_invocation (int): número total de aliados a generar.
+        - time_for_invocation (float): duración total de la fase de invocación en segundos.
+        - timeout_invocations (float): lifetime en segundos para cada aliado invocado.
     """
     try:
-        # inicial bookkeeping (existente)
+        # 1) Inicial bookkeeping para la invocación
         hinst.set_blackboard("invocation_started_at", time.time())
         hinst.set_blackboard("invocation_spawned_count", 0)
         hinst.set_blackboard("invocation_entities", [])
-        # guardar algoritmo previo para restaurar al salir de invocación
         hinst.set_blackboard("invocation_prev_algorithm", getattr(entity, "algorithm", None))
 
-        # asegurar que el boss quede estático mirando al player (FACE)
+        # 2) Asegurar que el boss quede estático y cara al player (FACE)
         entity.velocity = (0.0, 0.0)
         entity._pending_steering = SteeringOutput(linear=(0.0, 0.0), angular=0.0)
 
-        # setear algoritmo FACE y target al player (si existe)
         player = get_player(hinst)
         try:
             entity.algorithm = CONF.ALG.ALGORITHM.FACE
             if player:
                 entity.face.target = player
             else:
-                # fallback: mirar última posición conocida
                 last = hinst.get_blackboard("last_known_player_pos", None)
                 if last:
                     tgt = Kinematic(position=tuple(last), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
@@ -1177,10 +1209,23 @@ def invocation_tick(hinst, entity):
     """
     Descripción
         ACCIÓN: Durante la invocación spawnear aliados gradualmente según time_for_invocation.
-        Mejoras:
-         - Asegurar uso de manager.spawn_enemy si está disponible.
-         - Spawn de soldados con behavior=None y algoritmo PURSUE hacia el player.
-         - Registrar referencias en invocation_entities.
+        - Usar manager.spawn_enemy cuando esté disponible.
+        - Registrar cada spawn en invocation_entities y mantener contador.
+
+    Argumentos
+        - hinst (HSMInstance): instancia HSM.
+        - entity (Any): boss que ejecuta la invocación.
+
+    Blackboard utilizado/modificado
+        - invocation_started_at (read): timestamp de inicio de invocación.
+        - invocation_spawned_count (read/update): contador de aliados spawnados.
+        - invocation_entities (read/update): lista acumulada de referencias a invocados.
+        - invocation_last_spawn_at (update): timestamp del último spawn (diagnóstico).
+
+    Parámetros esperados
+        - allies_for_invocation (int): total de aliados a crear.
+        - time_for_invocation (float): duración en segundos para distribuir los spawns.
+        - timeout_invocations (float): lifetime de cada aliado en segundos.
     """
     try:
         mgr = get_manager(hinst)
@@ -1192,11 +1237,9 @@ def invocation_tick(hinst, entity):
         if not start:
             return
 
-        elapsed = time.time() - float(start)
-        # schedule: spawn at deterministic intervals to avoid drift
+        # 1) Calcular interval determinista y spawnear cuando corresponda
         if spawned < total:
             interval = max(1e-6, float(duration) / float(total))
-            # deterministic next spawn time (no accumulation of small drifts)
             next_spawn_time = float(start) + (spawned + 1) * interval
             if time.time() >= next_spawn_time:
                 spawned_spec = {
@@ -1219,10 +1262,7 @@ def invocation_tick(hinst, entity):
                 arr.append(spawned_ref)
                 hinst.set_blackboard("invocation_entities", arr)
                 hinst.set_blackboard("invocation_spawned_count", spawned + 1)
-                # keep a reliable last spawn timestamp for diagnostics (but not used for scheduling)
                 hinst.set_blackboard("invocation_last_spawn_at", time.time())
-
-        # Invocation leaves boss static / FACE — no movement changes here
     except Exception as e:
         exception_print("INVOCATION TICK", entity, str(e))
 
@@ -1230,11 +1270,22 @@ def invocation_tick(hinst, entity):
 def stop_invocation(hinst, entity):
     """
     Descripción
-        ACCIÓN: Finalizar proceso de invocación (cleanup).
+        ACCIÓN: Finalizar el proceso de invocación y limpiar bookkeeping.
         - Restaurar algoritmo previo y limpiar face target.
+
+    Argumentos
+        - hinst (HSMInstance): instancia HSM.
+        - entity (Any): boss que termina la invocación.
+
+    Blackboard utilizado/modificado
+        - invocation_prev_algorithm (read/remove): algoritmo previo restaurado.
+        - invocation_started_at / invocation_spawned_count / invocation_last_spawn_at (remove): limpieza.
+        - invocation_entities (read): lista de entidades creadas (no se elimina aquí).
+
+    Parámetros esperados
+        - Ninguno
     """
     try:
-        # restaurar algoritmo previo si existía
         prev = hinst.get_blackboard("invocation_prev_algorithm", None)
         if prev:
             try:
@@ -1246,13 +1297,11 @@ def stop_invocation(hinst, entity):
             except Exception:
                 pass
 
-        # limpiar face target
         try:
             entity.face.target = None
         except Exception:
             pass
 
-        # limpiar timers / bookkeeping
         for k in ("invocation_started_at", "invocation_spawned_count", "invocation_last_spawn_at"):
             if k in hinst.blackboard:
                 del hinst.blackboard[k]
@@ -1263,8 +1312,22 @@ def stop_invocation(hinst, entity):
 def start_regeneration(hinst, entity):
     """
     Descripción
-      - Inicia regeneración y asegura que la entidad quede estática en boss_position
-        mirando al player (FACE). Evita desplazamientos residuales durante la fase.
+        ACCIÓN: Iniciar regeneración en boss_position; asegurar que el boss quede estático
+        y mirando al jugador (FACE). Preparar bookkeeping para regen.
+
+    Argumentos
+        - hinst (HSMInstance): instancia HSM.
+        - entity (Any): boss que iniciará regeneración.
+
+    Blackboard utilizado/modificado
+        - regen_started_at (update): timestamp de inicio de regeneración.
+        - regen_total_amount (update): cantidad total de HP a recuperar.
+        - regen_accum (update): acumulado actual de HP recuperado.
+
+    Parámetros esperados
+        - perc_regenerate (float): fracción de max_health a recuperar durante la fase.
+        - time_for_regeneration (float): duración en segundos de la regeneración.
+        - boss_position (tuple): posición absoluta donde debe ocurrir la regeneración.
     """
     try:
         perc = float(get_spec_param(hinst, "perc_regenerate", 0.18))
@@ -1274,22 +1337,19 @@ def start_regeneration(hinst, entity):
         hinst.set_blackboard("regen_total_amount", float(total))
         hinst.set_blackboard("regen_accum", 0.0)
 
-        # limpiar rutas y steering residuales para evitar movimiento
+        # 1) Normalizar cinemática y limpiar rutas residuales para evitar micro-desplazamientos
         entity.velocity = (0.0, 0.0)
         entity._pending_steering = SteeringOutput(linear=(0.0, 0.0), angular=0.0)
-    
-        # eliminar cualquier follow_path/temp_follow_path activo
         entity.follow_path = None
         entity.temp_follow_path = None
 
-        # poner algoritmo FACE y fijar objetivo al player (si existe) para que mire durante regen
+        # 2) Poner algoritmo FACE y fijar target al player o a boss_position como fallback
         try:
             player = get_player(hinst)
             entity.algorithm = CONF.ALG.ALGORITHM.FACE
             if player:
                 entity.face.target = player
             else:
-                # fallback: mirar boss_pos si no hay player
                 boss_pos = get_spec_param(hinst, "boss_position", None)
                 if boss_pos:
                     tgt = Kinematic(position=(float(boss_pos[0]), float(boss_pos[1])), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
@@ -1304,8 +1364,23 @@ def start_regeneration(hinst, entity):
 def regen_tick(hinst, entity):
     """
     Descripción
-        ACCIÓN: Aplicar curación lineal durante time_for_regeneration hasta completar regen_total_amount.
-        - Usa _dt del blackboard para calcular incrementos.
+        ACCIÓN: Aplicar curación incremental durante la fase de regeneración.
+        - Usa _dt del blackboard para calcular la cantidad a aplicar por tick.
+
+    Argumentos
+        - hinst (HSMInstance): instancia HSM.
+        - entity (Any): boss que recibe la regeneración.
+
+    Blackboard utilizado/modificado
+        - regen_started_at (read): indica si la regeneración está activa.
+        - regen_total_amount (read): total de HP a recuperar.
+        - regen_accum (update): acumulador de HP aplicado.
+        - regen_finished_at (update): timestamp marcado cuando termina la regeneración.
+
+    Parámetros esperados
+        - time_for_regeneration (float): duración total de la regeneración (s).
+        - perc_regenerate (float): porcentaje de max_health a recuperar.
+        - _dt (float): delta time del frame (debe estar en blackboard).
     """
     try:
         if not hinst.get_blackboard("regen_started_at", None):
@@ -1317,18 +1392,16 @@ def regen_tick(hinst, entity):
         if dt <= 0.0:
             return
         duration = float(get_spec_param(hinst, "time_for_regeneration", 8.0))
-        # amount per second
         per_sec = total / max(1e-6, duration)
         inc = per_sec * dt
         prev = float(hinst.get_blackboard("regen_accum", 0.0) or 0.0)
         to_apply = min(inc, total - prev)
         if to_apply <= 0.0:
             return
-        # apply to entity health
+        # 1) Aplicar curación a la entidad y actualizar bookkeeping
         max_hp = float(getattr(entity, "max_health", 100.0) or 100.0)
         entity.health = min(max_hp, float(getattr(entity, "health", 0.0)) + to_apply)
         hinst.set_blackboard("regen_accum", prev + to_apply)
-        # mark finished if reached
         if (hinst.get_blackboard("regen_accum", 0.0) or 0.0) >= total:
             hinst.set_blackboard("regen_finished_at", time.time())
     except Exception as e:
@@ -1338,7 +1411,17 @@ def regen_tick(hinst, entity):
 def stop_regeneration(hinst, entity):
     """
     Descripción
-        ACCIÓN: Limpiar estado de regeneración y opcionalmente normalizar flags.
+        ACCIÓN: Finalizar la fase de regeneración y limpiar claves del blackboard.
+
+    Argumentos
+        - hinst (HSMInstance): instancia HSM.
+        - entity (Any): boss que finaliza regeneración.
+
+    Blackboard utilizado/modificado
+        - regen_started_at / regen_total_amount / regen_accum (remove): se eliminan las claves relacionadas.
+
+    Parámetros esperados
+        - Ninguno
     """
     try:
         if "regen_started_at" in hinst.blackboard:
@@ -1354,8 +1437,18 @@ def stop_regeneration(hinst, entity):
 def reset_lost_health_accum(hinst, entity):
     """
     Descripción
-        ACCIÓN: Resetea la referencia de vida al final de una regeneración/restauración.
-        - Guarda health_at_last_restore = current health.
+        ACCIÓN: Resetea la referencia de vida al final de una restauración o regeneración.
+        - Guarda health_at_last_restore = current health en el blackboard.
+
+    Argumentos
+        - hinst (HSMInstance): instancia HSM.
+        - entity (Any): entidad cuyo snapshot de vida se resetea.
+
+    Blackboard utilizado/modificado
+        - health_at_last_restore (update): vida actual registrada como referencia de restauración.
+
+    Parámetros esperados
+        - Ninguno
     """
     try:
         hp = float(getattr(entity, "health", 0.0))
@@ -1366,24 +1459,28 @@ def reset_lost_health_accum(hinst, entity):
 @_register("record_health_tick")
 def record_health_tick(hinst, entity):
     """
-    ACCIÓN: Mantener dos snapshots de vida:
-      - last_health_snapshot_prev : vida al inicio del tick anterior
-      - last_health_snapshot      : vida actual (incluye daño aplicado antes del update)
-    Razonamiento:
-      - Las acciones `update` se ejecutan ANTES de evaluar transiciones. Guardamos la
-        snapshot previa para que condiciones como `RecentlyDamaged` puedan comparar
-        contra el valor del frame anterior.
+    Descripción
+        ACCIÓN: Mantener dos snapshots de vida para detectar daños recientes.
+        - last_health_snapshot_prev : vida al inicio del tick anterior.
+        - last_health_snapshot      : vida actual (snapshot de este tick).
+
+    Argumentos
+        - hinst (HSMInstance): instancia HSM.
+        - entity (Any): entidad cuya vida se registra.
+
+    Blackboard utilizado/modificado
+        - last_health_snapshot_prev (update): vida del tick previo.
+        - last_health_snapshot (update): vida actual.
+
+    Parámetros esperados
+        - Ninguno
     """
     try:
-        # obtener snapshot actual guardada (valor del tick anterior)
         prev_snapshot = hinst.get_blackboard("last_health_snapshot", None)
         if prev_snapshot is None:
-            # si no existía, inicializar prev a la vida actual para evitar disparos falsos
             prev_snapshot = float(getattr(entity, "health", 0.0) or 0.0)
-        # escribir la snapshot previa en key específica
         hinst.set_blackboard("last_health_snapshot_prev", float(prev_snapshot))
 
-        # ahora registrar la snapshot actual (daño ya aplicado en esta frame)
         current_hp = float(getattr(entity, "health", 0.0) or 0.0)
         hinst.set_blackboard("last_health_snapshot", float(current_hp))
     except Exception as e:
@@ -1397,41 +1494,41 @@ def start_attention_facing(hinst, entity):
     """
     Descripción
         ACCIÓN: Inicializar el objetivo de facing para el estado 'Atento'.
-        - Lee `attention_direction` (str cardinal) o `attention_angle_deg` (numérico)
-          desde el spec (`_spec_params`) y crea un Kinematic target delante de la entidad.
-        - Guarda el target en blackboard `attention_face_target`.
-        Parámetros esperados en spec:
-            - attention_direction: "N"|"S"|"E"|"W" (opcional)
-            - attention_distance: float (px) distancia del punto objetivo (default 10.0)
+        - Crea y asigna un target Kinematic en la dirección especificada y activa FACE.
+
+    Argumentos
+        - hinst (HSMInstance): instancia HSM.
+        - entity (Any): entidad que entra en estado Atento.
+
+    Blackboard utilizado/modificado
+        - attention_face_target (update): Kinematic objetivo almacenado para facing.
+
+    Parámetros esperados
+        - attention_direction (str): "N"|"S"|"E"|"W" (opcional).
+        - attention_distance (float): distancia en px para colocar el target (default 10.0).
     """
     try:
         dir_param = get_spec_param(hinst, "attention_direction", "N")
         distance = float(get_spec_param(hinst, "attention_distance", 10.0))
     
         dd = dir_param.strip().upper()
-        # map cardinal to radians (0 = +x / East)
         card_map = {"E": 0.0, "N": math.pi/2, "W": math.pi, "S": -math.pi/2}
         angle_rad = card_map.get(dd, None)
-
-        # fallback: if still None, use entity.orientation (keep facing)
         if angle_rad is None:
             angle_rad = float(getattr(entity, "orientation", 0.0))
 
-        # compute target position a small distancia en la dirección angle_rad
         ex, ez = entity.get_pos()
         tx = ex + math.cos(angle_rad) * distance
         tz = ez + math.sin(angle_rad) * distance
 
-        # normalize dynamic state to avoid residual rotation when entering Atento
+        # 1) Normalizar estado cinemático para evitar giros bruscos residuales
         entity._pending_steering = SteeringOutput(linear=(0.0, 0.0), angular=0.0)
         entity.rotation = 0.0
 
-        # create Kinematic target (Face uses position)
+        # 2) Crear Kinematic target y asignarlo como objetivo de face
         try:
             tgt = Kinematic(position=(float(tx), float(tz)), orientation=angle_rad, velocity=(0.0, 0.0), rotation=0.0)
-            # store target in blackboard for reuse
             hinst.set_blackboard("attention_face_target", tgt)
-            # set entity to FACE algorithm and target
             entity.face.target = tgt
             entity.algorithm = CONF.ALG.ALGORITHM.FACE
         except Exception as e:
@@ -1447,31 +1544,38 @@ def start_boss_range_attack_mode(hinst, entity):
     """
     Descripción
         ACCIÓN: Inicializar modo de ataque a distancia.
-        - El boss se queda estático (stop movement) y mira al jugador (FACE).
-        - Guarda algoritmo previo para restaurarlo al salir.
+        - Pone al boss estático, guarda algoritmo previo y activa FACE mirando al player.
+
+    Argumentos
+        - hinst (HSMInstance): instancia HSM.
+        - entity (Any): boss que cambia a modo ranged.
+
+    Blackboard utilizado/modificado
+        - boss_range_last_at (update): timestamp del último ataque (inicializado a 0).
+        - boss_range_cooldown (update): cooldown del ataque (se establece desde spec).
+        - boss_prev_algorithm (update): algoritmo previo guardado.
+
+    Parámetros esperados
+        - stomp_cooldown (float): cooldown entre ataques a distancia.
+        - ranged_attack_range (float): radio del efecto AOE a usar en boss_range_attack_tick.
     """
     try:
-        # cooldown bookkeeping
         hinst.set_blackboard("boss_range_last_at", 0.0)
         hinst.set_blackboard("boss_range_cooldown", float(get_spec_param(hinst, "stomp_cooldown", 6.0)))
 
-        # guardar algoritmo previo
         prev_alg = getattr(entity, "algorithm", None)
         hinst.set_blackboard("boss_prev_algorithm", prev_alg)
 
-        # detener movimiento inmediatamente
         entity.velocity = (0.0, 0.0)
         entity._pending_steering = SteeringOutput(linear=(0.0, 0.0), angular=0.0)
         entity.rotation = 0.0
 
-        # poner algoritmo FACE y fijar objetivo de mirada al player (si existe)
         try:
             player = get_player(hinst)
             entity.algorithm = CONF.ALG.ALGORITHM.FACE
             if player:
                 entity.face.target = player
             else:
-                # fallback: mirar último known pos si existe
                 last = hinst.get_blackboard("last_known_player_pos", None)
                 if last:
                     tgt = Kinematic(position=tuple(last), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
@@ -1486,25 +1590,36 @@ def boss_range_attack_tick(hinst, entity):
     """
     Descripción
         ACCIÓN: Ejecutar ataque de rango AOE simple manteniendo FACE y sin movimiento.
-        - Cada tick asegura que el entity mire al player y aplica el efecto cuando toca cooldown.
+        - Cuando el cooldown expira, genera un efecto mediante manager.spawn_attack_effect
+          o registra en blackboard si el manager no está presente.
+
+    Argumentos
+        - hinst (HSMInstance): instancia HSM.
+        - entity (Any): boss en modo ranged.
+
+    Blackboard utilizado/modificado
+        - boss_range_last_at (read/update): timestamp del último ataque.
+        - boss_range_cooldown (read): cooldown entre ataques.
+        - last_boss_range_effect (update): fallback si no se pudo usar manager.
+
+    Parámetros esperados
+        - ranged_attack_range (float): radio del AOE a aplicar.
+        - stomp_cooldown (float): cooldown entre ataques.
     """
     try:
         player = get_player(hinst)
         if not player:
             return
 
-        # asegurar estado estático y facing al jugador
         try:
             entity.velocity = (0.0, 0.0)
             entity._pending_steering = SteeringOutput(linear=(0.0, 0.0), angular=0.0)
         except Exception:
             pass
 
-        # mantener target de face apuntando al player
         try:
             entity.face.target = player
         except Exception:
-            # fallback: crear kinematic target
             try:
                 entity.face.target = Kinematic(position=player.get_pos(), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
             except Exception:
@@ -1516,7 +1631,6 @@ def boss_range_attack_tick(hinst, entity):
         if now - last < cd:
             return
 
-        # trigger effect: try manager.spawn_attack_effect or record in blackboard
         mgr = get_manager(hinst)
         pos = player.get_pos()
         try:
@@ -1535,10 +1649,21 @@ def boss_range_attack_tick(hinst, entity):
 def stop_boss_range_attack_mode(hinst, entity):
     """
     Descripción
-        ACCIÓN: Limpiar estado de attack mode range y restaurar algoritmo previo.
+        ACCIÓN: Limpiar el modo de ataque a distancia y restaurar algoritmo previo.
+        - Limpia face target y borra claves relacionadas del blackboard.
+
+    Argumentos
+        - hinst (HSMInstance): instancia HSM.
+        - entity (Any): boss que sale del modo ranged.
+
+    Blackboard utilizado/modificado
+        - boss_prev_algorithm (read/remove): algoritmo previo restaurado.
+        - boss_range_last_at / boss_range_cooldown / last_boss_range_effect (remove): limpieza.
+
+    Parámetros esperados
+        - Ninguno
     """
     try:
-        # Restaurar algoritmo previo si existía
         prev = hinst.get_blackboard("boss_prev_algorithm", None)
         if prev:
             try:
@@ -1548,13 +1673,11 @@ def stop_boss_range_attack_mode(hinst, entity):
         else:
             entity.algorithm = CONF.ALG.ALGORITHM.WANDER_DYNAMIC
 
-        # limpiar face target
         try:
             entity.face.target = None
         except Exception:
             pass
 
-        # limpiar blackboard keys vinculadas al modo range
         for k in ("boss_range_last_at", "boss_range_cooldown", "boss_prev_algorithm", "last_boss_range_effect"):
             if k in hinst.blackboard:
                 del hinst.blackboard[k]
