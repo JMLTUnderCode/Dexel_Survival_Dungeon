@@ -289,23 +289,44 @@ class Enemy(Kinematic):
         except Exception:
             pass
 
-        # Draw HSM debug stack if present
-        try:
+        if CONF.DEV.DEBUG:
+            # Mostrar la máquina de estados jerárquica (HSM) en pantalla
+            # Mantenemos una cola (máx 5) de snapshots de la pila activa para mostrar
+            # la secuencia: el más antiguo arriba y el más reciente abajo.
             if getattr(self, "behavior", None):
                 stack = self.behavior.get_active_stack()
                 if stack:
-                    font = pygame.font.SysFont("Segoe UI", 16)
-                    # compose text: topmost (leaf) first
-                    txt = " > ".join(stack[-3:]) if len(stack) > 3 else " > ".join(stack)
+                    # representación textual completa de la pila activa (root -> ... -> leaf)
+                    rep = " > ".join(stack)
+
+                    # historial persistente por entidad: lista oldest..newest
+                    hist = getattr(self, "_hsm_stack_history", [])
+                    # sólo añadir si cambió respecto al último elemento
+                    if not hist or hist[-1] != rep:
+                        hist.append(rep)
+                        # limitar tamaño a 5 (drop oldest)
+                        if len(hist) > 5:
+                            hist.pop(0)
+                        # almacenar de vuelta
+                        self._hsm_stack_history = hist
+
+                    # dibujar líneas: oldest arriba, newest abajo
+                    font = pygame.font.SysFont("Segoe UI", 20)
                     sx = int(self.position[0] - camera_x)
                     sz = int(self.position[1] - camera_z)
-                    text_surf = font.render(txt, True, (255, 255, 255))
-                    tsw, tsh = text_surf.get_size()
-                    surface.blit(text_surf, (sx - tsw // 2, sz - (self.current_animation.get_size()[1] // 2) - 28 - tsh))
-        except Exception:
-            pass
+                    anim_h = self.current_animation.get_size()[1]
+                    # calcular offset inicial (arriba del sprite)
+                    base_y = sz - (anim_h // 2) - 28
+                    # altura de línea (usar medida de fuente)
+                    _, line_h = font.size("Mg")
+                    # desplazar hacia arriba para que la lista no salga del sprite
+                    start_y = base_y - (line_h * (len(self._hsm_stack_history) - 1))
+                    for i, line in enumerate(self._hsm_stack_history):
+                        ts = font.render(line, True, (255, 255, 255))
+                        tw, th = ts.get_size()
+                        y = int(start_y + i * line_h) - th
+                        surface.blit(ts, (sx - tw // 2, y))
 
-        if CONF.DEV.DEBUG:
             # Mostrar arriba del sprite el algoritmo activo en VERDE, NEGRITA y MAYÚSCULAS
             # Cachear la fuente en la clase para no recrearla cada frame
             if not hasattr(self.__class__, "_dev_font") or self.__class__._dev_font is None:
