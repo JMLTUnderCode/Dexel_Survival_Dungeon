@@ -39,12 +39,17 @@ def condition(fn):
 def HealthBelow(hinst: HSMInstance, entity: Any) -> bool:
     """
     Descripción
-        CONDICIÓN: True si la vida actual del entity es menor que el umbral.
+        CONDICIÓN: True si la vida actual del entity es menor que el umbral de huida.
 
-    Lógica (pasos)
-    1. Resolver 'flee_threshold' desde spec con get_spec_param.
-    2. Leer hp y max_hp de la entidad.
-    3. Calcular fraction = hp / max_hp y comparar.
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM que contiene el blackboard y spec.
+        - entity (Any): entidad cuyo estado de vida se evalúa.
+
+    Blackboard utilizado/modificado
+        - Ninguno
+
+    Parámetros esperados
+        - flee_threshold (float): fracción (0..1) que define el umbral para huir.
     """
     try:
         # 1) Obtener umbral
@@ -66,11 +71,17 @@ def HealthBelow(hinst: HSMInstance, entity: Any) -> bool:
 def HealthAbove(hinst: HSMInstance, entity: Any) -> bool:
     """
     Descripción
-        CONDICIÓN: True si la vida actual del entity es mayor o igual al umbral.
+        CONDICIÓN: True si la vida actual del entity es mayor o igual al umbral de restauración.
 
-    Lógica (pasos)
-    1. Resolver 'restore_threshold' desde spec.
-    2. Leer hp / max_hp y comparar fraction >= threshold.
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad cuya vida se evalúa.
+
+    Blackboard utilizado/modificado
+        - Ninguno
+
+    Parámetros esperados
+        - restore_threshold (float): fracción (0..1) que define el umbral para considerar restaurado.
     """
     try:
         restore_threshold = get_spec_param(hinst, "restore_threshold", 0.70)
@@ -89,15 +100,22 @@ def HealthAbove(hinst: HSMInstance, entity: Any) -> bool:
 def PlayerVisible(hinst: HSMInstance, entity: Any) -> bool:
     """
     Descripción
-        CONDICIÓN: True si el jugador está dentro de rango y en el cono de visión.
+        CONDICIÓN: True si el jugador está dentro de rango y dentro del cono de visión.
+        - Actualiza timestamps y última posición conocida cuando se detecta visibilidad.
 
-    Lógica (pasos)
-    1. Leer parámetros de vision desde _spec_params (vision_range, vision_fov_deg, memory).
-    2. Obtener referencia al player vía get_player().
-    3. Calcular distancia y, si dentro de vision_range, chequear ángulo (FOV).
-    4. Si visible: actualizar timestamps y last_known en blackboard.
-    5. Si no visible pero estuvo recientemente visible (memory) -> considerar visible.
-    6. En caso contrario marcar player_visible=False y devolver False.
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad que realiza la comprobación de visión.
+
+    Blackboard utilizado/modificado
+        - last_player_visible_at (update): timestamp de la última vez que se vio al jugador.
+        - last_known_player_pos (update): posición (x,z) del último avistamiento.
+        - player_visible (update): flag booleano de visibilidad.
+
+    Parámetros esperados
+        - vision_range (float): distancia máxima de detección en píxeles.
+        - vision_fov_deg (float): apertura del cono de visión en grados.
+        - player_seen_memory (float): tiempo en segundos para considerar visible por memoria.
     """
     try:
         # 1) Parámetros
@@ -150,13 +168,17 @@ def PlayerVisible(hinst: HSMInstance, entity: Any) -> bool:
 def PlayerNotVisibleFor(hinst: HSMInstance, entity: Any) -> bool:
     """
     Descripción
-        CONDICIÓN: True si el jugador NO ha sido visible por más de `timeout` segundos.
+        CONDICIÓN: True si el jugador NO ha sido visible por más de `player_lost_timeout` segundos.
 
-    Lógica (pasos)
-    1. Resolver timeout desde spec (player_lost_timeout).
-    2. Leer last_player_visible_at del blackboard.
-    3. Si no hay registro -> True (no visto nunca).
-    4. Si tiempo transcurrido >= timeout -> True.
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad que consulta el tiempo desde el último avistamiento.
+
+    Blackboard utilizado/modificado
+        - Ninguno
+
+    Parámetros esperados
+        - player_lost_timeout (float): tiempo en segundos tras el cual se considera perdido.
     """
     try:
         timeout = get_spec_param(hinst, "player_lost_timeout", 2.0)
@@ -175,14 +197,19 @@ def PlayerFar(hinst: HSMInstance, entity: Any) -> bool:
     """
     Descripción
         CONDICIÓN: True si el jugador está suficientemente lejos (>= safe_distance),
-        y no es visible dentro del cono. Además escribe `safe_anchor` en blackboard.
+        y no es visible dentro del cono. Además escribe `safe_anchor` en el blackboard.
 
-    Lógica (pasos)
-    1. Resolver safe_distance desde spec.
-    2. Si no hay player -> True (no hay amenaza).
-    3. Calcular distancia entidad->player; si < safe_distance -> False.
-    4. Hacer FOV/vision strict check: si player dentro de vision y FOV -> False.
-    5. Calcular safe_anchor en dirección opuesta al player y guardarlo.
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad que evalúa si puede curarse en seguridad.
+
+    Blackboard utilizado/modificado
+        - safe_anchor (update): punto seguro calculado en la dirección opuesta al jugador.
+
+    Parámetros esperados
+        - safe_distance (float): distancia mínima requerida para considerar seguro.
+        - vision_range (float): usado para comprobar visibilidad estricta.
+        - vision_fov_deg (float): usado para comprobación de FOV estricta.
     """
     try:
         safe_distance = float(get_spec_param(hinst, "safe_distance", 450.0))
@@ -231,16 +258,18 @@ def IsFarFromProtectionZone(hinst: HSMInstance, entity: Any) -> bool:
     """
     Descripción
         CONDICIÓN: True si la distancia desde la entidad al punto MÁS CERCANO del
-        path protegido (guardian_original_path o entity.path) es mayor que
-        `protection_margin`.
+        path protegido (guardian_original_path o entity.path) es mayor que `protection_margin`.
 
-    Lógica (pasos)
-    1. Resolver protection margin desde spec (protection_margin).
-    2. Obtener el path original (guardian_original_path o entity.path).
-    3. Usar last_param cache ('guardian_last_param') para búsqueda local en path.get_param.
-    4. Actualizar guardian_last_param en blackboard para futuras consultas.
-    5. Calcular posición en el param y medir distancia euclidiana.
-    6. Devolver True si dist > margin, False en caso contrario.
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad que evalúa su proximidad al path protegido.
+
+    Blackboard utilizado/modificado
+        - guardian_last_param (update): cache del parámetro de path para optimizar búsquedas.
+        - Ninguno (lectura): guardian_original_path (si existe) es leído desde el blackboard.
+
+    Parámetros esperados
+        - protection_margin (float): margen en píxeles que define la zona de protección.
     """
     try:
         # 1) margin (px) que define estar "sobre" el path
@@ -274,7 +303,17 @@ def IsAtProtectionZone(hinst: HSMInstance, entity: Any) -> bool:
     """
     Descripción
         CONDICIÓN: True si la entidad está dentro de la protección del path.
-        Implementación: negación de IsFarFromProtectionZone para mantener semántica clara.
+        - Implementación: negación de IsFarFromProtectionZone para mantener semántica clara.
+
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad que evalúa si está en la zona protegida.
+
+    Blackboard utilizado/modificado
+        - Ninguno
+
+    Parámetros esperados
+        - Ninguno
     """
     try:
         return not IsFarFromProtectionZone(hinst, entity)
@@ -291,6 +330,16 @@ def PlayerNotVisibleAndFarFromProtectionZone(hinst: HSMInstance, entity: Any) ->
         COMBINADA: True si el jugador NO es visible (PlayerNotVisibleFor) y la entidad
         está FUERA del path protegido (IsFarFromProtectionZone).
         Uso típico: Atacar -> RegresarAZona.
+
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad que evalúa la condición compuesta.
+
+    Blackboard utilizado/modificado
+        - Ninguno
+
+    Parámetros esperados
+        - Ninguno
     """
     try:
         if not PlayerNotVisibleFor(hinst, entity):
@@ -305,10 +354,243 @@ def PlayerNotVisibleAndAtProtectionZone(hinst: HSMInstance, entity: Any) -> bool
     Descripción
         COMBINADA: True si el jugador NO es visible y la entidad está EN la zona protegida.
         Uso típico: Atacar -> Vigilar.
+
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad que evalúa la condición compuesta.
+
+    Blackboard utilizado/modificado
+        - Ninguno
+
+    Parámetros esperados
+        - Ninguno
     """
     try:
         if not PlayerNotVisibleFor(hinst, entity):
             return False
         return IsAtProtectionZone(hinst, entity)
+    except Exception:
+        return False
+
+@condition
+def PlayerBeyondMelee(hinst: HSMInstance, entity: Any) -> bool:
+    """
+    Descripción
+        CONDICIÓN: True si el jugador está visible y su distancia es mayor que dist_for_mele.
+
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad que evalúa distancia relativa al jugador.
+
+    Blackboard utilizado/modificado
+        - Ninguno
+
+    Parámetros esperados
+        - dist_for_mele (float): umbral de distancia para preferir ataques melee.
+    """
+    try:
+        player = get_player(hinst)
+        if not player:
+            return False
+        ex, ez = entity.get_pos()
+        px, pz = player.get_pos()
+        dist = math.hypot(px - ex, pz - ez)
+        thresh = float(get_spec_param(hinst, "dist_for_mele", 120.0))
+        # además requiere que PlayerVisible sea True para coherencia con la HSM
+        if not CONDITIONS.get("PlayerVisible")(hinst, entity):
+            return False
+        return dist > thresh
+    except Exception:
+        return False
+
+@condition
+def PlayerWithinMelee(hinst: HSMInstance, entity: Any) -> bool:
+    """
+    Descripción
+        CONDICIÓN: True si el jugador está visible y su distancia es menor o igual que dist_for_mele.
+
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad que evalúa distancia relativa al jugador.
+
+    Blackboard utilizado/modificado
+        - Ninguno
+
+    Parámetros esperados
+        - dist_for_mele (float): umbral de distancia para considerar melee.
+    """
+    try:
+        player = get_player(hinst)
+        if not player:
+            return False
+        ex, ez = entity.get_pos()
+        px, pz = player.get_pos()
+        dist = math.hypot(px - ex, pz - ez)
+        thresh = float(get_spec_param(hinst, "dist_for_mele", 120.0))
+        if not CONDITIONS.get("PlayerVisible")(hinst, entity):
+            return False
+        return dist <= thresh
+    except Exception:
+        return False
+
+@condition
+def LostHealthSinceLastRestoreAtLeast(hinst: HSMInstance, entity: Any) -> bool:
+    """
+    Descripción
+        CONDICIÓN: True cuando la fracción de vida perdida desde la última restauración
+        es >= lost_health_trigger_pct. Si no existe health_at_last_restore se inicializa.
+
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad cuyo historial de vida se compara.
+
+    Blackboard utilizado/modificado
+        - health_at_last_restore (read/update): referencia de vida usada como punto de comparación.
+
+    Parámetros esperados
+        - lost_health_trigger_pct (float): fracción (0..1) de vida perdida que dispara la condición.
+    """
+    try:
+        pct = float(get_spec_param(hinst, "lost_health_trigger_pct", 0.25))
+        hp = float(getattr(entity, "health", 0.0))
+        max_hp = float(getattr(entity, "max_health", hp))
+        if max_hp <= 0:
+            return False
+        health_at_restore = hinst.get_blackboard("health_at_last_restore", None)
+        if health_at_restore is None:
+            # inicializar para evitar disparos inmediatos
+            hinst.set_blackboard("health_at_last_restore", float(hp))
+            return False
+        lost = max(0.0, float(health_at_restore) - hp)
+        return (lost / max_hp) >= pct
+    except Exception:
+        return False
+
+@condition
+def IsAtBossPosition(hinst: HSMInstance, entity: Any) -> bool:
+    """
+    Descripción
+        CONDICIÓN: True si la entidad está suficientemente cerca de boss_position.
+
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad que verifica su posición relativa a boss_position.
+
+    Blackboard utilizado/modificado
+        - Ninguno
+
+    Parámetros esperados
+        - boss_position (tuple): posición objetivo (x,z) del boss (si no existe se considera True).
+        - arrival_threshold (float): umbral en píxeles para considerar llegada.
+    """
+    try:
+        boss_pos = hinst.blackboard.get("_spec_params", {}).get("boss_position", None) \
+                   or get_spec_param(hinst, "boss_position", None)
+        if not boss_pos:
+            return True
+        ex, ez = entity.get_pos()
+        tx, tz = float(boss_pos[0]), float(boss_pos[1])
+        thresh = float(get_spec_param(hinst, "arrival_threshold", 24.0))
+        return math.hypot(ex - tx, ez - tz) <= thresh
+    except Exception:
+        return False
+
+@condition
+def InvocationFinished(hinst: HSMInstance, entity: Any) -> bool:
+    """
+    Descripción
+        CONDICIÓN: True si el tiempo de invocación ha concluido (time_for_invocation).
+
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad asociada a la invocación.
+
+    Blackboard utilizado/modificado
+        - invocation_started_at (read): timestamp usado para calcular duración.
+
+    Parámetros esperados
+        - time_for_invocation (float): duración total de la fase de invocación en segundos.
+    """
+    try:
+        start = hinst.get_blackboard("invocation_started_at", None)
+        if not start:
+            return False
+        duration = float(get_spec_param(hinst, "time_for_invocation", 6.0))
+        return (time.time() - float(start)) >= duration
+    except Exception:
+        return False
+
+@condition
+def RegenerationFinished(hinst: HSMInstance, entity: Any) -> bool:
+    """
+    Descripción
+        CONDICIÓN: True si la regeneración ha finalizado (time_for_regeneration).
+
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad que está regenerando.
+
+    Blackboard utilizado/modificado
+        - regen_started_at (read): timestamp usado para calcular duración.
+
+    Parámetros esperados
+        - time_for_regeneration (float): duración total de la regeneración en segundos.
+    """
+    try:
+        start = hinst.get_blackboard("regen_started_at", None)
+        if not start:
+            return False
+        duration = float(get_spec_param(hinst, "time_for_regeneration", 8.0))
+        return (time.time() - float(start)) >= duration
+    except Exception:
+        return False
+
+@condition
+def RecentlyDamaged(hinst: HSMInstance, entity: Any) -> bool:
+    """
+    Descripción
+        CONDICIÓN: Detecta si la entidad sufrió daño recientemente comparando la vida
+        actual con una snapshot previa y manteniendo una ventana temporal.
+
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad cuyo daño reciente se detecta.
+
+    Blackboard utilizado/modificado
+        - last_health_snapshot_prev (read/update): snapshot de vida del tick previo.
+        - recently_damaged_at (update): timestamp del último daño detectado.
+
+    Parámetros esperados
+        - recent_damage_threshold (float): umbral mínimo de HP perdido para considerar daño.
+        - recent_damage_window (float): ventana temporal (s) durante la cual se mantiene el flag.
+    """
+    try:
+        threshold = float(get_spec_param(hinst, "recent_damage_threshold", 1.0))
+        window = float(get_spec_param(hinst, "recent_damage_window", 1.0))
+
+        current_hp = float(getattr(entity, "health", 0.0) or 0.0)
+        prev_hp = hinst.get_blackboard("last_health_snapshot_prev", None)
+        now = time.time()
+
+        # Si no existe prev_hp: inicializar y no disparar
+        if prev_hp is None:
+            hinst.set_blackboard("last_health_snapshot_prev", float(current_hp))
+            return False
+
+        # Detectar daño comparando con la snapshot previa
+        if current_hp < float(prev_hp) - float(threshold):
+            hinst.set_blackboard("recently_damaged_at", now)
+            # actualizar prev snapshot para evitar múltiples disparos en el mismo tick
+            hinst.set_blackboard("last_health_snapshot_prev", float(current_hp))
+            return True
+
+        # Si hubo daño recientemente dentro de la ventana temporal, seguir devolviendo True
+        recent_at = float(hinst.get_blackboard("recently_damaged_at", 0.0) or 0.0)
+        if recent_at and (now - recent_at) <= window:
+            return True
+
+        # No daño: actualizar prev para siguiente frame (defensivo)
+        hinst.set_blackboard("last_health_snapshot_prev", float(current_hp))
+        return False
     except Exception:
         return False
