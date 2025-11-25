@@ -259,10 +259,8 @@ class EntityManager:
                             enemy.take_damage(dmg)
                         except Exception:
                             enemy.health = max(0.0, getattr(enemy, "health", 0.0) - dmg)
-                try:
-                    wave.mark_applied()
-                except Exception:
-                    pass
+                
+                wave.mark_applied()
 
     def remove_dead_enemies(self) -> None:
         """
@@ -286,16 +284,10 @@ class EntityManager:
                 if ent is None:
                     continue
                 if lifetime > 0.0 and (now - spawned_at) >= lifetime:
-                    try:
-                        if getattr(ent, "die", None):
-                            ent.die()
-                        else:
-                            setattr(ent, "alive", False)
-                    except Exception:
-                        try:
-                            setattr(ent, "alive", False)
-                        except Exception:
-                            pass
+                    if getattr(ent, "die", None):
+                        ent.die()
+                    else:
+                        setattr(ent, "alive", False)
                     # not re-append -> expired
                 else:
                     new_meta.append(meta)
