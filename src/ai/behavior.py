@@ -30,20 +30,6 @@ Puntos clave de diseño
      `_spec_params`, `path_offset`) para que acciones/condiciones puedan consultarlas.
    - Convención de claves: `_spec_params`, `manager`, `entity_manager`, `entity`, `path_offset`.
 
-3. Buenas prácticas:
-   - Mantener las acciones y condiciones en sus módulos (`src/ai/actions.py`, `src/ai/conditions.py`).
-   - Evitar lógica de juego dentro de `Behavior`; delegar en acciones/condiciones.
-
-Ejemplo mínimo de uso
----------------------
-1) Definir spec (p. ej. `GUARDIAN_BEHAVIOR` en `src/data/enemies.py`).
-2) Crear enemy y manager (EntityManager).
-3) Adjuntar behavior:
-   behavior = Behavior.from_spec(spec, enemy, entity_manager)
-   enemy.behavior = behavior
-4) En el update del enemigo llamar:
-   behavior.tick(dt)
-
 Referencias en el workspace
 ---------------------------
 - Builder: [`build_from_spec`](src/ai/hsm_builder.py)

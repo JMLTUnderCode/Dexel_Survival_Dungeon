@@ -45,32 +45,6 @@ spec = {
   }
 }
 
-Buenas prácticas y advertencias
--------------------------------
-- `initial` y `substates` deben usar nombres relativos (no fully-qualified).
-  Ej: en composite "EstadoVida" use "Vigilar" en vez de "EstadoVida.Vigilar".
-- Registrar las acciones en src/ai/actions.py y condiciones en
-  src/ai/conditions.py. El builder sólo mapea keys a funciones.
-- Validar que las claves de estado sean únicas. Errores en el spec se deberían
-  detectar temprano; el builder hace comprobaciones básicas y no asume nada.
-- Mantener la spec legible y documentada (usar `actions_doc` / `conditions_doc`
-  en `src/data/enemies.py` cuando sea necesario).
-
-Ejemplo rápido
---------------
-1) Definir acciones/condiciones en sus respectivos módulos.
-2) Crear la spec en `src/data/enemies.py`.
-3) Llamar `build_from_spec(spec)` → obtener `HSMPrototype`.
-4) `Behavior.from_spec` usa el prototype para crear `HSMInstance`.
-
-Errores comunes y cómo resolverlos
----------------------------------
-- KeyError al resolver estado: revisar nombres en `states` y `initial`.
-- Condición no encontrada: verificar que el nombre exista en
-  src/ai/conditions.py.
-- Acción no encontrada: verificar que la key exista en
-  src/ai/actions.py.
-
 Referencias en el workspace
 ---------------------------
 - Spec ejemplos: src/data/enemies.py

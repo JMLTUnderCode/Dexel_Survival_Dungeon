@@ -49,31 +49,6 @@ Conceptos clave
     - Evalúa transiciones hoja→raíz, exponiendo `cond_params` en `_last_transition_cond_params`.
     - Escoge la transición de mayor prioridad y aplica la transición (exit→enter).
 
-Patrones y buenas prácticas
----------------------------
-- Acciones/condiciones:
-  - Firma: fn(hinst, entity). Usar el blackboard para compartir datos y params.
-  - No hacer operaciones pesadas en condiciones; cachear en blackboard si es necesario.
-- Restore history:
-  - Usar `restore_history=True` en la transición Curarse->EstadoVida para que la
-    HSM restaure la subruta previa (deep history) y deje que el subestado restaurado
-    evalúe sus propias transiciones (p.ej. Atacar -> RegresarAZona).
-- Blackboard keys recomendadas:
-  - `_spec_params`: parámetros del spec.
-  - `manager`, `entity_manager`: accesos a servicios (pathfinder, player).
-  - `return_target_pos`, `is_returning_to_zone`, `is_at_protection_zone`: convenciones para acciones de retorno.
-
-Ejemplo de flujo (guardian)
----------------------------
-1. root -> EstadoVida (composite) -> EstadoVida.Vigilar (leaf).
-2. Si `PlayerVisible` en Vigilar -> transición a EstadoVida.Atacar.
-3. Si en Atacar `IsFarFromProtectionZone` -> transición a EstadoVida.RegresarAZona.
-4. En RegresarAZona la acción `return_to_protection_zone` crea `entity.temp_follow_path`
-   y asigna `entity.algorithm = "TEMP_PATH_FOLLOWING"`. `check_return_path_finished`
-   marca `is_at_protection_zone` al llegar.
-5. Si en cualquier leaf `HealthBelow` -> transición a Huyendo (nivel 1).
-6. Curarse emplea `restore_history=True` para volver a EstadoVida y reanudar el subestado previo.
-
 Extensibilidad
 --------------
 - Añadir acciones/condiciones: registrar en `src/ai/actions.py` / `src/ai/conditions.py`.
@@ -99,14 +74,15 @@ Condition = Callable[[Any, Any], bool]   # (hinst, entity)
 @dataclass
 class TransitionPrototype:
     """
-    Representación de una transición en el prototipo de HSM.
+    Descripción
+        CLASE: Representación de una transición en el prototipo de HSM.
 
-    Atributos:
-      - to: ruta del estado destino (string).
-      - cond: función condición (hinst, entity) -> bool o None.
-      - priority: prioridad numérica (mayor = más prioridad).
-      - cond_params: parámetros auxiliares expuestos en blackboard durante la evaluación.
-      - restore_history: si true indica que al entrar se debe restaurar history del composite destino.
+    Atributos
+        - to: ruta del estado destino (string).
+        - cond: función condición (hinst, entity) -> bool o None.
+        - priority: prioridad numérica (mayor = más prioridad).
+        - cond_params: parámetros auxiliares expuestos en blackboard durante la evaluación.
+        - restore_history: si true indica que al entrar se debe restaurar history del composite destino.
     """
     to: str
     cond: Optional[Condition] = None
@@ -118,16 +94,17 @@ class TransitionPrototype:
 @dataclass
 class StatePrototype:
     """
-    Prototipo de estado.
+    Descripción
+        CLASE: Prototipo de estado.
 
-    Campos:
-      - name: nombre de la clave en el spec.
-      - stype: "leaf" | "composite".
-      - entry, update, exit: listas de acciones (callables).
-      - substates: nombres relativos de subestados.
-      - initial: nombre relativo del subestado inicial.
-      - transitions: lista de TransitionPrototype.
-      - history: "deep" | "shallow" | None.
+    Atributos
+        - name: nombre de la clave en el spec.
+        - stype: "leaf" | "composite".
+        - entry, update, exit: listas de acciones (callables).
+        - substates: nombres relativos de subestados.
+        - initial: nombre relativo del subestado inicial.
+        - transitions: lista de TransitionPrototype.
+        - history: "deep" | "shallow" | None.
     """
     name: str
     stype: str = "leaf"
@@ -143,7 +120,14 @@ class StatePrototype:
 @dataclass
 class HSMPrototype:
     """
-    Contenedor del spec construido por el builder.
+    Descripción
+        CLASE: Contenedor del spec construido por el builder.
+    
+    Atributos
+        - name: nombre de la HSM.
+        - params: parámetros globales del spec.
+        - states: mapa de nombres a StatePrototype.
+        - root: nombre del estado raíz.
     """
     name: str
     params: Dict[str, Any]
@@ -153,16 +137,46 @@ class HSMPrototype:
 
 class HSMInstance:
     """
-    Instancia en ejecución de la HSM.
+    Descripción
+        CLASE: Instancia en ejecución de la HSM (Hierarchical State Machine).
+        Representa el runtime de una máquina de estados jerárquica construida a partir
+        de un prototipo generado por el builder.
 
-    Responsabilidades:
-      - Mantener prototype (HSMPrototype).
-      - Mantener blackboard (datos compartidos).
-      - Mantener active_stack: rutas activas desde root hasta la hoja.
-      - Mantener history para deep history de composites.
+    Atributos
+        - prototype (HSMPrototype): prototipo de la HSM (estados, transiciones, params).
+        - blackboard (Dict[str, Any]): diccionario compartido para comunicación entre
+          acciones, condiciones y estados. Inicializado con la clave `_spec_params`.
+        - active_stack (List[str]): pila de rutas activas desde la raíz hasta la hoja.
+          Ejemplo: ["root", "root.EstadoVida", "root.EstadoVida.Atacar"].
+        - history (Dict[str, List[str]]): snapshots para composites que declaran
+          history="deep". La clave es el path del composite y el valor es la lista
+          de subpaths activos que representan la historia.
+        - (internos) `_last_transition_cond_params`, etc.: campos auxiliares usados
+          durante la evaluación de transiciones.
 
-    Nota:
-      - Todas las acciones/condiciones se ejecutan con la firma (hinst, entity).
+    Responsabilidades / Métodos principales
+        - _enter_path(path): entrar en la ruta indicada; ejecutar entry actions,
+          descender por `initial` o restaurar deep history si procede.
+        - _exit_to_common_ancestor(target_path): salir de la pila hasta el ancestro
+          común con `target_path`, ejecutar exit actions y guardar snapshots de
+          deep history cuando corresponda.
+        - update(entity, dt): ciclo por tick que:
+            1) registra `dt` y `entity` en el blackboard,
+            2) ejecuta update actions desde la hoja hacia la raíz (bottom-up),
+            3) evalúa transiciones hoja→raíz, selecciona la de mayor prioridad y la aplica.
+        - get_active_stack(): devuelve una copia de la pila activa.
+        - set_blackboard(key, val) / get_blackboard(key, default): utilidades para
+          leer/escribir en el blackboard de forma explícita.
+
+    Convenciones
+        - Todas las acciones y condiciones se ejecutan con la firma (hinst, entity).
+        - Las claves del blackboard que comienzan con "_" están reservadas para uso
+          interno (p.ej. `_spec_params`, `_last_transition_cond_params`).
+        - Las condiciones deben ser rápidas y defensivas (no propagar excepciones).
+        - Las acciones deben documentar claramente qué claves del blackboard leen/escriben.
+        - El campo `history` almacena lists de rutas fully-qualified relativas al composite.
+        - La API del HSM evita efectos secundarios inesperados: la restauración de
+          history se realiza antes de evaluar nuevas transiciones al entrar en un composite.
     """
 
     def __init__(self, prototype: HSMPrototype, blackboard: Optional[Dict[str, Any]] = None):
@@ -183,11 +197,18 @@ class HSMInstance:
     # --------------------
     def _get_state_proto(self, path: str) -> StatePrototype:
         """
-        Resuelve una ruta a un StatePrototype con varias heurísticas:
-          - clave exacta en prototype.states
-          - último segmento (p. ej. "root.X" -> "X")
-          - si inicia con "root." intentar la parte sin prefijo
-        Lanza KeyError si no encuentra el prototipo.
+        Descripción
+            MÉTODO: Resuelve una ruta a un StatePrototype aplicando heurísticas sobre
+            nombres relativos y prefijos.
+
+        Argumentos
+            - path (str): ruta buscada (puede ser fully-qualified o relativa).
+
+        Retorno
+            - StatePrototype: el prototipo asociado a la ruta.
+
+        Excepciones
+            - Lanza KeyError si no existe un prototipo que corresponda a la ruta.
         """
         if path in self.prototype.states:
             return self.prototype.states[path]
@@ -202,12 +223,39 @@ class HSMInstance:
         raise KeyError(path)
 
     def _split_path(self, path: str) -> List[str]:
+        """
+        Descripción
+            FUNCIÓN: Divide una ruta en sus segmentos por el separador '.'.
+
+        Argumentos
+            - path (str): ruta a dividir.
+
+        Retorno
+            - List[str]: lista de segmentos.
+        """
         return path.split(".")
 
     # --------------------
     # Ejecución de acciones
     # --------------------
     def _call_actions(self, actions: List[Action], entity: Any, kind: str):
+        """
+        Descripción
+            MÉTODO: Ejecuta una lista de acciones capturando excepciones y reportando
+            errores formateados para debugging.
+
+        Argumentos
+            - actions (List[Action]): lista de callables con firma (hinst, entity).
+            - entity (Any): entidad sobre la que se ejecutan las acciones.
+            - kind (str): etiqueta de contexto ("ENTRY"/"UPDATE"/"EXIT") usada en logs.
+
+        Retorno
+            - None
+
+        Notas
+            - Las excepciones se capturan individualmente por acción para evitar que
+              una acción fallida interrumpa la ejecución de las restantes.
+        """
         for act in actions:
             try:
                 act(self, entity)
@@ -215,6 +263,18 @@ class HSMInstance:
                 print(f"[HSM {kind}] Error en acción {act}: {err}")
 
     def _call_entry_actions(self, state_path: str, entity: Any = None):
+        """
+        Descripción
+            MÉTODO: Ejecuta las acciones de entry declaradas en el StatePrototype
+            asociado a `state_path`.
+
+        Argumentos
+            - state_path (str): ruta del estado cuyo entry ejecutar.
+            - entity (Any): entidad pasiva para las acciones (opcional).
+
+        Retorno
+            - None
+        """
         try:
             proto = self._get_state_proto(state_path)
         except KeyError:
@@ -222,6 +282,17 @@ class HSMInstance:
         self._call_actions(proto.entry, entity, "ENTRY")
 
     def _call_update_actions(self, state_path: str, entity: Any = None):
+        """
+        Descripción
+            MÉTODO: Ejecuta las acciones de update del StatePrototype para `state_path`.
+
+        Argumentos
+            - state_path (str): ruta del estado cuyo update ejecutar.
+            - entity (Any): entidad para pasar a las acciones (opcional).
+
+        Retorno
+            - None
+        """
         try:
             proto = self._get_state_proto(state_path)
         except KeyError:
@@ -229,6 +300,20 @@ class HSMInstance:
         self._call_actions(proto.update, entity, "UPDATE")
 
     def _call_exit_actions(self, state_path: str, entity: Any = None):
+        """
+        Descripción
+            MÉTODO: Ejecuta las acciones de exit del StatePrototype para `state_path`.
+
+        Argumentos
+            - state_path (str): ruta del estado cuyo exit ejecutar.
+            - entity (Any): entidad para pasar a las acciones (opcional).
+
+        Retorno
+            - None
+
+        Notas
+            - Las acciones de exit se ejecutan en el orden declarado en el prototipo.
+        """
         try:
             proto = self._get_state_proto(state_path)
         except KeyError:
@@ -241,11 +326,29 @@ class HSMInstance:
     # --------------------
     def _enter_path(self, path: str):
         """
-        Entra en la ruta 'path' (puede ser fully-qualified o relativa).
-        Realiza:
-          - calcular la secuencia de nodos a introducir en la pila
-          - ejecutar entry actions y descender por initial si el estado es composite
-          - restaurar history deep cuando corresponda
+        Descripción
+            MÉTODO: Entra en la ruta 'path' (puede ser fully-qualified o relativa).
+            Acciones realizadas (resumen secuencial):
+              1) Normalizar la ruta en una lista acumulada de nodos (ancestros).
+              2) Calcular el prefijo común con la pila actual (active_stack).
+              3) Ejecutar exit actions de los estados que se dejarán.
+              4) Para cada estado faltante, ejecutar entry actions y:
+                 - Si es composite y declara history="deep" y existe snapshot en `history`,
+                   restaurar dicha historia (llamando recursivamente a _enter_path).
+                 - Si es composite con `initial`, descender al subestado inicial.
+                 - En otro caso, simplemente añadir el estado a la pila.
+              5) Terminar con la máquina en un estado hoja (si procede).
+
+        Argumentos
+            - path (str): ruta destino a la que entrar.
+
+        Retorno
+            - None
+
+        Notas de implementación
+            - La restauración de history se realiza antes de evaluar nuevas transiciones
+              para garantizar que el estado restaurado tenga oportunidad de ejecutar
+              sus entry/update antes de ser re-evaluado por condiciones.
         """
         parts = self._split_path(path)
         # construir la lista de rutas acumuladas: ["root", "root.X", "root.X.Y", ...] si corresponde
@@ -300,9 +403,24 @@ class HSMInstance:
 
     def _exit_to_common_ancestor(self, target_path: str):
         """
-        Sale de los estados activos hasta alcanzar el ancestro común con target_path.
-        Guarda snapshots de deep history cuando corresponde.
-        Ejecuta exit actions durante el proceso.
+        Descripción
+            MÉTODO: Sale de los estados activos hasta alcanzar el ancestro común con target_path.
+            Comportamiento:
+              - Por cada estado que se sale, ejecutar exit actions.
+              - Si el padre del estado actual declara history="deep", guardar un snapshot
+                de la porción de la pila que pertenece a ese padre en `self.history[parent]`.
+
+        Argumentos
+            - target_path (str): ruta destino usada para determinar el ancestro común.
+
+        Retorno
+            - None
+
+        Notas de implementación
+            - El cálculo del `parent` evita crear nombres inválidos: si el estado actual
+              no tiene padre (primer nivel) no se intenta guardar history.
+            - Las snapshots se guardan antes de poppear el estado para captar la porción
+              activa completa correspondiente al parent.
         """
         target_parts = self._split_path(target_path)
         while self.active_stack:
@@ -336,10 +454,24 @@ class HSMInstance:
     # --------------------
     def update(self, entity: Any, dt: float):
         """
-        Actualización por tick:
-          - registra dt y entity en blackboard
-          - ejecuta update actions desde la hoja hacia arriba
-          - evalúa transiciones (hoja -> raíz) y aplica la de mayor prioridad
+        Descripción
+            MÉTODO: Actualización por tick de la HSM. Realiza las tareas necesarias para
+            avanzar la máquina de estados en un frame de simulación.
+
+        Argumentos
+            - entity (Any): la entidad vinculada a esta HSM (pasada a acciones/condiciones).
+            - dt (float): delta-time del frame (segundos).
+
+        Retorno
+            - None
+
+        Pasos ejecutados (secuencial):
+            1) Escribir `dt` y `entity` en el blackboard.
+            2) Ejecutar las acciones de `update` desde la hoja activa hacia la raíz (bottom-up).
+            3) Evaluar las transiciones en orden hoja→raíz, exponiendo `cond_params` temporalmente.
+            4) Seleccionar la transición de mayor prioridad y, si existe, aplicar:
+               - llamar `_exit_to_common_ancestor` con el target,
+               - llamar `_enter_path` para posicionar la máquina en el destino.
         """
         self.blackboard["_dt"] = dt
         self.blackboard["entity"] = entity
@@ -398,13 +530,42 @@ class HSMInstance:
     # API pública sencilla
     # --------------------
     def get_active_stack(self) -> List[str]:
-        """Devuelve la pila activa (copia)."""
+        """
+        Descripción
+            MÉTODO: Devuelve una copia de la pila activa (root -> ... -> hoja).
+
+        Argumentos
+            - Ninguno
+
+        Retorno
+            - List[str]: copia de `self.active_stack`.
+        """
         return list(self.active_stack)
 
     def set_blackboard(self, key: str, val: Any):
-        """Asigna un valor en el blackboard."""
+        """
+        Descripción
+            MÉTODO: Asigna un valor en el blackboard compartido.
+
+        Argumentos
+            - key (str): clave a escribir.
+            - val (Any): valor asociado a la clave.
+
+        Retorno
+            - None
+        """
         self.blackboard[key] = val
 
     def get_blackboard(self, key: str, default: Any = None):
-        """Obtiene un valor del blackboard."""
+        """
+        Descripción
+            MÉTODO: Obtiene un valor del blackboard.
+
+        Argumentos
+            - key (str): clave a leer.
+            - default (Any): valor por defecto si la clave no existe.
+
+        Retorno
+            - Any: valor asociado a la clave o `default` si no existe.
+        """
         return self.blackboard.get(key, default)
