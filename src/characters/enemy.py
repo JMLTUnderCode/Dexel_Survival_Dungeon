@@ -428,7 +428,7 @@ class Enemy(Kinematic):
                 )
             case CONF.ALG.ALGORITHM.PATH_FOLLOWING:
                 steering = self.follow_path.get_steering()
-            case "TEMP_PATH_FOLLOWING":
+            case CONF.ALG.ALGORITHM.TEMP_PATH_FOLLOWING:
                 steering = self.temp_follow_path.get_steering()
 
         # Aplicar el steering y actualizar la cinemática

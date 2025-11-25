@@ -968,7 +968,7 @@ def return_to_protection_zone(hinst, entity):
         )
 
         # 5) configurar algoritmo temporal y flags
-        entity.algorithm = "TEMP_PATH_FOLLOWING"
+        entity.algorithm = CONF.ALG.ALGORITHM.TEMP_PATH_FOLLOWING
         hinst.set_blackboard("is_returning_to_zone", True)
         hinst.set_blackboard("is_on_guardian_path", False)
         hinst.set_blackboard("is_at_protection_zone", False)
@@ -1094,7 +1094,7 @@ def start_return_to_boss_position(hinst, entity):
             max_acceleration=getattr(entity, "max_acceleration", 300.0)
         )
         # 6) Marcar algoritmo temporal y guardar timestamp de la petición
-        entity.algorithm = "TEMP_PATH_FOLLOWING"
+        entity.algorithm = CONF.ALG.ALGORITHM.TEMP_PATH_FOLLOWING
         hinst.set_blackboard("return_path_requested_at", time.time())
     except Exception as e:
         exception_print("START RETURN TO BOSS POSITION", entity, str(e))
