@@ -9,3 +9,4 @@ if os.path.exists(env_path):
                 _, value = line.strip().split("=", 1)
                 DEBUG = value.strip().lower() == "true" or value.strip() == "1" or value.strip().lower() == "yes" or value.strip().lower() == "on"
                 break
+MAX_HSM_HISTORY_SIZE = 5

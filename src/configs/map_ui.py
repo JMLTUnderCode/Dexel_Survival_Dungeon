@@ -19,6 +19,7 @@ FONT = pygame.font.SysFont("Segoe UI", 16)
 
 BUTTONS = []
 PARSING_BUTTONS = {
+    "0" : "Level 0",
     "1" : "Level 1",
     "2" : "Level 2",
 }

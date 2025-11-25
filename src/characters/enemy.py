@@ -17,26 +17,32 @@ from kinematics.evade import Evade
 from kinematics.face import Face
 from kinematics.look_where_youre_going import LookWhereYoureGoing
 from kinematics.path_following import FollowPath
-from helper.paths import make_circle_path, make_rectangle_path
 from characters.animation import Animation, load_animations, set_animation_state
+from ai.behavior import Behavior
 from configs.package import CONF
 
 class Enemy(Kinematic):
     """
     Clase que representa un enemigo que persigue al jugador.
+    
     Atributos:
-        type: tipo de enemigo (puede usarse para diferentes sprites o comportamientos)
-        position: posición inicial del enemigo (x, y)
-        collider_box: dimensiones de la caja de colisión del enemigo (ancho, alto)
-        target: referencia al objeto target (objetivo a seguir)
-        algorithm: algoritmo de búsqueda cinemática ("ARRIVE" o "SEEK")
-        max_speed: velocidad máxima del enemigo
-        target_radius: radio de llegada al objetivo
-        slow_radius: radio de desaceleración
-        time_to_target: tiempo para alcanzar el objetivo
-        max_acceleration: aceleración máxima permitida (unidades/segundo²)
-        max_rotation: velocidad angular máxima (radianes/segundo)
-        max_angular_accel: aceleración angular máxima (radianes/segundo²)
+        - type: tipo de enemigo (puede usarse para diferentes sprites o comportamientos)
+        - position: posición inicial del enemigo (x, y)
+        - collider_box: dimensiones de la caja de colisión del enemigo (ancho, alto)
+        - target: referencia al objeto target (objetivo a seguir)
+        - algorithm: algoritmo de búsqueda cinemática ("ARRIVE" o "SEEK")
+        - max_speed: velocidad máxima del enemigo
+        - target_radius_dist: radio de llegada al objetivo
+        - slow_radius_dist: radio de desaceleración
+        - target_radius_deg: umbral objetivo de aliniación (radianes)
+        - slow_radius_deg: umbral de inicio de desaceleración (radianes)
+        - time_to_target: tiempo para alcanzar el objetivo
+        - max_acceleration: aceleración máxima permitida (unidades/segundo²)
+        - max_rotation: velocidad angular máxima (radianes/segundo)
+        - max_angular_accel: aceleración angular máxima (radianes/segundo²)
+        - max_prediction: tiempo máximo de predicción para Pursue/Evade
+        - path: camino a seguir (objeto Path)
+        - path_offset: puntos de offset para el seguimiento del camino
 
     Algoritmos:
         - KinematicSeek: Persigue al objetivo de manera directa.
@@ -53,6 +59,7 @@ class Enemy(Kinematic):
         - Evade: Huye del objetivo anticipando su movimiento.
         - Face: Gira para mirar al objetivo.
         - LookWhereYoureGoing: Gira en la dirección del movimiento.
+        - PathFollow: Sigue un camino predefinido.
     """
     def __init__(
         self, 
@@ -62,15 +69,17 @@ class Enemy(Kinematic):
         target: Kinematic, 
         algorithm: str, 
         max_speed: float = 200.0, 
-        target_radius: float = 40.0, 
-        slow_radius: float = 150.0, 
+        target_radius_dist: float = 40.0, 
+        slow_radius_dist: float = 150.0, 
+        target_radius_deg: float = 0.1, 
+        slow_radius_deg: float = 0.5,
         time_to_target: float = 0.15,
         max_acceleration: float = 300.0,
         max_rotation: float = 1.0,
         max_angular_accel: float = 8.0,
-        max_prediction: float = 1.0, 
+        max_prediction: float = 0.25, 
         path: object = None,
-        path_offset: float = 12.0,
+        path_offset: float = 1.0,
     ) -> None:
         super().__init__(
             position=position, 
@@ -83,13 +92,24 @@ class Enemy(Kinematic):
         # comportamiento de ataque (melee)
         self.attack_cooldown = 1.0  # segundos entre ataques
         self._attack_timer = 0.0
-        self.attack_range = 40.0    # pixels distancia para pegar
+        self.attack_range = target_radius_dist    # pixels distancia para pegar
 
         self.type = type
         self.target = target
         self.algorithm = algorithm
         self.max_speed = max_speed
-
+        self.target_radius_dist = target_radius_dist
+        self.slow_radius_dist = slow_radius_dist
+        self.target_radius_deg = target_radius_deg
+        self.slow_radius_deg = slow_radius_deg
+        self.time_to_target = time_to_target
+        self.max_acceleration = max_acceleration
+        self.max_rotation = max_rotation
+        self.max_angular_accel = max_angular_accel
+        self.max_prediction = max_prediction
+        self.path = path
+        self.path_offset = path_offset
+        
         # Instanciar atributos de animación
         self.state = CONF.ENEMY.ACTIONS.MOVE
         self.animations : dict[str, Animation] = load_animations(
@@ -119,7 +139,7 @@ class Enemy(Kinematic):
             character=self,                    # Kinematic que se mueve
             target=target,                     # Objetivo a seguir
             max_speed=max_speed,               # Velocidad máxima
-            target_radius=target_radius,       # Radio de llegada
+            target_radius=target_radius_dist,  # Radio de llegada
             time_to_target=time_to_target      # Tiempo para ajustar la velocidad
         )
         self.kinematic_wander = KinematicWander(
@@ -143,16 +163,16 @@ class Enemy(Kinematic):
             character=self,                    # Kinematic que se mueve
             target=target,                     # Objetivo a seguir
             max_speed=max_speed,               # Velocidad máxima
-            target_radius=target_radius,       # Radio de llegada
-            slow_radius=slow_radius,           # Radio para empezar a desacelerar
+            target_radius=target_radius_dist,  # Radio de llegada
+            slow_radius=slow_radius_dist,      # Radio para empezar a desacelerar
             time_to_target=time_to_target,     # Tiempo para ajustar la velocidad
             max_acceleration=max_acceleration  # Aceleración máxima
         )
         self.dynamic_wander = DynamicWander(
             character=self,                      # Kinematic que se mueve
             target=target,                       # Objetivo a seguir (no se usa realmente)
-            target_radius=target_radius,         # Radio de llegada (para Face interno)
-            slow_radius=slow_radius,             # Radio para empezar a girar (para Face interno)
+            target_radius=target_radius_deg,     # Umbral objetivo de aliniación (para Face interno)
+            slow_radius=slow_radius_deg,         # Umbral de inicio de desaceleración (para Face interno)
             time_to_target=time_to_target,       # Tiempo para ajustar la rotación (para Face interno)
             max_acceleration=max_acceleration,   # Aceleración máxima
             max_rotation=max_rotation,           # Velocidad angular máxima (para Face interno)
@@ -167,8 +187,8 @@ class Enemy(Kinematic):
         self.align = Align(
             character=self,                     # Quien se alinea
             target=target,                      # Referencia para alinearse
-            target_radius=target_radius,        # Radio de llegada
-            slow_radius=slow_radius,            # Radio para empezar a girar
+            target_radius=target_radius_deg,    # Umbral objetivo de aliniación
+            slow_radius=slow_radius_deg,        # Umbral de inicio de desaceleración
             time_to_target=time_to_target,      # Tiempo para ajustar la rotación
             max_rotation=max_rotation,          # Velocidad angular máxima
             max_angular_accel=max_angular_accel # Aceleración angular máxima
@@ -176,63 +196,66 @@ class Enemy(Kinematic):
 
         # Instanciar el algoritmo de velocity matching
         self.velocity_match = VelocityMatch(
-            character=self,
-            target=target,
-            max_acceleration=max_acceleration,
-            time_to_target=time_to_target
+            character=self,                     # Quien iguala velocidad
+            target=target,                      # Referencia para igualar velocidad
+            max_acceleration=max_acceleration,  # Aceleración máxima
+            time_to_target=time_to_target       # Tiempo para ajustar velocidad
         )
 
         # Instanciar el algoritmo de persecución
         self.pursue = Pursue(
-            character=self,
-            target=target,
-            max_speed=max_speed,
-            target_radius=target_radius,
-            slow_radius=slow_radius,
-            time_to_target=time_to_target,
-            max_acceleration=max_acceleration,
-            max_prediction=max_prediction
+            character=self,                     # Quien persigue
+            target=target,                      # Referencia a perseguir
+            max_speed=max_speed,                # Velocidad máxima
+            target_radius=target_radius_dist,   # Radio de llegada
+            slow_radius=slow_radius_dist,       # Radio para empezar a desacelerar
+            time_to_target=time_to_target,      # Tiempo para ajustar la velocidad
+            max_acceleration=max_acceleration,  # Aceleración máxima
+            max_prediction=max_prediction       # Tiempo máximo de predicción
         )
 
         # Instanciar el algoritmo de evasión
         self.evade = Evade(
-            character=self,
-            target=target,
-            max_acceleration=max_acceleration,
-            max_prediction=max_prediction
+            character=self,                     # Quien evade
+            target=target,                      # Referencia a evadir
+            max_acceleration=max_acceleration,  # Aceleración máxima
+            max_prediction=max_prediction       # Tiempo máximo de predicción
         )
 
         # Instanciar el algoritmo de Face
         self.face = Face(
-            character=self,
-            target=target,
-            target_radius=target_radius,
-            slow_radius=slow_radius,
-            time_to_target=time_to_target,
-            max_rotation=max_rotation,
-            max_angular_accel=max_angular_accel,
+            character=self,                      # Quien se orienta
+            target=target,                       # Referencia para orientarse
+            target_radius=target_radius_deg,     # Umbral objetivo de aliniación
+            slow_radius=slow_radius_deg,         # Umbral de inicio de desaceleración
+            time_to_target=time_to_target,       # Tiempo para ajustar aliniación
+            max_rotation=max_rotation,           # Máxima rotación
+            max_angular_accel=max_angular_accel, # Aceleración angular máxima
         )
 
         # Instanciar el algoritmo de Look Where You're Going
         self.look_where = LookWhereYoureGoing(
             character=self,                      # Quien se alinea
             target=target,                       # Referencia para alinearse
-            target_radius=target_radius,         # Radio de llegada
-            slow_radius=slow_radius,             # Radio para empezar a girar
+            target_radius=target_radius_deg,     # Umbral objetivo de aliniación
+            slow_radius=slow_radius_deg,         # Umbral de inicio de desaceleración
             time_to_target=time_to_target,       # Tiempo para ajustar la rotación
             max_rotation=max_rotation,           # Velocidad angular máxima
             max_angular_accel=max_angular_accel, # Aceleración angular máxima
         )
 
         # Instanciar el algoritmo de Follow Path
-        if algorithm == CONF.ALG.ALGORITHM.PATH_FOLLOWING and path is not None:
-            self.follow_path = FollowPath(
-                character=self, 
-                path=path, 
-                path_offset=path_offset, 
-                current_param=0.0,
-                max_acceleration=max_acceleration
-            )
+        self.follow_path = FollowPath(
+            character=self,                     # Quien sigue el camino
+            path=path,                          # Camino a seguir
+            path_offset=path_offset,            # Punto de offset para seguir el camino
+            current_param=0.0,                  # Punto inicial del camino
+            max_acceleration=max_acceleration   # Aceleración máxima
+        )
+        self.temp_follow_path: FollowPath | None = None # Para caminos temporales y mantener original.
+        
+        # Comportamiento AI (Behavior) adjunto, si existe
+        self.behavior: Behavior | None = None
 
     def draw(self, surface: pygame.Surface, camera_x: float, camera_z: float):
         """
@@ -267,6 +290,43 @@ class Enemy(Kinematic):
             pass
 
         if CONF.DEV.DEBUG:
+            # Mostrar la máquina de estados jerárquica (HSM) en pantalla
+            # Mantenemos una cola (MAX_HSM_HISTORY_SIZE) de snapshots de la pila activa para mostrar
+            # la secuencia: el más antiguo arriba y el más reciente abajo.
+            if getattr(self, "behavior", None):
+                stack = self.behavior.get_active_stack()
+                if stack:
+                    # representación textual completa de la pila activa (root -> ... -> leaf)
+                    rep = " > ".join(stack)
+
+                    # historial persistente por entidad: lista oldest..newest
+                    hist = getattr(self, "_hsm_stack_history", [])
+                    # sólo añadir si cambió respecto al último elemento
+                    if not hist or hist[-1] != rep:
+                        hist.append(rep)
+                        # limitar tamaño a MAX_HSM_HISTORY_SIZE (drop oldest)
+                        if len(hist) > CONF.DEV.MAX_HSM_HISTORY_SIZE:
+                            hist.pop(0)
+                        # almacenar de vuelta
+                        self._hsm_stack_history = hist
+
+                    # dibujar líneas: oldest arriba, newest abajo
+                    font = pygame.font.SysFont("Segoe UI", 20)
+                    sx = int(self.position[0] - camera_x)
+                    sz = int(self.position[1] - camera_z)
+                    anim_h = self.current_animation.get_size()[1]
+                    # calcular offset inicial (arriba del sprite)
+                    base_y = sz - (anim_h // 2) - 28
+                    # altura de línea (usar medida de fuente)
+                    _, line_h = font.size("Mg")
+                    # desplazar hacia arriba para que la lista no salga del sprite
+                    start_y = base_y - (line_h * (len(self._hsm_stack_history) - 1))
+                    for i, line in enumerate(self._hsm_stack_history):
+                        ts = font.render(line, True, (255, 255, 255))
+                        tw, th = ts.get_size()
+                        y = int(start_y + i * line_h) - th
+                        surface.blit(ts, (sx - tw // 2, y))
+
             # Mostrar arriba del sprite el algoritmo activo en VERDE, NEGRITA y MAYÚSCULAS
             # Cachear la fuente en la clase para no recrearla cada frame
             if not hasattr(self.__class__, "_dev_font") or self.__class__._dev_font is None:
@@ -296,6 +356,12 @@ class Enemy(Kinematic):
                     # Path.draw espera surface, camera_x, camera_z, opcionales...
                     path.draw(surface, camera_x, camera_z, color=(0,255,0), width=2)
 
+            if hasattr(self, "temp_follow_path") and self.temp_follow_path is not None:
+                path = getattr(self.temp_follow_path, "path", None)
+                if path is not None:
+                    # Path.draw espera surface, camera_x, camera_z, opcionales...
+                    path.draw(surface, camera_x, camera_z, color=(0,0,255), width=2)
+
     def draw_collision_box(self, surface: pygame.Surface, camera_x: float, camera_z: float):
         """
         Dibuja el cuadro de colisión del enemigo para depuración.
@@ -315,6 +381,13 @@ class Enemy(Kinematic):
         Actualiza la posición, velocidad y orientación del enemigo para perseguir al jugador.
         Utiliza el algoritmo de movimiento especificado en "algorithm" para calcular el steering adecuado.
         """
+        if getattr(self, "behavior", None) is not None:
+            try:
+                self.behavior.tick(dt)
+            except Exception:
+                # no queremos que un fallo en la IA rompa el update principal
+                pass
+
         # Calcular el steering según el algoritmo seleccionado
         steering: Union[SteeringOutput, KinematicSteeringOutput] = SteeringOutput(linear=(0, 0), angular=0)
         match (self.algorithm):
@@ -355,6 +428,8 @@ class Enemy(Kinematic):
                 )
             case CONF.ALG.ALGORITHM.PATH_FOLLOWING:
                 steering = self.follow_path.get_steering()
+            case CONF.ALG.ALGORITHM.TEMP_PATH_FOLLOWING:
+                steering = self.temp_follow_path.get_steering()
 
         # Aplicar el steering y actualizar la cinemática
         if isinstance(steering, SteeringOutput):

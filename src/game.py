@@ -56,11 +56,11 @@ class Game:
         if CONF.ALG_UI.ACTIVE: 
             self.group_key = CONF.ALG_UI.SELECTED
             self.group_type = "alg"
+            self.load_level(level_number=0, g_key=self.group_key, g_type=self.group_type)
         if CONF.MAP_UI.ACTIVE: 
             self.group_key = CONF.MAP_UI.SELECTED
             self.group_type = "map" 
-
-        self.load_level(level_number=CONF.MAP_UI.SELECTED, g_key=self.group_key, g_type=self.group_type)
+            self.load_level(level_number=CONF.MAP_UI.SELECTED, g_key=self.group_key, g_type=self.group_type)
 
         self.camera_x = 0
         self.camera_z = 0
