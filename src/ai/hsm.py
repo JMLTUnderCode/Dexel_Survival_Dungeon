@@ -436,7 +436,8 @@ class HSMInstance:
                     parent_proto = self._get_state_proto(parent)
                     if parent_proto.history == "deep":
                         # guardamos la porción activa que pertenece al parent (antes de pop)
-                        self.history[parent] = [s for s in self.active_stack if s.startswith(parent + ".")]
+                        parent_prefix = parent + "."
+                        self.history[parent] = [s for s in self.active_stack if s.startswith(parent_prefix)]
                 except KeyError:
                     # si no existe el prototipo no hacemos nada
                     pass
