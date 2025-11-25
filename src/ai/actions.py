@@ -948,6 +948,7 @@ def return_to_protection_zone(hinst, entity):
             if getattr(poly, "points", None):
                 poly.points[0] = tuple(entity.get_pos())
         except Exception:
+            # Si no podemos establecer el primer punto en la posición de la entidad, continuar sin generar una excepción.
             pass
 
         try:
@@ -1082,11 +1083,6 @@ def start_return_to_boss_position(hinst, entity):
 
         # 5) Construir PolylinePath y FollowPath temporal y asignarlo a la entidad
         poly = PolylinePath(pts, closed=False)
-        try:
-            poly.points[0] = tuple(entity.get_pos())
-        except Exception:
-            pass
-
         start_param = poly.get_param(entity.get_pos(), 0.0)
         temp_offset = float(get_spec_param(hinst, "path_offset", getattr(entity, "path_offset", 1.0)))
         entity.follow_path = None
@@ -1305,14 +1301,11 @@ def stop_invocation(hinst, entity):
                 entity.algorithm = CONF.ALG.ALGORITHM.WANDER_DYNAMIC
             try:
                 del hinst.blackboard["invocation_prev_algorithm"]
-            except Exception:
-                pass
+            except Exception as e:
+                exception_print("STOP INVOCATION", entity, str(e))
 
-        try:
-            entity.face.target = None
-        except Exception:
-            pass
-
+        entity.face.target = None
+        
         for k in ("invocation_started_at", "invocation_spawned_count", "invocation_last_spawn_at"):
             if k in hinst.blackboard:
                 del hinst.blackboard[k]
@@ -1622,19 +1615,13 @@ def boss_range_attack_tick(hinst, entity):
         if not player:
             return
 
-        try:
-            entity.velocity = (0.0, 0.0)
-            entity._pending_steering = SteeringOutput(linear=(0.0, 0.0), angular=0.0)
-        except Exception:
-            pass
+        entity.velocity = (0.0, 0.0)
+        entity._pending_steering = SteeringOutput(linear=(0.0, 0.0), angular=0.0)
 
         try:
             entity.face.target = player
         except Exception:
-            try:
-                entity.face.target = Kinematic(position=player.get_pos(), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
-            except Exception:
-                pass
+            entity.face.target = Kinematic(position=player.get_pos(), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
 
         last = float(hinst.get_blackboard("boss_range_last_at", 0.0))
         cd = float(hinst.get_blackboard("boss_range_cooldown", get_spec_param(hinst, "stomp_cooldown", 6.0)))
@@ -1677,18 +1664,12 @@ def stop_boss_range_attack_mode(hinst, entity):
     try:
         prev = hinst.get_blackboard("boss_prev_algorithm", None)
         if prev:
-            try:
-                entity.algorithm = prev
-            except Exception:
-                entity.algorithm = CONF.ALG.ALGORITHM.WANDER_DYNAMIC
+            entity.algorithm = prev
         else:
             entity.algorithm = CONF.ALG.ALGORITHM.WANDER_DYNAMIC
 
-        try:
-            entity.face.target = None
-        except Exception:
-            pass
-
+        entity.face.target = None
+        
         for k in ("boss_range_last_at", "boss_range_cooldown", "boss_prev_algorithm", "last_boss_range_effect"):
             if k in hinst.blackboard:
                 del hinst.blackboard[k]
