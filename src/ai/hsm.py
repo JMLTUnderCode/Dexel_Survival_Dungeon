@@ -430,11 +430,6 @@ class HSMInstance:
             if len(cur_parts) <= len(target_parts) and target_parts[:len(cur_parts)] == cur_parts:
                 break
             # si el padre del estado actual declara history="deep" guardamos snapshot
-            try:
-                proto = self._get_state_proto(cur)
-            except KeyError:
-                self.active_stack.pop()
-                continue
             parent = ".".join(cur_parts[:-1]) if len(cur_parts) > 1 else None
             if parent is not None:
                 try:
