@@ -1,34 +1,45 @@
 """
-Acciones HSM (src/ai/actions.py) — documentación y refactorización (en español)
+Acciones para el HSM
 
-Descripción general
+Descripción
 -------------------
-Este módulo expone un registro de acciones (ACTIONS) utilizadas por las HSM.
-Cada acción tiene la firma: fn(hinst, entity) donde:
- - hinst: instancia runtime de la HSM (HSMInstance).
- - entity: la entidad (Enemy) sobre la que opera la acción.
+    MÓDULO: Colección y registro de acciones (ACTIONS) invocables por la HSM.
+    Cada acción implementa un efecto sobre el mundo y/o el blackboard y tiene la
+    firma: fn(hinst, entity) -> None, donde:
+        - hinst: instancia runtime de la HSM (HSMInstance) que expone el blackboard
+                 y utilitarios de spec/manager.
+        - entity: la entidad (Enemy / Boss / etc.) sobre la que opera la acción.
 
-Objetivos y convenciones
-- Código en inglés; documentación y docstrings en español (AGENTS.md).
-- Las acciones deben ser pequeñas, deterministas y delegar lógica de dominio a utilitarios.
-- Uso de `ai.utils.get_spec_param/get_manager/get_player` para acceder a parámetros y servicios.
-- Manejo robusto de excepciones: no propagar errores al bucle principal del juego.
-- Nombres de parámetros en spec: usar `heal_rate_per_sec`, `patrol_path_nodes`, etc.
+    Propósito:
+        - Encapsular comportamientos atómicos (iniciar patrol, spawn, curación, cambiar
+          algoritmo, asignar FollowPath, actualizar bookkeeping, etc.).
+        - Mantener efectos locales y documentados en el blackboard para que las
+          condiciones y transiciones puedan leerlos/consumirlos.
 
-Estructura
-- ACTIONS: dict mapping string -> callable
-- Decorador @_register(name) para registrar acciones
-- Acciones agrupadas por responsabilidad:
-  - patrol / follow path
-  - visibility / bookkeeping
-  - pursue / attack
-  - evade / flee
-  - face / healing
-  - flags / monitoring
-
-Notas de mantenimiento
-- Preferir mover helpers reutilizables a ai.utils y mantener aquí sólo acciones.
-- Si introduces nuevas acciones, documentarlas con su comportamiento esperado y keys de blackboard que usan/modifican.
+Convenciones
+-------------------
+    - Documentación: todos los docstrings de acciones deben estar en español y
+      documentar: Descripción, Argumentos, Blackboard utilizado/modificado y
+      Parámetros esperados. Si no hay entradas para Blackboard o Parámetros, indicar
+      explícitamente "- Ninguno".
+    - Firma: fn(hinst, entity) -> None (no return útil). Acciones no deben devolver valores.
+    - Registro: usar el decorador @_register("nombre_accion") para exponer la acción.
+    - Efectos en blackboard: preferir set_blackboard/get_blackboard (hinst.* helpers)
+      para sincronizar datos entre condiciones/acciones/estado.
+    - Seguridad: capturar excepciones internamente y usar exception_print para logging;
+      no propagar excepciones al bucle principal del juego.
+    - Determinismo y peso: las acciones deben ser rápidas y deterministas; evitar operaciones
+      bloqueantes o cálculos pesados (offload a systems/manager si es necesario).
+    - Acceso a servicios: usar get_spec_param, get_manager, get_player desde ai.utils
+      para leer parámetros del spec y acceder a servicios/globales.
+    - Manipulación de entidad: modificar campos de la entidad (algorithm, follow_path,
+      velocity, face.target, etc.), pero documentar los cambios en el docstring.
+    - Atomicidad: intentar que cada acción sea atómica y recuperable; mantener bookkeeping
+      coherente en caso de fallo.
+    - Tamaño: preferir funciones pequeñas; extraer lógica compleja a helpers privados
+      dentro del módulo (prefijo _).
+    - Nombres de claves: documentar claves de blackboard que la acción lee/escribe y
+      eliminar o limpiar claves cuando sea apropiado en stop_* actions.
 """
 import random
 import math

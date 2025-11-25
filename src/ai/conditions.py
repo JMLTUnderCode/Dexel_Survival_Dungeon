@@ -2,16 +2,45 @@
 Condiciones para el HSM
 
 Descripción
-    MÓDULO: Registro de condiciones usadas por la HSM. Cada condición tiene la
-    firma: fn(hinst, entity) -> bool. Las condiciones deben ser ligeras y usar
-    el blackboard para datos compartidos.
+-------------------
+    MÓDULO: Registro de condiciones booleanas usadas por la HSM para evaluar
+    transiciones. Cada condición tiene la firma: fn(hinst, entity) -> bool.
+    Las condiciones deben ser ligeras, rápidas y, en general, puramente lectoras del
+    estado (blackboard y atributos de la entidad). Excepciones:
+      - Actualizaciones pequeñas y explícitas del blackboard para bookkeeping temporal
+        (timestamps, last_seen, last_known_pos) están permitidas y deben documentarse.
+
+    Propósito:
+        - Proveer predicados simples y compuestos que definen las reglas de transición
+          entre estados de la HSM (visibilidad, salud, proximidad, finishing timers, etc.).
+        - Mantener coherencia de lectura con las acciones: keys usadas deben estar
+          documentadas en ambos lados.
 
 Convenciones
-    - Las condiciones se registran mediante el decorador `@condition`.
-    - El HSM expone `_spec_params` en el blackboard con los parámetros del spec.
-    - Las condiciones pueden leer y escribir claves en el blackboard (p.ej.
-      `last_player_visible_at`, `last_known_player_pos`, `player_visible`).
-    - Las funciones deben ser defensivas: nunca lanzar excepción no manejada.
+-------------------
+    - Documentación: todos los docstrings de condiciones deben estar en español y
+      documentar: Descripción, Argumentos, Blackboard utilizado/modificado y
+      Parámetros esperados. Si no hay entradas para Blackboard o Parámetros, indicar
+      explícitamente "- Ninguno".
+    - Firma: fn(hinst: HSMInstance, entity: Any) -> bool.
+    - Registro: usar el decorador @condition para añadir la función al registro global.
+    - Performance: deben ser muy rápidas; evitar cálculos trigonométricos innecesarios
+      o búsquedas costosas cada vez (usar throttling o cached hints en el blackboard).
+    - Robustez: no deben propagar excepciones; capturar errores y devolver False
+      en casos indeterminados para no romper el ciclo del HSM.
+    - Lectura vs Escritura: preferir lectura del blackboard; los únicos writes permitidos
+      son metadata de observación (p.ej. last_player_visible_at, last_known_player_pos,
+      last_health_snapshot_prev) y siempre documentados.
+    - Uso de utilitarios: usar get_spec_param y get_player desde ai.utils para acceder
+      a parámetros del spec y al jugador respectivamente.
+    - Determinismo: evitar efectos secundarios que cambien el mundo; las condiciones
+      deben ser puramente predictivas o idempotentes en su escritura.
+    - Composición: crear funciones simples y combinarlas para condiciones compuestas
+      (ej. PlayerNotVisibleAndAtProtectionZone) en lugar de duplicar lógica.
+    - Nombres: preferir PascalCase o nombres descriptivos (ej. PlayerVisible,
+      HealthBelow, RecentlyDamaged) para facilitar mapeo desde el HSM.
+    - Testing: las condiciones deben ser fácilmente testeables inyectando un HSMInstance
+      con blackboard controlado y un stub de entidad.
 """
 import math
 import time
