@@ -46,10 +46,10 @@ import math
 import time
 from typing import Dict, Callable, Any, List, Optional
 
-from kinematics.kinematic import Kinematic, SteeringOutput
-from kinematics.path_following import FollowPath
-from characters.animation import set_animation_state
-from helper.paths import PolylinePath
+from entity.kinematic import Kinematic, SteeringOutput
+from algorithms.path_following import FollowPath
+from entity.animation import set_animation_state
+from map.paths import Path
 from configs.package import CONF
 
 from ai.utils import get_spec_param, get_manager, get_player, exception_print
@@ -158,8 +158,8 @@ def start_random_patrol(hinst, entity):
             hinst.set_blackboard("patrol_requested_at", time.time())
             return
 
-        # 6) Construir PolylinePath y FollowPath de forma segura
-        poly = PolylinePath(pts, closed=False)
+        # 6) Construir Path y FollowPath de forma segura
+        poly = Path(pts, closed=False)
         try:
             entity.follow_path = FollowPath(
                 character=entity,
@@ -835,7 +835,7 @@ def start_guardian_patrol(hinst, entity):
         - entity (Any): entidad (Enemy) que iniciará/retomará la patrulla guardian.
 
     Blackboard usado / modificado
-        - guardian_original_path (update): referencia al PolylinePath protegido.
+        - guardian_original_path (update): referencia al Path protegido.
         - is_on_guardian_path (update): marca que indica que la entidad sigue la ruta guardian.
         - is_returning_to_zone (update): limpia la marca de retorno si procede.
         - is_at_protection_zone (update): marcado inicial (False hasta verificar llegada).
@@ -941,8 +941,8 @@ def return_to_protection_zone(hinst, entity):
             hinst.set_blackboard("is_at_protection_zone", True)
             return
 
-        # 4) crear PolylinePath y FollowPath temporal
-        poly = PolylinePath(pts, closed=False)
+        # 4) crear Path y FollowPath temporal
+        poly = Path(pts, closed=False)
         try:
             # asegurar primer punto igual a la posición actual para continuidad
             if getattr(poly, "points", None):
@@ -1081,8 +1081,8 @@ def start_return_to_boss_position(hinst, entity):
         if not pts or len(pts) < 2:
             pts = [tuple(entity.get_pos()), target_pos]
 
-        # 5) Construir PolylinePath y FollowPath temporal y asignarlo a la entidad
-        poly = PolylinePath(pts, closed=False)
+        # 5) Construir Path y FollowPath temporal y asignarlo a la entidad
+        poly = Path(pts, closed=False)
         start_param = poly.get_param(entity.get_pos(), 0.0)
         temp_offset = float(get_spec_param(hinst, "path_offset", getattr(entity, "path_offset", 1.0)))
         entity.follow_path = None

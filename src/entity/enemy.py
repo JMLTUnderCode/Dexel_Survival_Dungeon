@@ -1,23 +1,23 @@
 import math
 import pygame
 from typing import Union
-from kinematics.kinematic import Kinematic, SteeringOutput, KinematicSteeringOutput
-from kinematics.kinematic_seek import KinematicSeek
-from kinematics.kinematic_flee import KinematicFlee
-from kinematics.kinematic_arrive import KinematicArrive
-from kinematics.kinematic_wander import KinematicWander
-from kinematics.dynamic_seek import DynamicSeek
-from kinematics.dynamic_flee import DynamicFlee
-from kinematics.dynamic_arrive import DynamicArrive
-from kinematics.dynamic_wander import DynamicWander
-from kinematics.align import Align
-from kinematics.velocity_match import VelocityMatch
-from kinematics.pursue import Pursue
-from kinematics.evade import Evade
-from kinematics.face import Face
-from kinematics.look_where_youre_going import LookWhereYoureGoing
-from kinematics.path_following import FollowPath
-from characters.animation import Animation, load_animations, set_animation_state
+from entity.kinematic import Kinematic, SteeringOutput, KinematicSteeringOutput
+from algorithms.kinematic_seek import KinematicSeek
+from algorithms.kinematic_flee import KinematicFlee
+from algorithms.kinematic_arrive import KinematicArrive
+from algorithms.kinematic_wander import KinematicWander
+from algorithms.dynamic_seek import DynamicSeek
+from algorithms.dynamic_flee import DynamicFlee
+from algorithms.dynamic_arrive import DynamicArrive
+from algorithms.dynamic_wander import DynamicWander
+from algorithms.align import Align
+from algorithms.velocity_match import VelocityMatch
+from algorithms.pursue import Pursue
+from algorithms.evade import Evade
+from algorithms.face import Face
+from algorithms.look_where_youre_going import LookWhereYoureGoing
+from algorithms.path_following import FollowPath
+from entity.animation import Animation, load_animations, set_animation_state
 from ai.behavior import Behavior
 from configs.package import CONF
 

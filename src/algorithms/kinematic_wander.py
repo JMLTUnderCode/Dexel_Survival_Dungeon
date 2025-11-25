@@ -1,7 +1,6 @@
 import math
 import random
-
-from kinematics.kinematic import Kinematic, KinematicSteeringOutput
+from entity.kinematic import Kinematic, KinematicSteeringOutput
 
 class KinematicWander:
     """

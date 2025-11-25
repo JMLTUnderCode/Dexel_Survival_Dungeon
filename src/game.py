@@ -4,7 +4,7 @@ from map.map import Map
 from map.pathfinder import Pathfinder
 from ui.enemy_set import EnemySet
 from ui.map_set import MapSet
-from helper.entity_manager import EntityManager
+from entity.entity_manager import EntityManager
 from configs.package import CONF
 
 class Game:

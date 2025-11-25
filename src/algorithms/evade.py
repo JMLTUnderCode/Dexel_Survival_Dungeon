@@ -1,38 +1,25 @@
 import math
-
-from kinematics.kinematic import Kinematic, SteeringOutput
-from kinematics.dynamic_arrive import DynamicArrive
+from entity.kinematic import Kinematic, SteeringOutput
+from algorithms.dynamic_flee import DynamicFlee
 
 EPS = 1e-6
 
-class Pursue:
+class Evade:
     """
-    Pursue: predice posición futura del target y delega a DynamicArrive.
+    Evade: predice posición futura del target y delega a DynamicFlee.
     """
     def __init__(
         self,
         character: Kinematic,
         target: Kinematic,
-        max_speed: float = 150.0,
-        target_radius: float = 40.0,
-        slow_radius: float = 180.0,
-        time_to_target: float = 0.1,
         max_acceleration: float = 300.0,
-        max_prediction: float = 1.0,
+        max_prediction: float = 1.0
     ) -> None:
         self.character = character
         self.target = target
         self.max_acceleration = float(max_acceleration)
         self.max_prediction = float(max_prediction)
-        self.arrive: DynamicArrive = DynamicArrive(
-            character=self.character, 
-            target=self.target, 
-            max_speed=max_speed,
-            target_radius=target_radius,
-            slow_radius=slow_radius,
-            time_to_target=time_to_target,
-            max_acceleration=self.max_acceleration
-        )
+        self._flee = DynamicFlee(character=self.character, target=self.target, max_acceleration=self.max_acceleration)
 
     def predict_target(self, prediction: float) -> Kinematic:
         """
@@ -47,7 +34,7 @@ class Pursue:
     def get_steering(self) -> SteeringOutput:
         """
         Devuelve SteeringOutput (aceleración).
-        Calcula la predicción y delega a DynamicArrive con el target temporal.
+        Calcula la predicción y delega a DynamicFlee con el target temporal.
         """
         dx = self.target.position[0] - self.character.position[0]
         dy = self.target.position[1] - self.character.position[1]
@@ -63,8 +50,6 @@ class Pursue:
 
         explicit_target = self.predict_target(prediction)
 
-        # Delegar a DynamicArrive con target temporal
-        self.arrive.target = explicit_target
-        self.arrive.max_acceleration = self.max_acceleration
-        return self.arrive.get_steering()
-
+        self._flee.target = explicit_target
+        self._flee.max_acceleration = self.max_acceleration
+        return self._flee.get_steering()

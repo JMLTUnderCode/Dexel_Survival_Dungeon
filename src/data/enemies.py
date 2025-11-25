@@ -1,5 +1,5 @@
 from configs.package import CONF
-from helper.paths import make_circle_path, make_rectangle_path
+from map.paths import make_circle_path, make_rectangle_path
 
 # Todos los atributos obligatorios para crear un enemigo
 # - type: tipo de enemigo (string)
@@ -1179,7 +1179,7 @@ HUNTER_BEHAVIOR = {
 DOCUMENTACIÓN: GUARDIAN_BEHAVIOR
 
 Resumen
-    Comportamiento 'guardian' para enemigos. Diseñado para proteger un camino (PolylinePath)
+    Comportamiento 'guardian' para enemigos. Diseñado para proteger un camino (Path)
     que representa la "zona" defendida. El guardian patrulla sobre un path definido (si existe)
     y gestiona retorno cuando se aleja del camino. Si no hay path, se comporta como patrulla
     aleatoria. Incluye lógica de persecución/ataque, huida y curado similar a HUNTER pero
@@ -1197,7 +1197,7 @@ Parámetros principales (params)
     - patrol_path_nodes (int): nodos deseados para patrulla aleatoria.
     - face_range_multiplier: multiplica vision_range para decidir cuándo "mirar" al jugador.
     - check_los_throttle (s): throttling para checks de línea de visión.
-    - protection_margin (px): distancia al punto MÁS CERCANO del PolylinePath que define
+    - protection_margin (px): distancia al punto MÁS CERCANO del Path que define
         si la entidad está "sobre" su ruta patrulla (p.ej. 40 px).
     - arrival_threshold (px): umbral de llegada usado por la ruta de retorno (p.ej. 40 px).
 
@@ -1207,7 +1207,7 @@ Estados y semántica
     - Guarda historial profundo para restaurar comportamiento tras Curarse.
 
   - EstadoVida.Vigilar (Patrulla guardian / Vigilar)
-    - Si la entidad tiene un PolylinePath (entity.path) lo usa como ruta guardian.
+    - Si la entidad tiene un Path (entity.path) lo usa como ruta guardian.
     - is_on_guardian_path = True indica que la entidad sigue el path protegido.
     - Si la entidad se aleja más que protection_margin del punto MÁS CERCANO del path,
       la condición IsFarFromProtectionZone dispara el retorno.
@@ -1218,7 +1218,7 @@ Estados y semántica
 
   - EstadoVida.RegresarAZona (volver al camino protegido)
     - Genera un FollowPath temporal (entity.temp_follow_path) desde la posición actual
-      hacia el punto MÁS CERCANO del PolylinePath guardian_original_path.
+      hacia el punto MÁS CERCANO del Path guardian_original_path.
     - Usa arrival_threshold para decidir llegada por proximidad; al llegar restaura
       PATH_FOLLOWING sobre el path guardian.
 

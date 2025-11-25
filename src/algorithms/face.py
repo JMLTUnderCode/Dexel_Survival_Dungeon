@@ -1,7 +1,6 @@
 import math
-
-from kinematics.kinematic import Kinematic, SteeringOutput
-from kinematics.align import Align
+from entity.kinematic import Kinematic, SteeringOutput
+from algorithms.align import Align
 
 class Face:
     """

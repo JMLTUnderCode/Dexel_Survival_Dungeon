@@ -1,15 +1,13 @@
 import math
-from typing import Tuple
+from entity.kinematic import Kinematic, KinematicSteeringOutput
 
-from kinematics.kinematic import Kinematic, KinematicSteeringOutput
-
-class KinematicSeek:
+class KinematicFlee:
     """
-    Kinematic Seek behaviour (direct seeking).
+    Kinematic Flee behaviour (direct fleeing).
 
     Objetivo
     - Calcular un SteeringOutput que haga que `character` se dirija de forma directa
-      hacia `target` a la máxima velocidad especificada (`max_speed`).
+      en dirección opuesta a `target` a la máxima velocidad especificada (`max_speed`).
     - No implementa desaceleración ni radios de llegada: es un movimiento directo y agresivo.
 
     Parámetros (constructor)
@@ -29,16 +27,16 @@ class KinematicSeek:
 
     def get_steering(self) -> KinematicSteeringOutput:
         """
-        Calcula el KinematicSteeringOutput para dirigirse directamente al target.
+        Calcula el KinematicSteeringOutput para alejarse directamente del target.
 
         Flujo:
-        1) Calcular vector hacia target y su magnitud (dist).
-        2) Velocidad objetivo = max_speed en dirección al target.
+        1) Calcular vector en dirección opuesta al target y su magnitud (dist).
+        2) Velocidad objetivo = max_speed en dirección opuesta al target.
         3) Retornar KinematicSteeringOutput(velocity=target_velocity, rotation=0).
         """
         # 1) Calcular vector y distancia al objetivo
-        dx = self.target.position[0] - self.character.position[0]
-        dy = self.target.position[1] - self.character.position[1]
+        dx = self.character.position[0] - self.target.position[0]
+        dy = self.character.position[1] - self.target.position[1]
         dist = math.hypot(dx, dy)
 
         # 2) Velocidad objetivo en dirección al objetivo (magnitude = max_speed)

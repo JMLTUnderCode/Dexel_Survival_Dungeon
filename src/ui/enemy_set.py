@@ -1,7 +1,7 @@
 import pygame
 from data.enemies import list_of_enemies_data
 from configs.package import CONF
-from helper.entity_manager import EntityManager
+from entity.entity_manager import EntityManager
 
 class EnemySet:
     """

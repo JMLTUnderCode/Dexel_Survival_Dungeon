@@ -1,6 +1,5 @@
 import math
-
-from kinematics.kinematic import Kinematic, SteeringOutput
+from entity.kinematic import Kinematic, SteeringOutput
 
 class VelocityMatch:
     """

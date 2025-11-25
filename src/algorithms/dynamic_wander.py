@@ -1,9 +1,8 @@
 import math
 import random
 from typing import Tuple
-
-from kinematics.kinematic import Kinematic, SteeringOutput
-from kinematics.face import Face
+from entity.kinematic import Kinematic, SteeringOutput
+from algorithms.face import Face
 
 class DynamicWander:
     """

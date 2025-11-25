@@ -1,6 +1,6 @@
-from kinematics.kinematic import Kinematic, SteeringOutput
-from kinematics.dynamic_seek import DynamicSeek
-from helper.paths import Path
+from entity.kinematic import Kinematic, SteeringOutput
+from algorithms.dynamic_seek import DynamicSeek
+from map.paths import Path
 
 class FollowPath:
     """

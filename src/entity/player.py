@@ -1,9 +1,8 @@
-import os
 import pygame
 import math
-from kinematics.kinematic import Kinematic, SteeringOutput
-from characters.attack_wave import AttackWave
-from characters.animation import Animation, load_animations, set_animation_state
+from entity.kinematic import Kinematic, SteeringOutput
+from entity.attack_wave import AttackWave
+from entity.animation import Animation, load_animations, set_animation_state
 from configs.package import CONF
 
 class Player(Kinematic):

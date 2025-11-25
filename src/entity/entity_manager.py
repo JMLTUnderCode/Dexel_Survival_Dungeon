@@ -6,11 +6,11 @@ import importlib
 import traceback
 from typing import Optional, List, Dict, Any
 
-from kinematics.kinematic import Kinematic
-from characters.player import Player
-from characters.enemy import Enemy
+from entity.kinematic import Kinematic
+from entity.player import Player
+from entity.enemy import Enemy
 from data.enemies import list_of_enemies_data, map_levels_enemies_data
-from helper.paths import PolylinePath
+from map.paths import Path
 from map.pathfinder import Pathfinder
 from ai.behavior import Behavior
 from configs.package import CONF
@@ -336,7 +336,7 @@ class EntityManager:
     def update_enemy_paths_to(self, target_pos: tuple[float, float]) -> None:
         """
         Descripción
-            MÉTODO: Recalcula y asigna un nuevo PolylinePath a todos los enemigos.
+            MÉTODO: Recalcula y asigna un nuevo Path a todos los enemigos.
 
         Argumentos
             - target_pos (tuple): posición objetivo (x,z).
@@ -349,6 +349,6 @@ class EntityManager:
                 pts = self.pathfinder.find_path(start, target_pos)
                 if not pts:
                     continue
-                poly = PolylinePath(pts, closed=False)
+                poly = Path(pts, closed=False)
                 if getattr(enemy, "follow_path", None):
                     enemy.follow_path.path = poly

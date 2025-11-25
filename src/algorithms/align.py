@@ -1,4 +1,4 @@
-from kinematics.kinematic import Kinematic, SteeringOutput
+from entity.kinematic import Kinematic, SteeringOutput
 from configs.package import CONF
 
 class Align:

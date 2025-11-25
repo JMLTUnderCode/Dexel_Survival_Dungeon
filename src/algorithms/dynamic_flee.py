@@ -1,7 +1,5 @@
 import math
-from typing import Tuple
-
-from kinematics.kinematic import Kinematic, SteeringOutput
+from entity.kinematic import Kinematic, SteeringOutput
 
 class DynamicFlee:
     """
