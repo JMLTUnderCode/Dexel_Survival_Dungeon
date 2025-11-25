@@ -170,7 +170,9 @@ def PlayerVisible(hinst: HSMInstance, entity: Any) -> bool:
                 angle_to_player = math.atan2(dz, dx)
                 facing = float(getattr(entity, "orientation", 0.0))
                 half_fov = math.radians(max(0.0, min(180.0, fov_deg)) / 2.0)
-                # normalizar diferencia angular a [-pi, pi]
+                # Normaliza la diferencia angular a [-pi, pi]:
+                # Esto asegura que la diferencia de ángulo esté en el rango [-π, π],
+                # facilitando la comparación con el campo de visión (FOV).
                 diff = (angle_to_player - facing + math.pi) % (2 * math.pi) - math.pi
                 if abs(diff) <= half_fov:
                     # 5) Visible: actualizar memoria en blackboard
