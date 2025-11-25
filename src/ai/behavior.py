@@ -174,3 +174,13 @@ class Behavior:
             self.hinst.set_blackboard("entity_manager", None)
         except Exception as e:
             print(f"[BEHAVIOR STOP] Error setting blackboard values: {e}")
+
+    def get_name(self) -> str:
+        """
+        Descripción
+            FUNCIÓN: Devuelve el nombre del comportamiento, si está definido en la spec.
+
+        Retorno
+            - str: nombre del comportamiento o "UnnamedBehavior" si no está definido.
+        """
+        return self.spec.get("name", "UnnamedBehavior")

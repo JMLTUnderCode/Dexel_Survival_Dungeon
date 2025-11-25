@@ -264,36 +264,45 @@ class Enemy(Kinematic):
         """
         sx = self.position[0] - camera_x
         sz = self.position[1] - camera_z
+        # Dibujar frame del enemigo en pantalla.
         deg = -math.degrees(self.orientation) - 90
         frame = self.current_animation.get_frame()
         rotated = pygame.transform.rotate(frame, deg)
         rect = rotated.get_rect(center=(sx, sz))
         surface.blit(rotated, rect)
 
-        # Dibujar barra de vida encima del sprite
-        try:
-            sx = int(self.position[0] - camera_x)
-            sz = int(self.position[1] - camera_z)
-            bar_w = 44
-            bar_h = 6
-            bar_x = sx - bar_w // 2
-            bar_y = sz - (self.current_animation.get_size()[1] // 2) - 12
-            # fondo (gris)
-            pygame.draw.rect(surface, (50, 50, 50), (bar_x, bar_y, bar_w, bar_h))
-            # vida (verde)
-            hp_ratio = max(0.0, min(1.0, self.health / self.max_health))
-            fill_w = int(bar_w * hp_ratio)
-            pygame.draw.rect(surface, (0, 200, 0), (bar_x, bar_y, fill_w, bar_h))
-            # borde
-            pygame.draw.rect(surface, (0,0,0), (bar_x, bar_y, bar_w, bar_h), 1)
-        except Exception:
-            pass
+        # Dibujar barra de vida
+        self.draw_life_bar(surface, camera_x, camera_z)
 
         if CONF.DEV.DEBUG:
+            if not hasattr(self.__class__, "_dev_font") or self.__class__._dev_font is None:
+                self.__class__._dev_font = pygame.font.SysFont("Segoe UI", 20, bold=True)
+            font = self.__class__._dev_font
+            anim_h = self.current_animation.get_size()[1]
+            # calcular offset inicial (arriba del sprite)
+            base_y = sz - (anim_h // 2) - 40
+            # altura de línea (usar medida de fuente)
+            _, line_h = font.size("Mg")
+
+            # Mostrar arriba del sprite el algoritmo activo en VERDE, NEGRITA y MAYÚSCULAS
+            # Cachear la fuente en la clase para no recrearla cada frame
+            if CONF.DEV.ACTIVE_ALG:
+                # self.algorithm puede ser un Enum o string; obtener representación en mayúsculas
+                start_y = base_y + (line_h * 2)
+                alg_text = (
+                    self.algorithm.value.upper()
+                    if hasattr(self.algorithm, "value")
+                    else str(self.algorithm).upper()
+                )
+                ts = font.render(alg_text, True, (0, 255, 0))
+                tw, th = ts.get_size()
+                y = int(start_y - line_h) - th
+                surface.blit(ts, (sx - tw // 2, y))
+
             # Mostrar la máquina de estados jerárquica (HSM) en pantalla
             # Mantenemos una cola (MAX_HSM_HISTORY_SIZE) de snapshots de la pila activa para mostrar
             # la secuencia: el más antiguo arriba y el más reciente abajo.
-            if getattr(self, "behavior", None):
+            if CONF.DEV.HSM and getattr(self, "behavior", None):
                 stack = self.behavior.get_active_stack()
                 if stack:
                     # representación textual completa de la pila activa (root -> ... -> leaf)
@@ -311,14 +320,6 @@ class Enemy(Kinematic):
                         self._hsm_stack_history = hist
 
                     # dibujar líneas: oldest arriba, newest abajo
-                    font = pygame.font.SysFont("Segoe UI", 20)
-                    sx = int(self.position[0] - camera_x)
-                    sz = int(self.position[1] - camera_z)
-                    anim_h = self.current_animation.get_size()[1]
-                    # calcular offset inicial (arriba del sprite)
-                    base_y = sz - (anim_h // 2) - 28
-                    # altura de línea (usar medida de fuente)
-                    _, line_h = font.size("Mg")
                     # desplazar hacia arriba para que la lista no salga del sprite
                     start_y = base_y - (line_h * (len(self._hsm_stack_history) - 1))
                     for i, line in enumerate(self._hsm_stack_history):
@@ -326,37 +327,27 @@ class Enemy(Kinematic):
                         tw, th = ts.get_size()
                         y = int(start_y + i * line_h) - th
                         surface.blit(ts, (sx - tw // 2, y))
+                    
+                    # Mostrar arriba del sprite el comportamiento activo en ROJO, NEGRITA y MAYÚSCULAS
+                    # Cachear la fuente en la clase para no recrearla cada frame
+                    if CONF.DEV.ACTIVE_BEHAVIOR:
+                        # self.algorithm puede ser un Enum o string; obtener representación en mayúsculas
+                        behavior_text = self.behavior.get_name().upper()
+                        ts = font.render(behavior_text, True, (0, 255, 0))
+                        tw, th = ts.get_size()
+                        y = int(start_y - line_h) - th
+                        surface.blit(ts, (sx - tw // 2, y))
 
-            # Mostrar arriba del sprite el algoritmo activo en VERDE, NEGRITA y MAYÚSCULAS
-            # Cachear la fuente en la clase para no recrearla cada frame
-            if not hasattr(self.__class__, "_dev_font") or self.__class__._dev_font is None:
-                try:
-                    self.__class__._dev_font = pygame.font.SysFont(None, 18, bold=True)
-                except pygame.error:
-                    # Fallback si SysFont falla (no se puede poner en negrita con Font)
-                    self.__class__._dev_font = pygame.font.Font(None, 18)
+            if CONF.DEV.COLLISION_RECTS:
+                self.draw_collision_box(surface, camera_x, camera_z)
 
-            font = self.__class__._dev_font
-            # self.algorithm puede ser un Enum o string; obtener representación en mayúsculas
-            alg_text = (
-                self.algorithm.value.upper()
-                if hasattr(self.algorithm, "value")
-                else str(self.algorithm).upper()
-            )
-            text_surf = font.render(alg_text, True, (0, 255, 0))
-            # Posicionar el texto justo encima del sprite (ajustar offset si es necesario)
-            text_rect = text_surf.get_rect(center=(sx, sz - rect.height // 2))
-            surface.blit(text_surf, text_rect)
-
-            self.draw_collision_box(surface, camera_x, camera_z)
-
-            if hasattr(self, "follow_path") and self.follow_path is not None:
+            if CONF.DEV.PATHFOLLOWER and hasattr(self, "follow_path") and self.follow_path is not None:
                 path = getattr(self.follow_path, "path", None)
                 if path is not None:
                     # Path.draw espera surface, camera_x, camera_z, opcionales...
                     path.draw(surface, camera_x, camera_z, color=(0,255,0), width=2)
 
-            if hasattr(self, "temp_follow_path") and self.temp_follow_path is not None:
+            if CONF.DEV.TEMP_PATHFOLLOWER and hasattr(self, "temp_follow_path") and self.temp_follow_path is not None:
                 path = getattr(self.temp_follow_path, "path", None)
                 if path is not None:
                     # Path.draw espera surface, camera_x, camera_z, opcionales...

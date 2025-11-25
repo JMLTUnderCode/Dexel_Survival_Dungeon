@@ -117,11 +117,12 @@ class Game:
                 mx, my = event.pos
 
                 # Si el click fue dentro del área de juego (a la derecha del panel UI)
-                if CONF.DEV.DEBUG and mx >= self.ui_panel_width and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                    # Convertir coords de pantalla -> coords world (game_surface)
-                    world_x = mx - self.ui_panel_width + self.camera_x
-                    world_z = my + self.camera_z
-                    self.entity_manager.update_enemy_paths_to((world_x, world_z))
+                if CONF.DEV.DEBUG:
+                    if CONF.DEV.PATHFINDER and mx >= self.ui_panel_width and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+                        # Convertir coords de pantalla -> coords world (game_surface)
+                        world_x = mx - self.ui_panel_width + self.camera_x
+                        world_z = my + self.camera_z
+                        self.entity_manager.update_enemy_paths_to((world_x, world_z))
             
                 self._forward_event_to_player(event)
 
@@ -210,12 +211,13 @@ class Game:
         self.game_map.draw(self.game_surface, self.camera_x, self.camera_z, self.camera_width, self.camera_height)
 
         # DEBUG: dibujar el nodo actual de cada entidad (solo bordes)
-        if CONF.DEV.DEBUG and self.game_map.navmesh:
-            for entity in self.entity_manager.enemies + [self.entity_manager.player]:
-                node = getattr(entity, "node_location", None)
-                if node and getattr(node, "polygon", None):
-                    pts = [(int(p[0] - self.camera_x), int(p[1] - self.camera_z)) for p in node.polygon]
-                    pygame.draw.polygon(self.game_surface, (255, 0, 0), pts, 2)
+        if CONF.DEV.DEBUG:
+            if CONF.DEV.NODE_LOCATION and self.game_map.navmesh:
+                for entity in self.entity_manager.enemies + [self.entity_manager.player]:
+                    node = getattr(entity, "node_location", None)
+                    if node and getattr(node, "polygon", None):
+                        pts = [(int(p[0] - self.camera_x), int(p[1] - self.camera_z)) for p in node.polygon]
+                        pygame.draw.polygon(self.game_surface, (255, 0, 0), pts, 2)
 
         # 2. Dibujar todos los enemigos
         for enemy in self.entity_manager.enemies:

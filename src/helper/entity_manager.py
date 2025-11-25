@@ -342,7 +342,7 @@ class EntityManager:
             - target_pos (tuple): posición objetivo (x,z).
         """
         for enemy in list(self.enemies):
-            try:
+            if getattr(enemy, "behavior", None) is None:
                 start = enemy.get_pos()
                 if not self.pathfinder:
                     continue
@@ -352,5 +352,3 @@ class EntityManager:
                 poly = PolylinePath(pts, closed=False)
                 if getattr(enemy, "follow_path", None):
                     enemy.follow_path.path = poly
-            except Exception:
-                continue

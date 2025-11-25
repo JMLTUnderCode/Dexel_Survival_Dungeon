@@ -1415,7 +1415,7 @@ Transiciones críticas (resumen práctico)
     - Regenerar -> EstadoVida (restore_history=True) cuando RegenerationFinished
 """
 BOSS_BEHAVIOR = {
-    "name": "boss_reposition_invoker",
+    "name": "INVOKER BOSS",
     "debug": {"show_state_over_entity": True},
     "params": {
         "vision_range": 500.0,

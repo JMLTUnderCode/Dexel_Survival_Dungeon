@@ -227,3 +227,27 @@ class Kinematic:
     def get_pos(self) -> tuple[float, float]:
         """Devuelve la posición actual del objeto como una tupla (x, z)."""
         return self.position
+
+    def draw_life_bar(self, surface: pygame.Surface, camera_x: float, camera_z: float) -> None:
+        """
+        Dibuja la barra de vida encima del sprite en la superficie dada.
+        Atributos:
+            - surface: superficie de Pygame donde se dibuja la barra
+            - camera_x: posición X de la cámara (esquina superior izquierda)
+            - camera_z: posición Z de la cámara (esquina superior izquierda)
+        """
+        # Dibujar barra de vida encima del sprite
+        sx = int(self.position[0] - camera_x)
+        sz = int(self.position[1] - camera_z)
+        bar_w = 74
+        bar_h = 14
+        bar_x = sx - bar_w // 2
+        bar_y = sz - (self.current_animation.get_size()[1] // 2) - 12
+        # fondo (gris)
+        pygame.draw.rect(surface, (50, 50, 50), (bar_x, bar_y, bar_w, bar_h))
+        # vida (verde)
+        hp_ratio = max(0.0, min(1.0, self.health / self.max_health))
+        fill_w = int(bar_w * hp_ratio)
+        pygame.draw.rect(surface, (0, 200, 0), (bar_x, bar_y, fill_w, bar_h))
+        # borde
+        pygame.draw.rect(surface, (0,0,0), (bar_x, bar_y, bar_w, bar_h), 1)

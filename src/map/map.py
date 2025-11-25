@@ -137,11 +137,12 @@ class Map:
                         if -CONF.MAIN_WIN.RENDER_TILE_SIZE < sx < camera_width and -CONF.MAIN_WIN.RENDER_TILE_SIZE < sz < camera_height:
                             screen.blit(tile_img, (sx, sz))
 
-        """ if CONF.DEV.DEBUG:
-            self.draw_collision_rects(screen, camera_x, camera_z, camera_width, camera_height)
-            # Dibujar el NavMesh si existe
-            if self.navmesh:
-                self.navmesh.draw(screen, camera_x, camera_z) """
+        if CONF.DEV.DEBUG:
+            if CONF.DEV.COLLISION_RECTS:
+                self.draw_collision_rects(screen, camera_x, camera_z, camera_width, camera_height)
+            
+            if CONF.DEV.NAV_MESH and self.navmesh:
+                self.navmesh.draw(screen, camera_x, camera_z)
 
     def draw_collision_rects(self, screen: pygame.Surface, camera_x: int, camera_z: int, camera_width: int, camera_height: int):
         """
