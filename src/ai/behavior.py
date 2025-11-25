@@ -91,8 +91,6 @@ class Behavior:
             self.hinst.set_blackboard("_spec_params", spec.get("params", {}))
         except Exception as e:
             print(f"[BEHAVIOR INIT] Error setting blackboard values: {e}")
-            # No queremos romper la creación de Behavior si el blackboard falla
-            pass
 
     @classmethod
     def from_spec(cls, spec: Dict[str, Any], entity: Any, manager: Any) -> "Behavior":
@@ -142,8 +140,6 @@ class Behavior:
             self.hinst.update(self.entity, dt)
         except Exception as e:
             print(f"[BEHAVIOR] Error during tick: {e}")
-            # No queremos que un fallo en la HSM detenga el juego
-            pass
 
     def get_active_stack(self) -> list[str]:
         """
@@ -178,4 +174,3 @@ class Behavior:
             self.hinst.set_blackboard("entity_manager", None)
         except Exception as e:
             print(f"[BEHAVIOR STOP] Error setting blackboard values: {e}")
-            pass
