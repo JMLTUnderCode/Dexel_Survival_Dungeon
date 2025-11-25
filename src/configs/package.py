@@ -21,6 +21,7 @@ class MainWindowConfig:
 @dataclass
 class DevelopmentConfig:
     DEBUG: bool = DEV.DEBUG
+    MAX_HSM_HISTORY_SIZE: int = DEV.MAX_HSM_HISTORY_SIZE
 
 @dataclass
 class ConstantsConfig:

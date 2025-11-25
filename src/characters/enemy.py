@@ -291,7 +291,7 @@ class Enemy(Kinematic):
 
         if CONF.DEV.DEBUG:
             # Mostrar la máquina de estados jerárquica (HSM) en pantalla
-            # Mantenemos una cola (máx 5) de snapshots de la pila activa para mostrar
+            # Mantenemos una cola (MAX_HSM_HISTORY_SIZE) de snapshots de la pila activa para mostrar
             # la secuencia: el más antiguo arriba y el más reciente abajo.
             if getattr(self, "behavior", None):
                 stack = self.behavior.get_active_stack()
@@ -304,8 +304,8 @@ class Enemy(Kinematic):
                     # sólo añadir si cambió respecto al último elemento
                     if not hist or hist[-1] != rep:
                         hist.append(rep)
-                        # limitar tamaño a 5 (drop oldest)
-                        if len(hist) > 5:
+                        # limitar tamaño a MAX_HSM_HISTORY_SIZE (drop oldest)
+                        if len(hist) > CONF.DEV.MAX_HSM_HISTORY_SIZE:
                             hist.pop(0)
                         # almacenar de vuelta
                         self._hsm_stack_history = hist
