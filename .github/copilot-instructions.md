@@ -17,16 +17,22 @@ Este archivo contiene las instrucciones que GitHub Copilot debe seguir al trabaj
 #### Ejemplos:
 ```python
 # ✅ Correcto
-def calculate_player_damage():
-    player_health = 100
-    enemy_attack_power = 25
-    return player_health - enemy_attack_power
+class PlayerCharacter:
+    def calculate_player_damage(self):
+        player_health = 100
+        enemy_attack_power = 25
+        return player_health - enemy_attack_power
+
+class EnemySpawner:
+    def spawn_enemy_at_position(self, position_x, position_y):
+        pass
 
 # ❌ Incorrecto
-def calcularDanoJugador():
-    vidaJugador = 100
-    poderAtaqueEnemigo = 25
-    return vidaJugador - poderAtaqueEnemigo
+class personajeJugador:
+    def calcularDanoJugador(self):
+        vidaJugador = 100
+        poderAtaqueEnemigo = 25
+        return vidaJugador - poderAtaqueEnemigo
 ```
 
 ### 3. Documentación y Comentarios en Español
