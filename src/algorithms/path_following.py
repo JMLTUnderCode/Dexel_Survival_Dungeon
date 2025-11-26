@@ -4,41 +4,26 @@ from map.paths import Path
 
 class FollowPath:
     """
-    FollowPath (Chase-the-Rabbit) behaviour.
-
     Descripción
-    - Este comportamiento calcula un único objetivo a lo largo de una `path`
-      (ruta) usando el enfoque "chase the rabbit":
-        1) Encuentra el parámetro `current_param` de la ruta más cercano a la posición
-           actual del personaje (usando `path.get_param(position, hint)`).
-        2) Avanza a lo largo de la ruta una distancia `path_offset` para obtener el
-           parámetro objetivo `target_param`.
-        3) Recupera la posición objetivo con `path.get_position(target_param)`.
-        4) Delega la persecución de esa posición al `DynamicSeek` (seek dinámico).
-    - Devuelve un `SteeringOutput` con la aceleración lineal calculada por `DynamicSeek`
-      y componente angular 0 (la orientación la puede gestionar otro comportamiento,
-      p. ej. `LookWhereYoureGoing` o `Face` si se desea).
+        CLASE: Comportamiento FollowPath (chase-the-rabbit) que sigue una ruta
+        polilínea avanzando un offset a partir del punto más cercano.
 
-    Notas sobre la interfaz `path`
-    - Se asume que `path` implementa al menos:
-        - `get_param(position: Tuple[float, float], hint: float) -> float`
-          (devuelve el parámetro en la ruta más cercano a `position`. `hint` es un
-           parámetro inicial/estimación para búsqueda eficiente).
-        - `get_position(param: float) -> Tuple[float, float]`
-          (devuelve la posición 2D correspondiente al parámetro `param`).
-    - `path` puede representar rutas cerradas o abiertas. El manejo de límites/Wrap
-      depende de la implementación de `path.get_param` / `get_position`.
-    - `path_offset` puede ser negativo para moverse en sentido inverso.
+    Atributos
+        - character (Kinematic): kinematic que seguirá la ruta.
+        - path (Path): objeto que representa la ruta (debe exponer get_param/get_position).
+        - path_offset (float): distancia a lo largo de la ruta para definir el objetivo.
+        - current_param (float): parámetro estimado actual en la ruta (se mantiene entre frames).
+        - max_acceleration (float): aceleración máxima pasada al DynamicSeek.
+        - dummy_target (Kinematic): target temporal usado para delegar en DynamicSeek.
+        - _seek (DynamicSeek): instancia delegada que calcula el steering lineal.
 
-    Parámetros (constructor)
-    - character: instancia de Kinematic que sigue la ruta.
-    - path: objeto que representa la ruta (ver la interfaz arriba).
-    - path_offset: distancia a lo largo de la ruta desde el punto más cercano
-                   para generar el objetivo (p. ej. 5.0 - 20.0 unidades).
-    - current_param: parámetro inicial estimado en la ruta (se actualiza internamente).
-    - max_acceleration: aceleración máxima pasada a DynamicSeek.
+    Métodos y Funciones
+        - get_steering(): Calcula y devuelve el SteeringOutput delegando en DynamicSeek.
+
+    Propósito
+        - Proveer un objetivo puntual sobre la ruta y delegar la persecución de ese objetivo
+          a DynamicSeek, manteniendo la orientación separada (por ejemplo Face o LookWhereYoureGoing).
     """
-
     def __init__(
         self,
         character: Kinematic,
@@ -47,57 +32,57 @@ class FollowPath:
         current_param: float = 0.0,
         max_acceleration: float = 300.0,
     ) -> None:
+        # 1. Guardar referencias y parámetros del comportamiento
         self.character = character
         self.path = path
         self.path_offset = float(path_offset)
-        # current_param se mantiene entre frames para búsquedas locales rápidas
         self.current_param = float(current_param)
         self.max_acceleration = float(max_acceleration)
 
-        # Delegate seek: usaremos un target temporal Kinematic que reemplazamos
-        # cada frame. DynamicSeek espera un Kinematic como target.
+        # 2. Preparar target temporal y delegado DynamicSeek
         self.dummy_target = Kinematic(position=(0.0, 0.0), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
         self._seek = DynamicSeek(character=self.character, target=self.dummy_target, max_acceleration=self.max_acceleration)
 
     def get_steering(self) -> SteeringOutput:
         """
-        Calcula y devuelve el SteeringOutput delegando en DynamicSeek.
+        Descripción
+            MÉTODO: Calcula y devuelve un SteeringOutput que mueve `character` hacia
+            un punto adelantado sobre la `path` (chase-the-rabbit), delegando en DynamicSeek.
 
-        Flujo:
-        1) current_param <- path.get_param(character.position, current_param)
-        2) target_param <- current_param + path_offset
-        3) target_pos <- path.get_position(target_param)
-        4) crear explicit_target (Kinematic) con position = target_pos
-        5) asignar self._seek.target = explicit_target y devolver self._seek.get_steering()
+        Argumentos
+            - Ninguno
+
+        Retorno
+            - SteeringOutput: salida con componente linear calculada por DynamicSeek y
+              componente angular = 0.0 (por convención la orientación la gestiona otro behaviour).
         """
-        # 1) Encontrar el parámetro en la ruta más cercano a la posición actual
+        # 1. Obtener el parámetro en la ruta más cercano a la posición actual (búsqueda con hint)
         try:
             param = self.path.get_param(self.character.position, self.current_param)
-        except Exception as e:
-            # Si la implementación de path no está disponible o falla, no generamos steering.
-            # Caller puede interpretar SteeringOutput((0,0), 0) como "no change".
-            # Loggear/elevar según políticas del proyecto.
+        except Exception:
+            # 1.1 Si la ruta no responde, no generar steering (resultado neutro)
             return SteeringOutput(linear=(0.0, 0.0), angular=0.0)
 
+        # 2. Actualizar current_param para la siguiente invocación
         self.current_param = float(param)
 
-        # 2) Avanzar por la ruta
+        # 3. Avanzar a lo largo de la ruta usando path_offset para obtener el parámetro objetivo
         target_param = self.current_param + self.path_offset
 
-        # 3) Obtener posición objetivo en la ruta
+        # 4. Obtener la posición objetivo en la ruta; manejar fallo defensivamente
         try:
             target_pos = self.path.get_position(target_param)
-        except Exception as e:
-            # Fallback si get_position falla
+        except Exception:
+            # 4.1 Si get_position falla, devolver steering neutro
             return SteeringOutput(linear=(0.0, 0.0), angular=0.0)
 
-        # Asegurar formato de tupla (x, z)
+        # 5. Normalizar la posición objetivo a (x, z)
         tx, tz = float(target_pos[0]), float(target_pos[1])
 
-        # 4) Construir target temporal y delegar a DynamicSeek
+        # 6. Actualizar el dummy_target con la posición calculada y sincronizar parámetros del delegado
         self.dummy_target.position = (tx, tz)
         self._seek.target = self.dummy_target
         self._seek.max_acceleration = self.max_acceleration
 
-        # 5) Devolver el steering calculado por DynamicSeek
+        # 7. Delegar el cálculo al DynamicSeek y devolver el resultado
         return self._seek.get_steering()

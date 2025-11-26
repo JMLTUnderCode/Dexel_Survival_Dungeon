@@ -1,45 +1,63 @@
 import math
 from entity.kinematic import Kinematic, SteeringOutput
+from configs.package import CONF
 
 class DynamicSeek:
     """
-    Dynamic Seek behaviour (direct seeking).
+    Descripción
+        CLASE: Comportamiento DynamicSeek que genera una aceleración lineal
+        para que un kinematic se dirija directamente hacia un objetivo.
 
-    Objetivo
-    - Calcular un SteeringOutput que haga que `character` se dirija de forma directa
-      hacia `target` con una aceleración máxima.
+    Atributos
+        - character (Kinematic): kinematic que se moverá.
+        - target (Kinematic): kinematic objetivo.
+        - max_acceleration (float): aceleración máxima aplicada.
 
-    Parámetros (constructor)
-    - character: Kinematic que se moverá.
-    - target: Kinematic objetivo.
-    - max_acceleration: aceleración máxima permitida (unidades/segundo²).
+    Métodos y Funciones
+        - get_steering(): calcula y devuelve el SteeringOutput con la aceleración necesaria.
+
+    Propósito
+        - Proveer una aceleración dirigida al objetivo con magnitud limitada por max_acceleration,
+          evitando divisiones por cero y manejando casos degenerados.
     """
     def __init__(
-        self, 
-        character : Kinematic, 
-        target : Kinematic, 
-        max_acceleration : float = 300.0
+        self,
+        character: Kinematic,
+        target: Kinematic,
+        max_acceleration: float = 300.0,
     ) -> None:
+        # asignar atributos
         self.character = character
         self.target = target
         self.max_acceleration = float(max_acceleration)
 
     def get_steering(self) -> SteeringOutput:
         """
-        Calcula el SteeringOutput para dirigirse directamente al target.
+        Descripción
+            MÉTODO: Calcula el SteeringOutput para dirigir `character` hacia `target`.
 
-        Flujo:
-        1) Calcular vector hacia target.
-        2) Velocidad objetivo = max_acceleration en dirección al target.
-        3) Retornar SteeringOutput(linear=target_velocity, angular=0).
+        Argumentos
+            - Ninguno
+
+        Retorno
+            - SteeringOutput: contiene la componente linear (ax, az) con la aceleración
+              dirigida al objetivo y angular = 0.0.
         """
-        # 1) Calcular vector y distancia al objetivo
+        # 1. Calcular vector desde character hacia target
         dx = self.target.position[0] - self.character.position[0]
         dz = self.target.position[1] - self.character.position[1]
-        
-        # 2) Velocidad deseada en dirección al objetivo. (magnitude = max_acceleration)
-        dist = math.hypot(dx, dz)
-        target_velocity = (dx / dist * self.max_acceleration, dz / dist * self.max_acceleration)
 
-        # 3) Devolver steering: la parte lineal es la velocidad objetivo; angular se maneja por orientación
-        return SteeringOutput(target_velocity, 0.0)
+        # 2. Calcular distancia al objetivo y manejar caso degenerado (distancia cero)
+        dist = math.hypot(dx, dz)
+        if dist <= CONF.ALG.EPS:
+            # si están prácticamente en la misma posición, no aplicar aceleración
+            return SteeringOutput((0.0, 0.0), 0.0)
+
+        # 3. Normalizar dirección y aplicar magnitud máxima de aceleración
+        dir_x = dx / dist
+        dir_z = dz / dist
+        accel_x = dir_x * self.max_acceleration
+        accel_z = dir_z * self.max_acceleration
+
+        # 4. Devolver SteeringOutput con componente linear y sin componente angular
+        return SteeringOutput((accel_x, accel_z), 0.0)

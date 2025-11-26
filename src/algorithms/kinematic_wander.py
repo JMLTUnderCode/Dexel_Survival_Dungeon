@@ -4,55 +4,74 @@ from entity.kinematic import Kinematic, KinematicSteeringOutput
 
 class KinematicWander:
     """
-    Kinematic Wander behaviour.
+    Descripción
+        CLASE: Comportamiento kinematic wander que genera una velocidad objetivo
+        y una rotación aleatoria suave para simular deambular.
 
-    Objetivo:
-    - Mover el character en una dirección aleatoria que cambia suavemente con el tiempo.
-    - Simula un movimiento errático pero natural, ideal para NPCs que deambulan sin un objetivo fijo.
+    Atributos
+        - character (Kinematic): kinematic que se moverá.
+        - max_speed (float): velocidad objetivo en unidades/segundo.
+        - max_rotation (float): magnitud máxima de cambio de rotación (radianes).
 
-    Parámetros (constructor):
-    - character: Kinematic que se moverá.
-    - max_speed: velocidad objetivo en píxeles/segundo.
-    - max_rotation: magnitud máxima (radianes/segundo) del cambio aleatorio de rotación.
+    Métodos y Funciones
+        - _random_binomial(): devuelve un valor aleatorio en [-1,1] centrado en 0.
+        - get_steering(): calcula y devuelve el KinematicSteeringOutput con la velocidad
+          objetivo y la rotación aleatoria.
+
+    Propósito
+        - Proveer una salida kinemática que permita al personaje moverse en una
+          dirección cambiable suavemente, ideal para NPCs que vagan sin objetivo.
     """
-
     def __init__(
         self,
         character: Kinematic,
         max_speed: float = 120.0,
         max_rotation: float = 1.0
     ) -> None:
+        # 1. Guardar referencia al character y parámetros de comportamiento
         self.character = character
         self.max_speed = float(max_speed)
         self.max_rotation = float(max_rotation)
 
     @staticmethod
-    def random_binomial() -> float:
+    def _random_binomial() -> float:
         """
-        Devuelve un número en [-1, 1] con distribución aproximada binomial (random() - random()).
-        Útil para obtener cambios positivos/negativos centrados en 0.
+        Descripción
+            FUNCIÓN: Genera un valor en el rango [-1, 1] usando diferencia de dos uniformes.
+
+        Argumentos
+            - Ninguno
+
+        Retorno
+            - float: valor aleatorio en [-1, 1].
         """
-        return random.random() - random.random()
+        # 1. Generar dos valores uniformes en [0,1]
+        a = random.random()
+        b = random.random()
+        # 2. Devolver su diferencia para centrar la distribución en 0
+        return a - b
 
     def get_steering(self) -> KinematicSteeringOutput:
         """
-        Calcula el KinematicSteeringOutput para wandering.
+        Descripción
+            MÉTODO: Calcula el KinematicSteeringOutput para wandering.
 
-        Flujo:
-        1) Usa la orientación actual del character para obtener la dirección en vector.
-        2) Calcula la velocidad objetivo = direction * max_speed.
-        3) Genera una rotación aleatoria pequeña en [-max_rotation, max_rotation].
-        4) Retorna KinematicSteeringOutput(velocity=target_velocity, rotation=random_rotation)
+        Argumentos
+            - Ninguno
+
+        Retorno
+            - KinematicSteeringOutput: velocidad objetivo (linear) y rotación aleatoria (angular).
         """
-        # 1) Dirección desde la orientación (orientación en radianes)
+        # 1. Obtener la orientación actual del character y convertirla a vector dirección
         ori = self.character.orientation
         dir_x = math.cos(ori)
         dir_z = math.sin(ori)
 
-        # 2) Velocidad objetivo
+        # 2. Calcular la velocidad objetivo como dirección normalizada * max_speed
         target_velocity = (dir_x * self.max_speed, dir_z * self.max_speed)
 
-        # 3) Rotación aleatoria (pequeño cambio para vagar)
-        random_rot = self.random_binomial() * self.max_rotation
+        # 3. Generar una rotación aleatoria pequeña en el rango [-max_rotation, max_rotation]
+        random_rot = self._random_binomial() * self.max_rotation
 
+        # 4. Construir y devolver el resultado kinemático con la velocidad y la rotación
         return KinematicSteeringOutput(target_velocity, random_rot)

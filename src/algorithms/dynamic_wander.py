@@ -6,30 +6,29 @@ from algorithms.face import Face
 
 class DynamicWander:
     """
-    Dynamic Wander (delegated) behaviour.
-
     Descripción
-    - Sitúa un objetivo en una circunferencia "wander circle" situada
-      delante del personaje (wander_offset) y con radio (wander_radius).
-    - La orientación del punto sobre la circunferencia se desplaza cada
-      frame por un pequeño delta aleatorio (wander_rate * randomBinomial()).
-    - Delegamos la rotación a `Face` usando el objetivo calculado.
-    - La componente lineal del `SteeringOutput` se fija como aceleración
-      máxima en la dirección de la orientación actual del personaje,
-      lo que genera un movimiento suave con rotación controlada por `Face`.
+        CLASE: Comportamiento DynamicWander que genera movimiento aleatorio suave
+        (wander) delegando la rotación en el comportamiento Face.
 
-    Parámetros (constructor)
-    - character: Kinematic que se moverá / orientará.
-    - target: Kinematic (no usado directamente, pero mantenido por compatibilidad).
-    - wander_offset: distancia delante del personaje donde se coloca el centro de la circunferencia.
-    - wander_radius: radio de la circunferencia de wander.
-    - wander_rate: máximo cambio por frame de la wanderOrientation (radianes).
-    - wander_orientation: orientación actual del objetivo dentro de la circunferencia.
-    - max_acceleration: aceleración lineal máxima aplicada como "empuje" forward.
-    - target_radius/slow_radius/time_to_target/max_rotation/max_angular_accel:
-      parámetros pasados al `Face` delegado (controlan la suavidad de la rotación).
+    Atributos
+        - character (Kinematic): kinematic que se moverá.
+        - target (Kinematic): kinematic objetivo de compatibilidad (no usado directamente).
+        - wander_offset (float): distancia delante del personaje donde se sitúa el centro de la "wander circle".
+        - wander_radius (float): radio de la circunferencia de wander.
+        - wander_rate (float): máximo cambio por frame de la orientación del objetivo en la circunferencia.
+        - wander_orientation (float): orientación actual del punto objetivo en la circunferencia.
+        - max_acceleration (float): aceleración lineal máxima aplicada como impulso hacia adelante.
+        - face (Face): instancia delegada para controlar la rotación del personaje.
+
+    Métodos y Funciones
+        - _random_binomial(): devuelve valor aleatorio en [-1,1] centrado en 0.
+        - _orientation_to_vector(orientation): convierte orientación (radianes) a vector unitario (x,z).
+        - get_steering(): calcula el SteeringOutput combinando empuje forward y rotación delegada.
+
+    Propósito
+        - Proveer un comportamiento de wander que mantenga movimiento hacia adelante y use Face
+          para orientar suavemente hacia un punto móvil sobre una circunferencia frontal.
     """
-
     def __init__(
         self,
         character: Kinematic,
@@ -45,6 +44,7 @@ class DynamicWander:
         wander_rate: float = 0.6,
         wander_orientation: float = 0.0,
     ) -> None:
+        # asignar atributos sin docstring según convención
         self.character = character
         self.target = target
 
@@ -55,6 +55,7 @@ class DynamicWander:
         self.wander_rate = float(wander_rate)
         self.wander_orientation = float(wander_orientation)
 
+        # crear instancia Face delegada para controlar la rotación
         self.face = Face(
             character=self.character,
             target=Kinematic(position=self.character.position, orientation=0.0, velocity=self.character.velocity, rotation=self.character.rotation),
@@ -65,46 +66,66 @@ class DynamicWander:
             max_angular_accel=max_angular_accel,
         )
 
-    def random_binomial(self) -> float:
-        """Devuelve valor en [-1,1] centrado en 0 (random() - random())."""
+    def _random_binomial(self) -> float:
+        """
+        Descripción
+            FUNCIÓN: Genera un valor en el rango [-1, 1] centrado en 0 usando diferencia de dos uniformes.
+
+        Argumentos
+            - Ninguno
+
+        Retorno
+            - float: valor aleatorio en [-1,1]
+        """
+        # 1. Generar dos valores uniformes y devolver su diferencia para centrar en 0
         return random.random() - random.random()
 
-    def orientation_to_vector(self, orientation: float) -> Tuple[float, float]:
-        """Convierte una orientación (radianes) a un vector unitario (x, z)."""
+    def _orientation_to_vector(self, orientation: float) -> Tuple[float, float]:
+        """
+        Descripción
+            FUNCIÓN: Convierte una orientación en radianes a un vector unitario (x, z).
+
+        Argumentos
+            - orientation (float): orientación en radianes.
+
+        Retorno
+            - Tuple[float, float]: vector unitario (x, z).
+        """
+        # 1. Calcular coseno/seno para obtener vector unitario en el plano XZ
         return (math.cos(orientation), math.sin(orientation))
 
     def get_steering(self) -> SteeringOutput:
         """
-        Calcula y devuelve un SteeringOutput:
-          - angular: delegada por Face (direccion hacia el objetivo wander).
-          - linear: aceleración máxima hacia adelante según la orientación actual.
+        Descripción
+            MÉTODO: Calcula y devuelve un SteeringOutput que combina:
+                - componente linear: empuje hacia adelante (max_acceleration)
+                - componente angular: delegada por Face apuntando a un objetivo en la circunferencia de wander
 
-        Flujo:
-        1) Actualizar wander_orientation: wander_orientation += randomBinomial() * wander_rate
-        2) Calcular targetOrientation = wander_orientation + character.orientation
-        3) Calcular center = character.position + wander_offset * orientation.asVector()
-        4) Calcular target_pos = center + wander_radius * targetOrientation.asVector()
-        5) Delegar rotación a Face usando explicit_target (posición y orientation)
-        6) Colocar componente linear = max_acceleration * character.forward_vector
-        7) Devolver SteeringOutput(linear, angular)
+        Argumentos
+            - Ninguno
+
+        Retorno
+            - SteeringOutput: objeto con `linear` (ax, az) y `angular` calculados.
         """
-        # 1) Actualizar orientación del punto en la circunferencia
-        self.wander_orientation += self.random_binomial() * self.wander_rate
+        # 1. Actualizar la orientación del punto objetivo en la circunferencia con un pequeño delta aleatorio
+        self.wander_orientation += self._random_binomial() * self.wander_rate
 
-        # 2) Orientación combinada del objetivo en la circunferencia
+        # 2. Combinar la wander_orientation con la orientación actual del personaje para obtener target_orientation
         target_orientation = self.wander_orientation + self.character.orientation
 
-        # 3) Centro de la circunferencia delante del personaje
-        forward = self.orientation_to_vector(self.character.orientation)
+        # 3. Calcular el vector forward del personaje a partir de su orientación actual
+        forward = self._orientation_to_vector(self.character.orientation)
+
+        # 4. Calcular el centro de la circunferencia: posición adelante del personaje
         center_x = self.character.position[0] + self.wander_offset * forward[0]
         center_z = self.character.position[1] + self.wander_offset * forward[1]
 
-        # 4) Posición objetivo sobre la circunferencia
-        to_target = self.orientation_to_vector(target_orientation)
+        # 5. Calcular la posición objetivo sobre la circunferencia usando target_orientation
+        to_target = self._orientation_to_vector(target_orientation)
         target_x = center_x + self.wander_radius * to_target[0]
         target_z = center_z + self.wander_radius * to_target[1]
 
-        # 5) Crear target temporal para Face (evitar mutar target real)
+        # 6. Construir un target temporal (Kinematic) para delegar la rotación en Face
         explicit_target = Kinematic(
             position=(target_x, target_z),
             orientation=target_orientation,
@@ -112,17 +133,14 @@ class DynamicWander:
             rotation=0.0,
         )
 
-        # Delegar la rotación a Face (obtiene SteeringOutput.angular)
+        # 7. Actualizar el target de la instancia Face y obtener el steering angular resultante
         self.face.target = explicit_target
         angular_steering = self.face.get_steering()
 
-        # 6) Componente linear: empuje hacia adelante en dirección de orientation actual
-        forward_vec = forward
-        lin_x = forward_vec[0] * self.max_acceleration
-        lin_z = forward_vec[1] * self.max_acceleration
+        # 8. Calcular la componente linear: empuje hacia adelante usando max_acceleration
+        lin_x = forward[0] * self.max_acceleration
+        lin_z = forward[1] * self.max_acceleration
 
-        # 7) Construir resultado final: combinar linear + angular
-        #    Face devuelve SteeringOutput(linear=(0,0), angular=...).
+        # 9. Construir y devolver el SteeringOutput combinando linear y angular
         result = SteeringOutput(linear=(lin_x, lin_z), angular=angular_steering.angular)
-
         return result
