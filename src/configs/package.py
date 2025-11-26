@@ -63,6 +63,7 @@ class MapConfig:
 @dataclass
 class AlgorithmConfig:
     ALGORITHM: ALG.ALGORITHM = ALG.ALGORITHM
+    EPS: float = ALG.EPS
 
 @dataclass
 class AlgorithmUIConfig:
