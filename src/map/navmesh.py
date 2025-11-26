@@ -2,6 +2,7 @@ import pygame
 from typing import List, Tuple, Dict
 from collections import deque
 from matplotlib.path import Path as MplPath
+from configs.package import CONF
 
 class NavMeshNode:
     """Representa un único polígono transitable (nodo) en el grafo de navegación."""
@@ -140,7 +141,7 @@ class NavMesh:
         es mayor que un solo punto (es decir, comparten un borde real).
         """
         # Tolerancia para comparaciones de punto flotante
-        epsilon = 1e-5
+        epsilon = CONF.ALG.EPS
 
         # 1. Comprobar colinealidad
         # Vector del primer segmento

@@ -1246,7 +1246,7 @@ def invocation_tick(hinst, entity):
 
         # 1) Calcular interval determinista y spawnear cuando corresponda
         if spawned < total:
-            interval = max(1e-6, float(duration) / float(total))
+            interval = max(CONF.ALG.EPS, float(duration) / float(total))
             next_spawn_time = float(start) + (spawned + 1) * interval
             if time.time() >= next_spawn_time:
                 spawned_spec = {
@@ -1396,7 +1396,7 @@ def regen_tick(hinst, entity):
         if dt <= 0.0:
             return
         duration = float(get_spec_param(hinst, "time_for_regeneration", 8.0))
-        per_sec = total / max(1e-6, duration)
+        per_sec = total / max(CONF.ALG.EPS, duration)
         inc = per_sec * dt
         prev = float(hinst.get_blackboard("regen_accum", 0.0) or 0.0)
         to_apply = min(inc, total - prev)

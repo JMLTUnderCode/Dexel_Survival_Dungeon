@@ -15,18 +15,12 @@ Convenciones
     - Path admite caminos cerrados (cíclicos) y abiertos.
     - Búsqueda local alrededor de last_param para rendimiento, con fallback a búsqueda completa.
 """
-from __future__ import annotations
 import math
+import pygame
 from typing import List, Tuple, Optional
-
-# pygame es opcional: si no está disponible, las funciones de dibujo no fallan.
-try:
-    import pygame
-except Exception:
-    pygame = None  # soporte para entornos headless
+from configs.package import CONF
 
 Vector2 = Tuple[float, float]
-
 
 # --------------------
 # Helpers matemáticos (internos)
@@ -178,7 +172,7 @@ class Path:
             frac = best_param - base
             best_param = (base % self.segment_count) + frac
         else:
-            max_param = float(self.segment_count - 1) + 1.0 - 1e-6
+            max_param = float(self.segment_count - 1) + 1.0 - CONF.ALG.EPS
             best_param = max(0.0, min(max_param, best_param))
 
         return float(best_param)
