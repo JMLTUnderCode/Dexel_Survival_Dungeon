@@ -11,7 +11,7 @@ class FollowPath:
     Atributos
         - character (Kinematic): kinematic que seguirá la ruta.
         - path (Path): objeto que representa la ruta (debe exponer get_param/get_position).
-        - path_offset (float): distancia a lo largo de la ruta para definir el objetivo.
+        - offset (float): distancia a lo largo de la ruta para definir el objetivo.
         - current_param (float): parámetro estimado actual en la ruta (se mantiene entre frames).
         - max_acceleration (float): aceleración máxima pasada al DynamicSeek.
         - dummy_target (Kinematic): target temporal usado para delegar en DynamicSeek.
@@ -28,21 +28,21 @@ class FollowPath:
         self,
         character: Kinematic,
         path: Path,
-        path_offset: float = 12.0,
+        offset: float = 12.0,
         current_param: float = 0.0,
         max_acceleration: float = 300.0,
     ) -> None:
         # 1. Guardar referencias y parámetros del comportamiento
         self.character = character
         self.path = path
-        self.path_offset = float(path_offset)
+        self.offset = float(offset)
         self.current_param = float(current_param)
         self.max_acceleration = float(max_acceleration)
 
         # 2. Preparar target temporal y delegado DynamicSeek
         self.dummy_target = Kinematic(position=(0.0, 0.0), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
         self._seek = DynamicSeek(character=self.character, target=self.dummy_target, max_acceleration=self.max_acceleration)
-
+ 
     def get_steering(self) -> SteeringOutput:
         """
         Descripción
@@ -66,8 +66,8 @@ class FollowPath:
         # 2. Actualizar current_param para la siguiente invocación
         self.current_param = float(param)
 
-        # 3. Avanzar a lo largo de la ruta usando path_offset para obtener el parámetro objetivo
-        target_param = self.current_param + self.path_offset
+        # 3. Avanzar a lo largo de la ruta usando offset para obtener el parámetro objetivo
+        target_param = self.current_param + self.offset
 
         # 4. Obtener la posición objetivo en la ruta; manejar fallo defensivamente
         try:
