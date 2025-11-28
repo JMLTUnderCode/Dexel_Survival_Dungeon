@@ -272,7 +272,9 @@ class Enemy(Kinematic):
             # 5.2 Mostrar historial HSM si existe
             if CONF.DEV.HSM and getattr(self, "behavior", None):
                 stack = self.behavior.get_active_stack()
-                if stack:
+                
+                start_y = base_y
+                if CONF.DEV.HSM_HISTORY and stack:
                     rep = " > ".join(stack)
                     hist = getattr(self, "_hsm_stack_history", [])
                     if not hist or hist[-1] != rep:
@@ -281,20 +283,20 @@ class Enemy(Kinematic):
                             hist.pop(0)
                         self._hsm_stack_history = hist
 
-                    start_y = base_y - (line_h * (len(self._hsm_stack_history) - 1))
+                    start_y -= (line_h * (len(self._hsm_stack_history) - 1))
                     for i, line in enumerate(self._hsm_stack_history):
                         ts = font.render(line, True, (255, 255, 255))
                         tw, th = ts.get_size()
                         y = int(start_y + i * line_h) - th
                         surface.blit(ts, (sx - tw // 2, y))
 
-                    # 5.2.1 Mostrar comportamiento activo en pantalla si está habilitado
-                    if CONF.DEV.ACTIVE_BEHAVIOR:
-                        behavior_text = self.behavior.get_name().upper()
-                        ts = font.render(behavior_text, True, (0, 255, 0))
-                        tw, th = ts.get_size()
-                        y = int(start_y - line_h) - th
-                        surface.blit(ts, (sx - tw // 2, y))
+                # 5.2.1 Mostrar comportamiento activo en pantalla si está habilitado
+                if CONF.DEV.ACTIVE_BEHAVIOR:
+                    behavior_text = self.behavior.get_name().upper()
+                    ts = font.render(behavior_text, True, (0, 255, 0))
+                    tw, th = ts.get_size()
+                    y = int(start_y - line_h) - th
+                    surface.blit(ts, (sx - tw // 2, y))
 
             # 5.3 Opciones de debug adicionales: colisión y paths
             if CONF.DEV.COLLISION_RECTS:
