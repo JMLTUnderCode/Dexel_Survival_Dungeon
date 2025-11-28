@@ -279,3 +279,21 @@ def make_circle_path(radius: float, center: Vector2 = (0.0, 0.0), segments: int 
         z = center[1] + math.sin(theta) * radius
         pts.append((x, z))
     return Path(pts, closed=True)
+
+class PathInstance:
+    """
+    DOCUMENTACIÓN: PATH INSTANCE
+
+    Resumen
+        Instancia de un camino (Path) para entidades que lo siguen.
+
+    Atributos
+        - path (Path): el camino asociado.
+        - offset (float): desplazamiento inicial a lo largo del camino.
+        - curr_param (float): parámetro actual sobre el camino.
+
+    """
+    def __init__(self, path: Path, offset: float = 1.0, curr_param: float = 0.0) -> None:
+        self.path = path
+        self.offset = offset
+        self.curr_param = curr_param
