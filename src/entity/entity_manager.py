@@ -1,13 +1,12 @@
 from __future__ import annotations
 import math
 import time
-import random
 import importlib
 import traceback
 from typing import Optional, List, Dict, Any
 
 from entity.kinematic import Kinematic
-from entity.entity_spec import *
+from entity.entity_spec import EntitySpec, SpawnedEntityMeta
 from entity.player import Player
 from entity.enemy import Enemy
 from map.paths import Path
@@ -21,37 +20,22 @@ class EntityManager:
     """
     Descripción
         CLASE: Gestor central de entidades del juego. Encapsula creación,
-        registro, gestión por-frame y limpieza de jugadores, enemigos y efectos.
+        registro, mantenimiento por-frame y limpieza de jugadores, enemigos y efectos.
 
     Atributos
         - player (Optional[Player]): Referencia al jugador principal.
         - enemies (List[Enemy]): Lista de enemigos activos en el mundo.
-        - pathfinder (Optional[Pathfinder]): Referencia al pathfinder usado para rutas.
-        - kills (int): Contador simple de enemigos eliminados.
-        - attack_effects (List[Dict[str, Any]]): Efectos (AOE/VFX) gestionados por el manager.
-        - _spawned_entities_meta (List[Dict[str, Any]]): Metadatos para invocados (lifetime, spawn time).
-    
-    Métodos y Funciones
-        - create_player: Fabrica y registra el jugador.
-        - create_enemy_from_data: Fabrica un enemigo completo desde un spec.
-        - spawn_enemy: Fabrica enemigos ligeros para IA (invocaciones).
-        - spawn_attack_effect: Registra efectos de ataque (visual/lógico).
-        - process_player_attacks: Aplica ondas de ataque del jugador sobre enemigos.
-        - remove_dead_enemies: Purga enemigos muertos y expira invocados por lifetime.
-        - update: Mantenimiento por-frame (debe llamarse desde game loop).
-        - clear_all: Limpia todas las colecciones internas.
-        - create_enemy_group: Construye grupo de enemigos desde datos.
-        - update_enemy_paths_to: Recalcula rutas para todos los enemigos.
+        - pathfinder (Optional[Pathfinder]): Pathfinding auxiliar para recalcular rutas.
+        - kills (int): Contador de enemigos eliminados.
+        - attack_effects (List[Dict[str, Any]]): Efectos visuales/lógicos (AOE/VFX) activos.
     """
-    def __init__(self):
-        # 1. Inicializar atributos contenedores
+    def __init__(self) -> None:
+        # 1. Inicializar contenedores y estado
         self.player: Optional[Player] = None
         self.enemies: List[Enemy] = []
         self.pathfinder: Optional[Pathfinder] = None
         self.kills: int = 0
         self.attack_effects: List[Dict[str, Any]] = []
-        # Cada meta: {"entity": Enemy, "lifetime": float, "spawned_at": float}
-        self._spawned_entities_meta: List[Dict[str, Any]] = []
 
     def create_player(self, **kwargs) -> Player:
         """
@@ -64,6 +48,7 @@ class EntityManager:
         Retorno
             - Player: instancia creada y registrada.
         """
+        # 1. Preparar valores por defecto y mezclar con overrides
         defaults = {
             "type": "oldman",
             "position": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 20, CONF.MAIN_WIN.RENDER_TILE_SIZE * 30),
@@ -71,36 +56,35 @@ class EntityManager:
             "max_speed": 250,
         }
         config = {**defaults, **kwargs}
-        # Crear player y registrar
+
+        # 2. Crear la instancia del player y guardarla en el manager
         self.player = Player(**config)
         return self.player
 
     def create_enemy_from_data(self, spec: EntitySpec, target: Optional[Kinematic] = None) -> Enemy:
         """
         Descripción
-            MÉTODO: Fabrica un enemigo completo a partir de una especificación.
-        
+            MÉTODO: Fabrica un enemigo completo a partir de una especificación tipada (EntitySpec).
+
         Argumentos
-            - enemy_data (dict): Especificación completa del enemigo (keys: type, position, collider_box, algorithm, ...).
+            - spec (EntitySpec): Especificación tipada del enemigo a crear.
             - target (Optional[Kinematic]): Target para la entidad (por defecto self.player).
-        
+
         Retorno
             - Enemy: instancia creada y añadida a self.enemies.
         """
-        # 1. Default target fallback
+        # 1. Resolver target por defecto (player)
         if target is None:
             target = self.player
 
-        # 2. Instanciar Enemy usando campos provistos
-        enemy = Enemy(
-            target=target,
-            spec=spec
-        )
+        # 2. Instanciar Enemy pasando la spec
+        enemy = Enemy(target=target, spec=spec)
 
-        # 3. Attach behavior if provided (resolve string names)
+        # 3. Resolver y enlazar behavior si la spec lo define
         behavior_spec = spec.behavior
         if behavior_spec:
             try:
+                # 3.1 Si behavior es string intentar resolver desde data.enemies (compatibilidad)
                 if isinstance(behavior_spec, str):
                     try:
                         data_mod = importlib.import_module("data.enemies")
@@ -108,17 +92,20 @@ class EntityManager:
                         if resolved is not None:
                             behavior_spec = resolved
                     except Exception:
-                        # best-effort resolution, continue if fails
+                        # best-effort resolution, continuar si falla
                         pass
+
+                # 3.2 Construir Behavior usando el builder central
                 enemy.behavior = Behavior.from_spec(behavior_spec, enemy, self)
                 if enemy.behavior is None:
-                    print(f"[EntityManager] Behavior.from_spec returned None for enemy '{enemy.type}'")
+                    print(f"[EntityManager] Behavior.from_spec returned None for enemy '{getattr(enemy, 'type', 'unknown')}'")
             except Exception as exc:
-                print(f"[EntityManager] Error building behavior for enemy '{enemy.type}': {exc}")
+                # 3.3 Capturar errores para no romper loop de creación
+                print(f"[EntityManager] Error building behavior for enemy '{getattr(enemy, 'type', 'unknown')}': {exc}")
                 print(traceback.format_exc())
                 enemy.behavior = None
 
-        # 4. Registrar y retornar
+        # 4. Registrar la entidad en la lista y retornar
         self.enemies.append(enemy)
         return enemy
 
@@ -126,16 +113,17 @@ class EntityManager:
         """
         Descripción
             MÉTODO: Registrar y retornar un efecto de ataque (AOE / VFX).
-        
+
         Argumentos
             - effect_name (str): Identificador del efecto.
-            - position (tuple): Posición (x,z) donde se crea el efecto.
+            - position (tuple[float, float]): Posición (x,z) donde se crea el efecto.
             - radius (float): Radio del efecto.
             - kwargs: Parámetros adicionales guardados en el efecto.
-        
+
         Retorno
             - dict: Representación del efecto creado.
         """
+        # 1. Construir la estructura del efecto con marca de tiempo
         try:
             effect = {
                 "name": effect_name,
@@ -144,9 +132,12 @@ class EntityManager:
                 "created_at": time.time(),
                 **kwargs
             }
+
+            # 2. Registrar y devolver
             self.attack_effects.append(effect)
             return effect
         except Exception as exc:
+            # 3. Manejo de error defensivo
             print(f"[EntityManager.spawn_attack_effect] Error: {exc}")
             return {}
 
@@ -154,17 +145,20 @@ class EntityManager:
         """
         Descripción
             MÉTODO: Procesa las ondas de ataque del jugador y aplica daño a enemigos dentro del radio.
-        
-        Blackboard/estado usado
-            - player.attack_waves (read): colección de ondas pendientes.
+
+        Argumentos
+            - Ninguno
+
+        Blackboard utilizado/modificado
+            - player.attack_waves (read): colección de ondas pendientes del jugador.
         """
-        # 1. Validaciones rápidas
+        # 1. Validaciones rápidas: requiere player y enemigos
         if not self.player:
             return
         if not self.enemies:
             return
 
-        # 2. Iterar ondas y aplicar daño por proximidad
+        # 2. Iterar sobre las ondas activas y aplicar daño por proximidad
         for wave in list(self.player.attack_waves):
             if not getattr(wave, "applied", False):
                 wx, wz = wave.x, wave.z
@@ -175,36 +169,47 @@ class EntityManager:
                     ex, ez = enemy.get_pos()
                     dist = math.hypot(ex - wx, ez - wz)
                     if dist <= r:
+                        # 2.1 Calcular daño y aplicarlo (defensivo ante excepciones)
                         dmg = 0.20 * getattr(enemy, "max_health", 100.0)
                         try:
                             enemy.take_damage(dmg)
                         except Exception:
                             enemy.health = max(0.0, getattr(enemy, "health", 0.0) - dmg)
-                
-                wave.mark_applied()
+
+                # 2.2 Marcar onda como aplicada
+                try:
+                    wave.mark_applied()
+                except Exception:
+                    wave.applied = True
 
     def remove_dead_enemies(self) -> None:
         """
         Descripción
             MÉTODO: Purga enemigos muertos y expira invocados por su `lifetime`.
-        
+
+        Argumentos
+            - Ninguno
+
         Detalle
-            - Revisa self._spawned_entities_meta para expirar entidades invocadas por lifetime.
-            - Llama a die() si existe; si no, marca alive=False.
-            - Elimina de self.enemies las entidades no vivas y actualiza self.kills.
+            - Recorre self.enemies, invoca die() si un invocado excede su lifetime y elimina
+              las entidades no vivas, incrementando contador de kills.
         """
         try:
             now = time.time()
 
-            # 1. Expirar invocados por lifetime
-            for enemy in self.enemies:
-                if getattr(enemy, "spawn_meta", None):
-                    lifetime = enemy.spawn_meta.lifetime
-                    spawned_at = enemy.spawn_meta.spawned_at
-                    if lifetime > 0.0 and (now - spawned_at) >= lifetime:
-                        enemy.die()
+            # 1. Expirar invocados por lifetime (spawn_meta)
+            for enemy in list(self.enemies):
+                spawn_meta: Optional[SpawnedEntityMeta] = getattr(enemy, "spawn_meta", None)
+                if spawn_meta:
+                    lifetime = getattr(spawn_meta, "lifetime", 0.0)
+                    spawned_at = getattr(spawn_meta, "spawned_at", 0.0)
+                    if lifetime and lifetime > 0.0 and (now - spawned_at) >= lifetime:
+                        try:
+                            enemy.die()
+                        except Exception:
+                            enemy.alive = False
 
-            # 2. Remover enemigos muertos de la lista principal
+            # 2. Filtrar la lista de enemigos, actualizar contador de bajas
             alive_list: List[Enemy] = []
             for e in self.enemies:
                 if getattr(e, "alive", True):
@@ -219,30 +224,41 @@ class EntityManager:
         """
         Descripción
             MÉTODO: Elimina todas las entidades gestionadas y resetea contadores.
+
+        Argumentos
+            - Ninguno
         """
+        # 1. Resetear referencias y colecciones
         self.player = None
         self.enemies.clear()
         self.attack_effects.clear()
-        self._spawned_entities_meta.clear()
         self.kills = 0
 
     def create_enemy_group(self, group_key: str, group_type: str) -> None:
         """
         Descripción
             MÉTODO: Crea un grupo de enemigos a partir de datos preconfigurados.
-        
+
         Argumentos
             - group_key (str): clave del grupo en los datos.
             - group_type (str): "map" o "alg" para seleccionar dataset.
         """
+        # 1. Limpiar lista actual de enemigos antes de poblar
         self.enemies.clear()
+
+        # 2. Seleccionar dataset correcto según tipo y clave
         enemy_group_data = []
         if group_type == "map" and group_key in MAP_ENEMIES_DATA:
             enemy_group_data = MAP_ENEMIES_DATA[group_key]
-        if group_type == "alg" and group_key in ALGORITHM_ENEMIES_DATA:
+        elif group_type == "alg" and group_key in ALGORITHM_ENEMIES_DATA:
             enemy_group_data = ALGORITHM_ENEMIES_DATA[group_key]
+
+        # 3. Iterar y crear cada enemigo usando create_enemy_from_data
         for enemy_data in enemy_group_data:
-            self.create_enemy_from_data(enemy_data)
+            try:
+                self.create_enemy_from_data(enemy_data)
+            except Exception as exc:
+                print(f"[EntityManager.create_enemy_group] Failed to create enemy: {exc}")
 
     def update_enemy_paths_to(self, target_pos: tuple[float, float]) -> None:
         """
@@ -250,8 +266,9 @@ class EntityManager:
             MÉTODO: Recalcula y asigna un nuevo Path a todos los enemigos.
 
         Argumentos
-            - target_pos (tuple): posición objetivo (x,z).
+            - target_pos (tuple[float,float]): posición objetivo (x,z).
         """
+        # 1. Para cada enemigo sin behavior, recalcular path hacia target_pos usando pathfinder
         for enemy in list(self.enemies):
             if getattr(enemy, "behavior", None) is None:
                 start = enemy.get_pos()
@@ -260,6 +277,7 @@ class EntityManager:
                 pts = self.pathfinder.find_path(start, target_pos)
                 if not pts:
                     continue
+                # 2. Crear objeto Path y asignarlo a la instancia follow_path si existe
                 poly = Path(pts, closed=False)
                 if getattr(enemy, "follow_path", None):
                     enemy.follow_path.path = poly
