@@ -61,7 +61,7 @@ class MapConfig:
     LEVELS: dict = field(default_factory=lambda: dict(MAP.LEVELS))
 
 @dataclass
-class AlgorithmConfig:
+class AlgorithmConfigType:
     ALGORITHM: ALG.ALGORITHM = ALG.ALGORITHM
     EPS: float = ALG.EPS
 
@@ -110,7 +110,7 @@ class Config:
     PLAYER: PlayerConfig
     ENEMY: EnemyConfig
     MAP: MapConfig
-    ALG: AlgorithmConfig
+    ALG: AlgorithmConfigType
     ALG_UI: AlgorithmUIConfig
     MAP_UI: MapUIConfig
 
@@ -121,7 +121,7 @@ class Config:
         self.PLAYER = PlayerConfig()
         self.ENEMY = EnemyConfig()
         self.MAP = MapConfig()
-        self.ALG = AlgorithmConfig()
+        self.ALG = AlgorithmConfigType()
         self.ALG_UI = AlgorithmUIConfig()
         self.MAP_UI = MapUIConfig()
 

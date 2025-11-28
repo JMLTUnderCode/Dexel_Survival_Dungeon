@@ -1,4 +1,4 @@
-from algorithms.algorithms_configs import AlgorithmConfigs
+from algorithms.algorithms_configs import AlgorithmConfigType
 from dataclasses import dataclass
 from typing import Optional, Dict
 
@@ -31,7 +31,7 @@ class EntitySpec:
     initial_position: tuple[float, float]
     collider_box: tuple[float, float]
     initial_algorithm: str
-    alg_configs: Dict[str, AlgorithmConfigs]
+    alg_configs: Dict[str, AlgorithmConfigType]
     statistics: Stats = None
     behavior: Optional[str] = None
     spawn_meta: Optional[SpawnedEntityMeta] = None
