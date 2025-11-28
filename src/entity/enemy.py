@@ -1,8 +1,9 @@
 import math
 import pygame
-from typing import Union
+from typing import Union, Dict
+
 from entity.kinematic import Kinematic, SteeringOutput, KinematicSteeringOutput
-from entity.entity_spec import *
+from entity.entity_spec import EntitySpec
 from algorithms.kinematic_seek import KinematicSeek
 from algorithms.kinematic_flee import KinematicFlee
 from algorithms.kinematic_arrive import KinematicArrive
@@ -22,76 +23,67 @@ from entity.animation import Animation, load_animations, set_animation_state
 from ai.behavior import Behavior
 from configs.package import CONF
 
+
 class Enemy(Kinematic):
     """
-    Clase que representa un enemigo que persigue al jugador.
-    
-    Atributos:
-        - type: tipo de enemigo (puede usarse para diferentes sprites o comportamientos)
-        - position: posición inicial del enemigo (x, y)
-        - collider_box: dimensiones de la caja de colisión del enemigo (ancho, alto)
-        - target: referencia al objeto target (objetivo a seguir)
-        - algorithm: algoritmo de búsqueda cinemática ("ARRIVE" o "SEEK")
-        - max_speed: velocidad máxima del enemigo
-        - target_radius_dist: radio de llegada al objetivo
-        - slow_radius_dist: radio de desaceleración
-        - target_radius_deg: umbral objetivo de aliniación (radianes)
-        - slow_radius_deg: umbral de inicio de desaceleración (radianes)
-        - time_to_target: tiempo para alcanzar el objetivo
-        - max_acceleration: aceleración máxima permitida (unidades/segundo²)
-        - max_rotation: velocidad angular máxima (radianes/segundo)
-        - max_angular_accel: aceleración angular máxima (radianes/segundo²)
-        - max_prediction: tiempo máximo de predicción para Pursue/Evade
-        - path: camino a seguir (objeto Path)
-        - path_offset: puntos de offset para el seguimiento del camino
+    Descripción
+        CLASE: Representa un enemigo del juego que combina cinemática, algoritmos de movimiento
+        y una máquina de estados de alto nivel (HSM / Behavior).
 
-    Algoritmos:
-        - KinematicSeek: Persigue al objetivo de manera directa.
-        - KinematicFlee: Huye del objetivo.
-        - KinematicArrive: Llega suavemente al objetivo.
-        - KinematicWander: Se mueve aleatoriamente.
-        - DynamicSeek: Persigue al objetivo con aceleración.
-        - DynamicFlee: Huye del objetivo con aceleración.
-        - DynamicArrive: Llega suavemente al objetivo con aceleración.
-        - DynamicWander: Se mueve aleatoriamente con aceleración.
-        - Align: Alinea la orientación con el objetivo.
-        - VelocityMatch: Igualar la velocidad con el objetivo.
-        - Pursue: Persigue al objetivo anticipando su movimiento.
-        - Evade: Huye del objetivo anticipando su movimiento.
-        - Face: Gira para mirar al objetivo.
-        - LookWhereYoureGoing: Gira en la dirección del movimiento.
-        - PathFollow: Sigue un camino predefinido.
+    Atributos
+        - target (Kinematic): referencia al objetivo (normalmente el jugador).
+        - behavior (Behavior | None): instancia de la HSM asociada (si existe).
+        - animations (dict[str, Animation]): animaciones cargadas por estado.
+        - current_animation (Animation): animación actualmente activa.
+        - collider_box (tuple[int,int]): dimensiones de la caja de colisión.
+        - algorithm (Enum|str): algoritmo de movimiento activo.
+        - max_speeds_for_alg (Dict[str, float]): mapeo algoritmo -> max_speed (cuando aplica).
+        - propiedades algorítmicas: atributos como kinematic_seek, dynamic_seek, pursue, follow_path, etc.
+    
+    Métodos y Funciones
+        - draw(surface, camera_x, camera_z): renderiza el enemigo y elementos debug.
+        - draw_collision_box(surface, camera_x, camera_z): dibuja la caja de colisión para debug.
+        - update(collision_rects, dt): actualiza AI, calcula steering y aplica cinemática.
+    
+    Propósito
+        - Encapsular la lógica visual, física y de IA de un enemigo, permitiendo que la HSM
+          cambie el algoritmo en tiempo de ejecución y que la entidad tenga instancias
+          específicas por algoritmo con sus propias configuraciones.
     """
     def __init__(self, target: Kinematic, spec: EntitySpec) -> None:
+        # 1. Inicializar la parte kinemática base usando la spec
         super().__init__(
-            position=spec.initial_position, 
-            orientation=0.0, 
-            velocity=(0,0), 
+            position=spec.initial_position,
+            orientation=0.0,
+            velocity=(0, 0),
             rotation=0.0,
             statistics=spec.statistics,
-            spawn_meta=spec.spawn_meta
+            spawn_meta=spec.spawn_meta,
         )
+
+        # 2. Guardar referencias y carga de recursos visuales
         self.target: Kinematic = target
-        
-        # Instanciar atributos de animación
         self.state = CONF.ENEMY.ACTIONS.MOVE
-        self.animations : dict[str, Animation] = load_animations(
-            dir=CONF.ENEMY.FOLDER, 
-            type=spec.sprite.name, 
-            states_anims=CONF.ENEMY.ACTIONS, 
-            w_tile=CONF.ENEMY.TILE_WIDTH, 
+        self.animations: Dict[str, Animation] = load_animations(
+            dir=CONF.ENEMY.FOLDER,
+            type=spec.sprite.name,
+            states_anims=CONF.ENEMY.ACTIONS,
+            w_tile=CONF.ENEMY.TILE_WIDTH,
             h_tile=CONF.ENEMY.TILE_HEIGHT,
             frame_duration=spec.sprite.frame_duration,
-            scale=spec.sprite.scale
+            scale=spec.sprite.scale,
         )
-        self.current_animation : Animation = self.animations[self.state]
+        self.current_animation: Animation = self.animations[self.state]
         self.collider_box = spec.collider_box
 
-        # Comportamiento AI (Behavior) adjunto, si existe
+        # 3. Preparar HSM/Behavior (se asignará tras la creación por EntityManager si aplica)
         self.behavior: Behavior | None = None
 
+        # 4. Preparar estructura para máximas por algoritmo y registrar algoritmo inicial
         self.max_speeds_for_alg: Dict[str, float] = {}
         self.algorithm = spec.initial_algorithm
+
+        # 5. Instanciar únicamente los algoritmos configurados en la spec
         for alg_name, alg_config in spec.alg_configs.items():
             match alg_name:
                 case CONF.ALG.ALGORITHM.SEEK_KINEMATIC:
@@ -233,131 +225,135 @@ class Enemy(Kinematic):
                     self.path_offset = alg_config.path_offset
                     self.temp_follow_path: FollowPath | None = None         # Para caminos temporales y mantener original.
 
-    def draw(self, surface: pygame.Surface, camera_x: float, camera_z: float):
+    def draw(self, surface: pygame.Surface, camera_x: float, camera_z: float) -> None:
         """
-        Dibuja el enemigo en pantalla, rotando el sprite hacia el jugador.
-        La posición se ajusta por la cámara para renderizar correctamente en el viewport.
+        Descripción
+            MÉTODO: Dibuja el enemigo en la pantalla aplicando rotación y debug overlays.
+
+        Argumentos
+            - surface (pygame.Surface): Superficie destino donde se dibuja.
+            - camera_x (float): posición x de la cámara.
+            - camera_z (float): posición z/de eje Y de la cámara.
         """
+        # 1. Calcular posición en pantalla relativa a la cámara
         sx = self.position[0] - camera_x
         sz = self.position[1] - camera_z
-        # Dibujar frame del enemigo en pantalla.
+
+        # 2. Rotar el frame actual según la orientación del enemigo
         deg = -math.degrees(self.orientation) - 90
         frame = self.current_animation.get_frame()
         rotated = pygame.transform.rotate(frame, deg)
         rect = rotated.get_rect(center=(sx, sz))
+
+        # 3. Dibujar el sprite rotado en la surface
         surface.blit(rotated, rect)
 
-        # Dibujar barra de vida
+        # 4. Dibujar la barra de vida encima del sprite (método heredado en Kinematic)
         self.draw_life_bar(surface, camera_x, camera_z)
 
+        # 5. Debug overlays condicionales según configuración
         if CONF.DEV.DEBUG:
             if not hasattr(self.__class__, "_dev_font") or self.__class__._dev_font is None:
                 self.__class__._dev_font = pygame.font.SysFont("Segoe UI", 20, bold=True)
             font = self.__class__._dev_font
             anim_h = self.current_animation.get_size()[1]
-            # calcular offset inicial (arriba del sprite)
             base_y = sz - (anim_h // 2) - 40
-            # altura de línea (usar medida de fuente)
             _, line_h = font.size("Mg")
 
-            # Mostrar arriba del sprite el algoritmo activo en VERDE, NEGRITA y MAYÚSCULAS
-            # Cachear la fuente en la clase para no recrearla cada frame
+            # 5.1 Mostrar algoritmo activo si está habilitado
             if CONF.DEV.ACTIVE_ALG:
-                # self.algorithm puede ser un Enum o string; obtener representación en mayúsculas
                 start_y = base_y + (line_h * 2)
-                alg_text = (
-                    self.algorithm.value.upper()
-                    if hasattr(self.algorithm, "value")
-                    else str(self.algorithm).upper()
-                )
+                alg_text = self.algorithm.value.upper() if hasattr(self.algorithm, "value") else str(self.algorithm).upper()
                 ts = font.render(alg_text, True, (0, 255, 0))
                 tw, th = ts.get_size()
                 y = int(start_y - line_h) - th
                 surface.blit(ts, (sx - tw // 2, y))
 
-            # Mostrar la máquina de estados jerárquica (HSM) en pantalla
-            # Mantenemos una cola (MAX_HSM_HISTORY_SIZE) de snapshots de la pila activa para mostrar
-            # la secuencia: el más antiguo arriba y el más reciente abajo.
+            # 5.2 Mostrar historial HSM si existe
             if CONF.DEV.HSM and getattr(self, "behavior", None):
                 stack = self.behavior.get_active_stack()
                 if stack:
-                    # representación textual completa de la pila activa (root -> ... -> leaf)
                     rep = " > ".join(stack)
-
-                    # historial persistente por entidad: lista oldest..newest
                     hist = getattr(self, "_hsm_stack_history", [])
-                    # sólo añadir si cambió respecto al último elemento
                     if not hist or hist[-1] != rep:
                         hist.append(rep)
-                        # limitar tamaño a MAX_HSM_HISTORY_SIZE (drop oldest)
                         if len(hist) > CONF.DEV.MAX_HSM_HISTORY_SIZE:
                             hist.pop(0)
-                        # almacenar de vuelta
                         self._hsm_stack_history = hist
 
-                    # dibujar líneas: oldest arriba, newest abajo
-                    # desplazar hacia arriba para que la lista no salga del sprite
                     start_y = base_y - (line_h * (len(self._hsm_stack_history) - 1))
                     for i, line in enumerate(self._hsm_stack_history):
                         ts = font.render(line, True, (255, 255, 255))
                         tw, th = ts.get_size()
                         y = int(start_y + i * line_h) - th
                         surface.blit(ts, (sx - tw // 2, y))
-                    
-                    # Mostrar arriba del sprite el comportamiento activo en ROJO, NEGRITA y MAYÚSCULAS
-                    # Cachear la fuente en la clase para no recrearla cada frame
+
+                    # 5.2.1 Mostrar comportamiento activo en pantalla si está habilitado
                     if CONF.DEV.ACTIVE_BEHAVIOR:
-                        # self.algorithm puede ser un Enum o string; obtener representación en mayúsculas
                         behavior_text = self.behavior.get_name().upper()
                         ts = font.render(behavior_text, True, (0, 255, 0))
                         tw, th = ts.get_size()
                         y = int(start_y - line_h) - th
                         surface.blit(ts, (sx - tw // 2, y))
 
+            # 5.3 Opciones de debug adicionales: colisión y paths
             if CONF.DEV.COLLISION_RECTS:
                 self.draw_collision_box(surface, camera_x, camera_z)
 
             if CONF.DEV.PATHFOLLOWER and hasattr(self, "follow_path") and self.follow_path is not None:
                 path = getattr(self.follow_path, "path", None)
                 if path is not None:
-                    # Path.draw espera surface, camera_x, camera_z, opcionales...
-                    path.draw(surface, camera_x, camera_z, color=(0,255,0), width=2)
+                    path.draw(surface, camera_x, camera_z, color=(0, 255, 0), width=2)
 
-            if CONF.DEV.TEMP_PATHFOLLOWER and hasattr(self, "temp_follow_path") and self.temp_follow_path is not None:
+            if CONF.DEV.TEMP_PATHFOLLOWER and getattr(self, "temp_follow_path", None) is not None:
                 path = getattr(self.temp_follow_path, "path", None)
                 if path is not None:
-                    # Path.draw espera surface, camera_x, camera_z, opcionales...
-                    path.draw(surface, camera_x, camera_z, color=(0,0,255), width=2)
+                    path.draw(surface, camera_x, camera_z, color=(0, 0, 255), width=2)
 
-    def draw_collision_box(self, surface: pygame.Surface, camera_x: float, camera_z: float):
+    def draw_collision_box(self, surface: pygame.Surface, camera_x: float, camera_z: float) -> None:
         """
-        Dibuja el cuadro de colisión del enemigo para depuración.
+        Descripción
+            MÉTODO: Dibuja la caja de colisión del enemigo para depuración.
+
+        Argumentos
+            - surface (pygame.Surface): Superficie destino.
+            - camera_x (float): posición x de la cámara.
+            - camera_z (float): posición z de la cámara.
         """
+        # 1. Calcular posición relativa
         sx = self.position[0] - camera_x
         sz = self.position[1] - camera_z
+
+        # 2. Construir rectángulo de colisión y dibujarlo en verde
         enemy_box = pygame.Rect(
             int(sx - self.collider_box[0] // 2),
             int(sz - self.collider_box[1] // 2),
             int(self.collider_box[0]),
-            int(self.collider_box[1])
+            int(self.collider_box[1]),
         )
-        pygame.draw.rect(surface, (0, 255, 0), enemy_box, 1)  # Verde, grosor 1
+        pygame.draw.rect(surface, (0, 255, 0), enemy_box, 1)
 
-    def update(self, collision_rects: list[pygame.Rect], dt: float):
+    def update(self, collision_rects: list[pygame.Rect], dt: float) -> None:
         """
-        Actualiza la posición, velocidad y orientación del enemigo para perseguir al jugador.
-        Utiliza el algoritmo de movimiento especificado en "algorithm" para calcular el steering adecuado.
+        Descripción
+            MÉTODO: Actualiza la entidad por frame. Ejecuta la HSM (si existe), calcula
+            el steering según el algoritmo activo y aplica la cinemática correspondiente.
+
+        Argumentos
+            - collision_rects (list[pygame.Rect]): rectángulos de colisión del mapa.
+            - dt (float): delta time en segundos desde la última actualización.
         """
+        # 1. Ejecutar tick de la HSM si existe (proteger con try/except)
         if getattr(self, "behavior", None) is not None:
             try:
                 self.behavior.tick(dt)
             except Exception:
-                # no queremos que un fallo en la IA rompa el update principal
+                # 1.1 No permitir que una excepción en la IA rompa el update global
                 pass
 
-        # Calcular el steering según el algoritmo seleccionado
+        # 2. Seleccionar y obtener el steering según el algoritmo activo
         steering: Union[SteeringOutput, KinematicSteeringOutput] = SteeringOutput(linear=(0, 0), angular=0)
-        match (self.algorithm):
+        match self.algorithm:
             case CONF.ALG.ALGORITHM.SEEK_KINEMATIC:
                 steering = self.kinematic_seek.get_steering()
             case CONF.ALG.ALGORITHM.FLEE_KINEMATIC:
@@ -388,26 +384,22 @@ class Enemy(Kinematic):
             case CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING:
                 steering_lwyg = self.look_where.get_steering()
                 steering_evade = self.evade.get_steering()
-                # Combinar ambos steerings: usar linear de evade y angular de lwyg
-                steering = SteeringOutput(
-                    linear=steering_evade.linear,
-                    angular=steering_lwyg.angular
-                )
+                steering = SteeringOutput(linear=steering_evade.linear, angular=steering_lwyg.angular)
             case CONF.ALG.ALGORITHM.PATH_FOLLOWING:
                 steering = self.follow_path.get_steering()
             case CONF.ALG.ALGORITHM.TEMP_PATH_FOLLOWING:
                 steering = self.temp_follow_path.get_steering()
 
-        # Aplicar el steering y actualizar la cinemática
+        # 3. Aplicar el steering resultante y actualizar la cinemática
         if isinstance(steering, SteeringOutput):
-            max_speed = self.max_speeds_for_alg[self.algorithm] if self.algorithm in self.max_speeds_for_alg else 100.0
+            max_speed = self.max_speeds_for_alg.get(self.algorithm, 100.0)
+            # 3.1 Algoritmos de orientación aplican sobre angular (ej. Align/Face)
             if self.algorithm in (CONF.ALG.ALGORITHM.ALIGN, CONF.ALG.ALGORITHM.FACE):
                 set_animation_state(self, CONF.ENEMY.ACTIONS.ATTACK_WOUNDED)
-                # Align devuelve angular steering; para align la parte linear suele ser (0,0)
                 if steering.angular != 0.0:
-                    # aplicar como aceleración angular
                     self.update_by_dynamic(steering, max_speed, dt, collision_rects, self.collider_box, self.algorithm)
             else:
+                # 3.2 Movimiento lineal: animación MOVE o ATTACK según vector linear
                 if steering.linear != (0, 0):
                     set_animation_state(self, CONF.ENEMY.ACTIONS.MOVE)
                     self.update_by_dynamic(steering, max_speed, dt, collision_rects, self.collider_box, self.algorithm)
@@ -415,10 +407,12 @@ class Enemy(Kinematic):
                     set_animation_state(self, CONF.ENEMY.ACTIONS.ATTACK)
 
         elif isinstance(steering, KinematicSteeringOutput):
+            # 3.3 Salida kinemática: aplicar update_by_kinematic si hay velocidad
             if steering.velocity != (0, 0):
                 set_animation_state(self, CONF.ENEMY.ACTIONS.MOVE)
                 self.update_by_kinematic(steering, dt, collision_rects, self.collider_box, self.algorithm)
             else:
                 set_animation_state(self, CONF.ENEMY.ACTIONS.ATTACK)
 
-        self.current_animation.update(dt)      # Actualizar animación
+        # 4. Actualizar animación actual con el dt
+        self.current_animation.update(dt)
