@@ -47,8 +47,10 @@ import time
 from typing import Dict, Callable, Any, List, Optional
 
 from entity.kinematic import Kinematic, SteeringOutput
-from algorithms.path_following import FollowPath
 from entity.animation import set_animation_state
+from entity.entity_spec import *
+from algorithms.path_following import FollowPath
+from algorithms.algorithms_configs import *
 from map.paths import Path
 from configs.package import CONF
 
@@ -164,7 +166,7 @@ def start_random_patrol(hinst, entity):
             entity.follow_path = FollowPath(
                 character=entity,
                 path=poly,
-                path_offset=getattr(entity, "path_offset", 1.0),
+                offset=getattr(entity, "path_offset", 1.0),
                 current_param=0.0,
                 max_acceleration=getattr(entity, "max_acceleration", 300.0)
             )
@@ -866,7 +868,7 @@ def start_guardian_patrol(hinst, entity):
             entity.follow_path = FollowPath(
                 character=entity,
                 path=original,
-                path_offset=float(get_spec_param(hinst, "path_offset", getattr(entity, "path_offset", 1.0))),
+                offset=getattr(entity, "path_offset", 1.0),
                 current_param=float(start_param),
                 max_acceleration=getattr(entity, "max_acceleration", 300.0)
             )
@@ -958,11 +960,10 @@ def return_to_protection_zone(hinst, entity):
 
         # limpiar follow_path regular para priorizar temp_follow_path
         entity.follow_path = None
-        temp_offset = min(float(get_spec_param(hinst, "path_offset", getattr(entity, "path_offset", 1.0))), 1.0)
         entity.temp_follow_path = FollowPath(
             character=entity,
             path=poly,
-            path_offset=temp_offset,
+            offset=getattr(entity, "path_offset", 1.0),
             current_param=start_param,
             max_acceleration=getattr(entity, "max_acceleration", 300.0)
         )
@@ -1084,12 +1085,11 @@ def start_return_to_boss_position(hinst, entity):
         # 5) Construir Path y FollowPath temporal y asignarlo a la entidad
         poly = Path(pts, closed=False)
         start_param = poly.get_param(entity.get_pos(), 0.0)
-        temp_offset = float(get_spec_param(hinst, "path_offset", getattr(entity, "path_offset", 1.0)))
         entity.follow_path = None
         entity.temp_follow_path = FollowPath(
             character=entity,
             path=poly,
-            path_offset=temp_offset,
+            offset= getattr(entity, "path_offset", 1.0),
             current_param=start_param,
             max_acceleration=getattr(entity, "max_acceleration", 300.0)
         )
@@ -1249,27 +1249,42 @@ def invocation_tick(hinst, entity):
             interval = max(CONF.ALG.EPS, float(duration) / float(total))
             next_spawn_time = float(start) + (spawned + 1) * interval
             if time.time() >= next_spawn_time:
-                spawned_spec = {
-                    "type": "gargant-soldier",
-                    "algorithm": CONF.ALG.ALGORITHM.PURSUE,
-                    "behavior": None,
-                    "lifetime": timeout
-                }
-                spawned_ref = None
+                sx, sz = entity.get_pos()
+                spawned_pos = (float(sx + random.uniform(-CONF.ENEMY.TILE_WIDTH, CONF.ENEMY.TILE_WIDTH)), 
+                               float(sz + random.uniform(-CONF.ENEMY.TILE_HEIGHT, CONF.ENEMY.TILE_HEIGHT)))
+                spawned_spec = EntitySpec(
+                    id=spawned + 1,
+                    sprite=Sprite(name="gargant-soldier"),
+                    initial_position=spawned_pos,
+                    collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
+                    initial_algorithm=CONF.ALG.ALGORITHM.PURSUE,
+                    alg_configs={
+                        CONF.ALG.ALGORITHM.PURSUE: PursueConfig(
+                            max_speed=120.0,
+                            target_radius_dist=40.0,
+                            slow_radius_dist=160.0,
+                            time_to_target=0.15,
+                            max_acceleration=300.0,
+                            max_prediction=0.5
+                        ),
+                    },
+                    statistics=Stats(alive=True, health=100.0,),
+                    spawn_meta=SpawnedEntityMeta(
+                        lifetime=timeout,
+                        spawned_at=time.time()
+                    )
+                )
+                
                 try:
-                    if mgr and getattr(mgr, "spawn_enemy", None):
-                        spawned_ref = mgr.spawn_enemy(spawned_spec, entity)
-                    else:
-                        spawned_ref = spawned_spec
+                    spawned_ref = mgr.create_enemy_from_data(spawned_spec, target=get_player(hinst))
+                    arr = hinst.get_blackboard("invocation_entities", []) or []
+                    arr.append(spawned_ref)
+                    hinst.set_blackboard("invocation_entities", arr)
+                    hinst.set_blackboard("invocation_spawned_count", spawned + 1)
+                    hinst.set_blackboard("invocation_last_spawn_at", time.time())
                 except Exception as e:
                     exception_print("INVOCATION SPAWN", entity, f"spawn error: {e}")
-                    spawned_ref = spawned_spec
 
-                arr = hinst.get_blackboard("invocation_entities", []) or []
-                arr.append(spawned_ref)
-                hinst.set_blackboard("invocation_entities", arr)
-                hinst.set_blackboard("invocation_spawned_count", spawned + 1)
-                hinst.set_blackboard("invocation_last_spawn_at", time.time())
     except Exception as e:
         exception_print("INVOCATION TICK", entity, str(e))
 
