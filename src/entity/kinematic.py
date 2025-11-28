@@ -1,268 +1,382 @@
-import pygame
 import math
-from typing import Tuple
-from entity.entity_spec import *
+import pygame
+from typing import Tuple, List, Optional
+from entity.entity_spec import Stats, SpawnedEntityMeta
 from configs.package import CONF
 
+# 2. Algoritmos que usan orientación explícita (lista de claves de algoritmo)
 ALGORITHM_USE_ROTATION = [
-    "PLAYER", 
+    "PLAYER",
     CONF.ALG.ALGORITHM.WANDER_KINEMATIC,
     CONF.ALG.ALGORITHM.WANDER_DYNAMIC,
-    CONF.ALG.ALGORITHM.ALIGN, 
-    CONF.ALG.ALGORITHM.FACE, 
-    CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING, 
+    CONF.ALG.ALGORITHM.ALIGN,
+    CONF.ALG.ALGORITHM.FACE,
+    CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING,
     CONF.ALG.ALGORITHM.VELOCITY_MATCH,
 ]
 
 class SteeringOutput:
     """
-    Representa la salida de steering con componentes lineales y angulares.
-    Atributos:
-        linear: tupla (ax, ay) representando la aceleración lineal en x e y
-        angular: aceleración angular en radianes
+    Descripción
+        CLASE: Representa la salida de steering con componentes lineal y angular.
+
+    Atributos
+        - linear (tuple[float,float]): vector de aceleración lineal (ax, az).
+        - angular (float): aceleración angular en radianes.
     """
-    def __init__(self, linear=(0, 0), angular=0.0):
-        self.linear = linear    # Aceleracion lineal en x e y
-        self.angular = angular  # Aceleracion angular en radianes
+    def __init__(self, linear: Tuple[float, float] = (0.0, 0.0), angular: float = 0.0) -> None:
+        # 1. Inicializar componentes de salida
+        self.linear: Tuple[float, float] = (float(linear[0]), float(linear[1]))
+        self.angular: float = float(angular)
 
 class KinematicSteeringOutput:
     """
-    Representa la salida de steering cinemático con componentes de velocidad y rotación.
-    Atributos:
-        velocity: tupla (vx, vz) representando la velocidad en x, z
-        rotation: velocidad angular en radianes
+    Descripción
+        CLASE: Representa la salida cinemática (velocidad y rotación).
+
+    Atributos
+        - velocity (tuple[float,float]): velocidad objetivo (vx, vz).
+        - rotation (float): velocidad angular objetivo en radianes.
     """
-    def __init__(self, velocity=(0, 0), rotation=0.0):
-        self.velocity = velocity  # Velocidad en x, z
-        self.rotation = rotation  # Velocidad angular en radianes
+    def __init__(self, velocity: Tuple[float, float] = (0.0, 0.0), rotation: float = 0.0) -> None:
+        # 1. Inicializar la velocidad y rotación objetivo
+        self.velocity: Tuple[float, float] = (float(velocity[0]), float(velocity[1]))
+        self.rotation: float = float(rotation)
 
 class Kinematic:
     """
-    Clase base para entidades con movimiento y colisiones.
-    Atributos:
-        position: tupla (x, y) representando la posición en píxeles
-        orientation: ángulo en radianes representando la orientación
-        velocity: tupla (vx, vy) representando la velocidad en píxeles/segundo
-        rotation: velocidad angular en radianes/segundo
-    """
-    def __init__(self, position=(0, 0), orientation=0.0, velocity=(0, 0), rotation=0.0, statistics: Stats = None, spawn_meta: SpawnedEntityMeta = None):
-        self.position = position        # Posicion (x, y)
-        self.orientation = orientation  # Orientacion en radianes
-        self.velocity = velocity        # Velocidad de desplazamiento en x e y.
-        self.rotation = rotation        # Velocidad de rotacion
+    Descripción
+        CLASE: Base para entidades con movimiento y colisiones.
 
+    Atributos
+        - position (tuple[float,float]): posición (x, z) en píxeles.
+        - orientation (float): orientación en radianes.
+        - velocity (tuple[float,float]): velocidad actual (vx, vz).
+        - rotation (float): velocidad angular.
+        - alive (bool): indicador de vida.
+        - max_health (float): salud máxima.
+        - health (float): salud actual.
+        - spawn_meta (Optional[SpawnedEntityMeta]): metadatos de spawn/invocación.
+        - node_location: nodo de navmesh asociado (opcional).
+    
+    Métodos y Funciones
+        - take_damage: aplica daño y marca la entidad muerta si corresponde.
+        - is_alive: retorna si la entidad está viva.
+        - die: hook por defecto para marcar entidad como muerta.
+        - is_a_collision: verifica colisión contra rectángulos del mapa.
+        - validate_movement: intenta mover respetando colisiones (total / parcial).
+        - update_by_kinematic: aplica movimiento kinemático (velocity, rotation).
+        - update_by_dynamic: aplica movimiento basado en aceleraciones (steering).
+        - new_orientation: calcula orientación desde un vector de velocidad.
+        - get_pos: retorna la posición actual.
+        - draw_life_bar: dibuja la barra de vida sobre el sprite.
+    
+    Propósito
+        - Proveer utilidades compartidas por Player y Enemy para actualización física y colisiones.
+    """
+    def __init__(
+        self,
+        position: Tuple[float, float] = (0.0, 0.0),
+        orientation: float = 0.0,
+        velocity: Tuple[float, float] = (0.0, 0.0),
+        rotation: float = 0.0,
+        statistics: Optional[Stats] = None,
+        spawn_meta: Optional[SpawnedEntityMeta] = None,
+    ) -> None:
+        # 1. Inicializar estado cinemático básico
+        self.position: Tuple[float, float] = (float(position[0]), float(position[1]))
+        self.orientation: float = float(orientation)
+        self.velocity: Tuple[float, float] = (float(velocity[0]), float(velocity[1]))
+        self.rotation: float = float(rotation)
+
+        # 2. Inicializar estadísticas (si se proporcionan) o valores por defecto
         self.alive: bool = statistics.alive if statistics else True
         self.max_health: float = statistics.health if statistics else 100.0
         self.health: float = self.max_health
-        self.max_mana: float = statistics.mana if statistics else 100.0
+        self.max_mana: float = statistics.mana if statistics and statistics.mana is not None else 100.0
         self.mana: float = self.max_mana
-        self.max_armor: float = statistics.armor if statistics else 100.0
+        self.max_armor: float = statistics.armor if statistics and statistics.armor is not None else 0.0
         self.armor: float = self.max_armor
-        self.max_mele_dmg: float = statistics.mele_dmg if statistics else 20.0
+        self.max_mele_dmg: float = statistics.mele_dmg if statistics and statistics.mele_dmg is not None else 20.0
         self.mele_dmg: float = self.max_mele_dmg
-        self.max_mele_cooldown: float = statistics.mele_cooldown if statistics else 3.0
+        self.max_mele_cooldown: float = statistics.mele_cooldown if statistics and statistics.mele_cooldown is not None else 3.0
         self.mele_cooldown: float = self.max_mele_cooldown
-        self.max_range_dmg: float = statistics.range_dmg if statistics else 25.0
+        self.max_range_dmg: float = statistics.range_dmg if statistics and statistics.range_dmg is not None else 25.0
         self.range_dmg: float = self.max_range_dmg
-        self.max_range_cooldown: float = statistics.range_cooldown if statistics else 3.5
+        self.max_range_cooldown: float = statistics.range_cooldown if statistics and statistics.range_cooldown is not None else 3.5
         self.range_cooldown: float = self.max_range_cooldown
 
-        self.spawn_meta: SpawnedEntityMeta | None = spawn_meta
+        # 3. Metadatos de spawn (si aplica)
+        self.spawn_meta: Optional[SpawnedEntityMeta] = spawn_meta
 
-        # Nodo del NavMesh donde se encuentra actualmente la entidad (NavMeshNode o node id).
-        # Debe inicializarse cuando la entidad se crea (p. ej. EntityManager.create_player/create_enemy_from_data)
-        # o puede permanecer None (se buscará la primera vez).
+        # 4. Nodo del NavMesh donde se encuentra la entidad (puede permanecer None)
         self.node_location = None
 
     def take_damage(self, amount: float) -> float:
         """
-        Aplica `amount` de daño (valor absoluto) a esta entidad.
-        Retorna la vida actual tras aplicar el daño.
+        Descripción
+            MÉTODO: Aplica `amount` de daño a la entidad y marca vivencia.
+        
+        Argumentos
+            - amount (float): cantidad de daño a aplicar (valor absoluto).
+        
+        Retorno
+            - float: vida restante después de aplicar el daño.
         """
+        # 1. No aplicar daño si ya está muerto
         if not self.alive:
             return self.health
-        self.health = max(0.0, self.health - amount)
+
+        # 2. Reducir la vida y comprobar si alcanza 0
+        self.health = max(0.0, self.health - float(amount))
         if self.health <= 0.0:
             self.alive = False
             try:
-                # hook que cada subclase puede implementar
+                # 3. Llamada a hook para subclases que quieran extender comportamiento
                 self.die()
             except Exception:
+                # 4. Ignorar errores en hooks de subclases para evitar romper el flujo
                 pass
         return self.health
 
     def is_alive(self) -> bool:
+        """
+        Descripción
+            FUNCIÓN: Indica si la entidad está viva.
+        
+        Argumentos
+            - Ninguno
+        
+        Retorno
+            - bool: True si la entidad está viva, False en caso contrario.
+        """
         return bool(self.alive)
 
     def die(self) -> None:
         """
-        Hook por defecto: marca como no vivo. Subclases pueden sobreescribir para efectos.
+        Descripción
+            MÉTODO: Hook por defecto al morir; marca la entidad como no viva.
+        
+        Argumentos
+            - Ninguno
         """
+        # 1. Marcar entidad como no viva
         self.alive = False
 
     def is_a_collision(
-        self, 
-        pos: tuple[float, float],
-        collision_rects: list[pygame.Rect], 
-        collider_box: tuple[int, int]
+        self,
+        pos: Tuple[float, float],
+        collision_rects: Optional[List[pygame.Rect]],
+        collider_box: Tuple[int, int],
     ) -> bool:
         """
-        Verifica si la posición actual colisiona con algún rectángulo de colisión.
-        Retorna True si hay colisión, False si no.
-        Usa un rectángulo centrado en la posición actual con dimensiones de collider_box.
-        """
-        if collision_rects is None:
-            return False  # Sin colisiones si no hay rectángulos
+        Descripción
+            FUNCIÓN: Verifica si la posición dada colisiona con alguno de los rectángulos provistos.
         
-        pos_x, pos_z = pos
-        # Bounding box del personaje en coordenadas de mapa
+        Argumentos
+            - pos (tuple[float,float]): posición (x, z) a validar.
+            - collision_rects (Optional[List[pygame.Rect]]): lista de rectángulos del mapa.
+            - collider_box (tuple[int,int]): dimensiones de la caja de colisión (w, h).
+        
+        Retorno
+            - bool: True si hay colisión, False si no.
+        """
+        # 1. Si no hay rectángulos de colisión, no hay colisión
+        if collision_rects is None:
+            return False
+
+        # 2. Construir rectángulo centrado en la posición propuesta
+        pos_x, pos_z = float(pos[0]), float(pos[1])
         box_collider = pygame.Rect(
             int(pos_x - collider_box[0] // 2),
             int(pos_z - collider_box[1] // 2),
-            collider_box[0],
-            collider_box[1]
+            int(collider_box[0]),
+            int(collider_box[1]),
         )
 
+        # 3. Comprobar intersección con cualquiera de los rectángulos
         for col_rect in collision_rects:
             if box_collider.colliderect(col_rect):
-                return True  # Colisión detectada
-        return False  # Sin colisiones
+                return True
+        return False
 
     def validate_movement(
-        self, 
-        new_pos: tuple[float, float], 
-        pos: tuple[float, float],
-        collision_rects: list[pygame.Rect], 
-        collider_box: tuple[int, int]
+        self,
+        new_pos: Tuple[float, float],
+        pos: Tuple[float, float],
+        collision_rects: Optional[List[pygame.Rect]],
+        collider_box: Tuple[int, int],
     ) -> None:
         """
-        Valida el movimiento del objeto en función de las colisiones.
-        Intenta mover a new_pos; si colisiona, intenta solo en X o solo en Z.
+        Descripción
+            MÉTODO: Valida y aplica el movimiento intentando evitar colisiones.
+            Intenta movimiento completo, luego solo en X, luego solo en Z.
+        
+        Argumentos
+            - new_pos (tuple[float,float]): posición propuesta (x, z).
+            - pos (tuple[float,float]): posición actual (x, z).
+            - collision_rects (Optional[List[pygame.Rect]]): rectángulos de colisión del mapa.
+            - collider_box (tuple[int,int]): dimensiones del collider.
         """
-        new_x, new_z = new_pos
-        x, z = pos
-        # 1. Intentar movimiento completo
-        if not self.is_a_collision(new_pos, collision_rects, collider_box):
-            self.position = new_pos
-        else:
-            # 2. Intentar solo en X
-            if not self.is_a_collision((new_x, z), collision_rects, collider_box):
-                self.position = (new_x, z)
-            # 3. Intentar solo en Y
-            elif not self.is_a_collision((x, new_z), collision_rects, collider_box):
-                self.position = (x, new_z)
-            # 4. Si no puede moverse, no cambia posición
+        # 1. Intentar movimiento completo y aplicar si no colisiona
+        new_x, new_z = float(new_pos[0]), float(new_pos[1])
+        x, z = float(pos[0]), float(pos[1])
+        if not self.is_a_collision((new_x, new_z), collision_rects, collider_box):
+            self.position = (new_x, new_z)
+            return
+
+        # 2. Intentar mover solo en X
+        if not self.is_a_collision((new_x, z), collision_rects, collider_box):
+            self.position = (new_x, z)
+            return
+
+        # 3. Intentar mover solo en Z
+        if not self.is_a_collision((x, new_z), collision_rects, collider_box):
+            self.position = (x, new_z)
+            return
+
+        # 4. Si no puede moverse, mantener posición actual (no cambiar)
 
     def update_by_kinematic(
-        self, 
-        steering: KinematicSteeringOutput, 
-        time: float, 
-        collision_rects: list[pygame.Rect], 
-        collider_box: tuple[int, int], 
-        algorithm: str
+        self,
+        steering: KinematicSteeringOutput,
+        time: float,
+        collision_rects: Optional[List[pygame.Rect]],
+        collider_box: Tuple[int, int],
+        algorithm: str,
     ) -> None:
         """
-        Actualiza la posición y orientación del objeto usando el steering proporcionado.
-        No considera aceleración, solo mueve según velocity y rotation. Respeta las colisiones.
-        """
-        # Actualizar posición y orientación según la entrada de control
-        x, z = self.position
-        vx, vz = steering.velocity
-
-        # Propuesta de nueva posición
-        new_x = x + vx * time
-        new_z = z + vz * time
-
-        # Validar movimiento con colisiones
-        self.validate_movement((new_x, new_z), self.position, collision_rects, collider_box)
+        Descripción
+            MÉTODO: Actualiza posición y orientación usando salida kinemática (velocity + rotation).
         
-         # Actualizar orientación
+        Argumentos
+            - steering (KinematicSteeringOutput): salida que contiene velocity y rotation.
+            - time (float): delta time en segundos.
+            - collision_rects (Optional[List[pygame.Rect]]): rects para validar colisiones.
+            - collider_box (tuple[int,int]): dimensiones del collider.
+            - algorithm (str): identificador del algoritmo activo (para decidir rotación).
+        """
+        # 1. Calcular nueva posición a partir de la velocidad
+        x, z = float(self.position[0]), float(self.position[1])
+        vx, vz = float(steering.velocity[0]), float(steering.velocity[1])
+
+        new_x = x + vx * float(time)
+        new_z = z + vz * float(time)
+
+        # 2. Validar movimiento y aplicar la mejor opción permitida
+        self.validate_movement((new_x, new_z), (x, z), collision_rects, collider_box)
+
+        # 3. Actualizar orientación: depende si el algoritmo usa rotación explícita
         if algorithm in ALGORITHM_USE_ROTATION:
-            self.orientation += steering.rotation * time
+            self.orientation += float(steering.rotation) * float(time)
         else:
-            self.orientation = self.newOrientation(self.orientation, steering.velocity)
-            
+            # 3.1 Si no usa rotación explícita, orientar según la velocidad actual
+            self.orientation = self.new_orientation(self.orientation, steering.velocity)
 
     def update_by_dynamic(
-        self, 
-        steering: SteeringOutput, 
-        maxSpeed: float, 
-        time: float, 
-        collision_rects: list[pygame.Rect], 
-        collider_box: tuple[int, int],
-        algorithm: str
+        self,
+        steering: SteeringOutput,
+        max_speed: float,
+        time: float,
+        collision_rects: Optional[List[pygame.Rect]],
+        collider_box: Tuple[int, int],
+        algorithm: str,
     ) -> None:
         """
-        Actualiza la posición, orientación, velocidad y rotación del objeto
-        usando el steering proporcionado, respetando las colisiones.
-        """
-        # Actualizar posición
-        x, z = self.position
-        vx, vz = self.velocity
-
-        # Propuesta de nueva posición
-        new_x = x + vx * time
-        new_z = z + vz * time
-
-        # Validar movimiento con colisiones
-        self.validate_movement((new_x, new_z), self.position, collision_rects, collider_box)
+        Descripción
+            MÉTODO: Actualiza posición, orientación, velocidad y rotación usando aceleraciones.
         
-        # Actualizar orientación
+        Argumentos
+            - steering (SteeringOutput): aceleraciones linear y angular.
+            - max_speed (float): velocidad máxima permitida para la entidad.
+            - time (float): delta time en segundos.
+            - collision_rects (Optional[List[pygame.Rect]]): rectángulos para colisión.
+            - collider_box (tuple[int,int]): dimensiones del collider.
+            - algorithm (str): identificador del algoritmo activo.
+        """
+        # 1. Aplicar integración simple para posición
+        x, z = float(self.position[0]), float(self.position[1])
+        vx, vz = float(self.velocity[0]), float(self.velocity[1])
+
+        new_x = x + vx * float(time)
+        new_z = z + vz * float(time)
+
+        # 2. Validar movimiento y aplicar
+        self.validate_movement((new_x, new_z), (x, z), collision_rects, collider_box)
+
+        # 3. Actualizar orientación
         if algorithm in ALGORITHM_USE_ROTATION:
-            self.orientation += self.rotation * time
+            self.orientation += float(self.rotation) * float(time)
         else:
-            self.orientation = self.newOrientation(self.orientation, self.velocity)
+            self.orientation = self.new_orientation(self.orientation, self.velocity)
 
-        # Actualizar velocidad
+        # 4. Integrar velocidad y rotación usando steering
         self.velocity = (
-            self.velocity[0] + steering.linear[0] * time,
-            self.velocity[1] + steering.linear[1] * time
+            self.velocity[0] + steering.linear[0] * float(time),
+            self.velocity[1] + steering.linear[1] * float(time),
         )
-        # Actualizar rotación
-        self.rotation += steering.angular * time
+        self.rotation += float(steering.angular) * float(time)
 
-        # Limitar la velocidad a la máxima permitida
+        # 5. Limitar la velocidad a max_speed
         speed = math.hypot(self.velocity[0], self.velocity[1])
-        if speed > maxSpeed:
-            # Normalizar la velocidad y escalar a maxSpeed
-            scale = maxSpeed / speed
+        if speed > float(max_speed) and speed > 0.0:
+            scale = float(max_speed) / speed
             self.velocity = (self.velocity[0] * scale, self.velocity[1] * scale)
 
-    def newOrientation(self, current_orientation: float, velocity: Tuple[float, float]) -> float:
+    def new_orientation(self, current_orientation: float, velocity: Tuple[float, float]) -> float:
         """
-        Calcula y devuelve la nueva orientación (ángulo en radianes) a partir de la dirección del vector velocity.
+        Descripción
+            FUNCIÓN: Calcula la nueva orientación (radianes) basada en el vector de velocity.
 
-        - Si velocity == (0,0): devuelve current_orientation (sin cambios).
-        - Se usa math.atan2(vy, vx) para obtener el ángulo en radianes en el rango [-pi, pi].
+        Argumentos
+            - current_orientation (float): orientación actual en radianes.
+            - velocity (tuple[float,float]): vector de velocidad (vx, vz).
+
+        Retorno
+            - float: nueva orientación en radianes.
         """
-        if velocity == (0, 0):
+        # 1. Si no hay velocidad, mantener orientación actual
+        if velocity == (0.0, 0.0):
             return current_orientation
-        return math.atan2(velocity[1], velocity[0])
-    
-    def get_pos(self) -> tuple[float, float]:
-        """Devuelve la posición actual del objeto como una tupla (x, z)."""
+        # 2. Calcular ángulo con atan2 (y luego devolver en radianes)
+        return math.atan2(float(velocity[1]), float(velocity[0]))
+
+    def get_pos(self) -> Tuple[float, float]:
+        """
+        Descripción
+            FUNCIÓN: Retorna la posición actual de la entidad.
+
+        Argumentos
+            - Ninguno
+
+        Retorno
+            - tuple[float,float]: (x, z) posición en píxeles.
+        """
         return self.position
 
     def draw_life_bar(self, surface: pygame.Surface, camera_x: float, camera_z: float) -> None:
         """
-        Dibuja la barra de vida encima del sprite en la superficie dada.
-        Atributos:
-            - surface: superficie de Pygame donde se dibuja la barra
-            - camera_x: posición X de la cámara (esquina superior izquierda)
-            - camera_z: posición Z de la cámara (esquina superior izquierda)
+        Descripción
+            MÉTODO: Dibuja la barra de vida sobre el sprite en la superficie indicada.
+
+        Argumentos
+            - surface (pygame.Surface): superficie de destino.
+            - camera_x (float): coordenada X de la cámara.
+            - camera_z (float): coordenada Z de la cámara.
         """
-        # Dibujar barra de vida encima del sprite
+        # 1. Calcular coordenadas de pantalla relativas a la cámara
         sx = int(self.position[0] - camera_x)
         sz = int(self.position[1] - camera_z)
+
+        # 2. Dimensiones de la barra y posición sobre el sprite
         bar_w = 74
         bar_h = 14
         bar_x = sx - bar_w // 2
-        bar_y = sz - (self.current_animation.get_size()[1] // 2) - 12
-        # fondo (gris)
+        bar_y = sz - (getattr(self, "current_animation", None).get_size()[1] // 2 if getattr(self, "current_animation", None) else 0) - 12
+
+        # 3. Dibujar fondo, barra de vida y borde
         pygame.draw.rect(surface, (50, 50, 50), (bar_x, bar_y, bar_w, bar_h))
-        # vida (verde)
-        hp_ratio = max(0.0, min(1.0, self.health / self.max_health))
+        hp_ratio = max(0.0, min(1.0, getattr(self, "health", 0.0) / max(1.0, getattr(self, "max_health", 1.0))))
         fill_w = int(bar_w * hp_ratio)
         pygame.draw.rect(surface, (0, 200, 0), (bar_x, bar_y, fill_w, bar_h))
-        # borde
-        pygame.draw.rect(surface, (0,0,0), (bar_x, bar_y, bar_w, bar_h), 1)
+        pygame.draw.rect(surface, (0, 0, 0), (bar_x, bar_y, bar_w, bar_h), 1)
