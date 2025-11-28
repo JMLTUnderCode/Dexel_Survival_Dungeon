@@ -1,5 +1,5 @@
 import pygame
-from data.enemies import list_of_enemies_data
+from data.algorithm_enemies import ALGORITHM_ENEMIES_DATA
 from configs.package import CONF
 from entity.entity_manager import EntityManager
 
@@ -73,7 +73,7 @@ class EnemySet:
 
     def _build_buttons(self):
         """Construye la lista de rectángulos para los botones de la UI."""
-        button_keys = list(list_of_enemies_data.keys())
+        button_keys = list(ALGORITHM_ENEMIES_DATA.keys())
         CONF.ALG_UI.BUTTONS.clear()
         y = CONF.ALG_UI.PADDING + 48
         for k in button_keys:

@@ -1,5 +1,5 @@
 import pygame
-from data.enemies import map_levels_enemies_data
+from data.map_enemies import MAP_ENEMIES_DATA
 from configs.package import CONF
 
 class MapSet:
@@ -73,7 +73,7 @@ class MapSet:
 
     def _build_buttons(self):
         """Construye la lista de rectángulos para los botones de la UI."""
-        button_keys = list(map_levels_enemies_data.keys())
+        button_keys = list(MAP_ENEMIES_DATA.keys())
         CONF.MAP_UI.BUTTONS.clear()
         y = CONF.MAP_UI.PADDING + 48
         for k in button_keys:
