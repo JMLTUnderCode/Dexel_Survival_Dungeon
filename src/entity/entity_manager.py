@@ -7,12 +7,14 @@ import traceback
 from typing import Optional, List, Dict, Any
 
 from entity.kinematic import Kinematic
+from entity.entity_spec import *
 from entity.player import Player
 from entity.enemy import Enemy
-from data.enemies import list_of_enemies_data, map_levels_enemies_data
 from map.paths import Path
 from map.pathfinder import Pathfinder
 from ai.behavior import Behavior
+from data.map_enemies import MAP_ENEMIES_DATA
+from data.algorithm_enemies import ALGORITHM_ENEMIES_DATA
 from configs.package import CONF
 
 class EntityManager:
@@ -73,7 +75,7 @@ class EntityManager:
         self.player = Player(**config)
         return self.player
 
-    def create_enemy_from_data(self, enemy_data: dict, target: Optional[Kinematic] = None) -> Enemy:
+    def create_enemy_from_data(self, spec: EntitySpec, target: Optional[Kinematic] = None) -> Enemy:
         """
         Descripción
             MÉTODO: Fabrica un enemigo completo a partir de una especificación.
@@ -91,27 +93,12 @@ class EntityManager:
 
         # 2. Instanciar Enemy usando campos provistos
         enemy = Enemy(
-            type=enemy_data["type"],
-            position=enemy_data["position"],
-            collider_box=enemy_data["collider_box"],
             target=target,
-            algorithm=enemy_data.get("algorithm"),
-            max_speed=enemy_data.get("max_speed", 120.0),
-            target_radius_dist=enemy_data.get("target_radius_dist", 40.0),
-            slow_radius_dist=enemy_data.get("slow_radius_dist", 150.0),
-            target_radius_deg=enemy_data.get("target_radius_deg", 5 * CONF.CONST.CONVERT_TO_RAD),
-            slow_radius_deg=enemy_data.get("slow_radius_deg", 60 * CONF.CONST.CONVERT_TO_RAD),
-            time_to_target=enemy_data.get("time_to_target", 0.1),
-            max_acceleration=enemy_data.get("max_acceleration", 300.0),
-            max_rotation=enemy_data.get("max_rotation", 2.0),
-            max_angular_accel=enemy_data.get("max_angular_accel", 30.0),
-            max_prediction=enemy_data.get("max_prediction", 0.25),
-            path=enemy_data.get("path"),
-            path_offset=enemy_data.get("path_offset", 1),
+            spec=spec
         )
 
         # 3. Attach behavior if provided (resolve string names)
-        behavior_spec = enemy_data.get("behavior")
+        behavior_spec = spec.behavior
         if behavior_spec:
             try:
                 if isinstance(behavior_spec, str):
@@ -134,72 +121,6 @@ class EntityManager:
         # 4. Registrar y retornar
         self.enemies.append(enemy)
         return enemy
-
-    def spawn_enemy(self, spec: dict, spawner: Optional[Kinematic] = None) -> Optional[Enemy]:
-        """
-        Descripción
-            MÉTODO: Crear y registrar un enemigo a partir de un spec ligero (usado por IA / invocaciones).
-        
-        Argumentos
-            - spec (dict): Posibles keys: type, position, algorithm, behavior, lifetime, max_speed, etc.
-            - spawner (Optional[Kinematic]): Entidad que invoca (se usa para posicionar cercano cuando position falta).
-        
-        Retorno
-            - Enemy | None: instancia creada o None en fallo.
-
-        Blackboard utilizado/modificado
-            - self._spawned_entities_meta (update): se añade meta cuando se provee lifetime.
-        """
-        try:
-            # 1. Resolver posición de spawn (cercana al spawner si es necesario)
-            pos = spec.get("position", None)
-            if pos is None and spawner is not None:
-                sx, sz = spawner.get_pos()
-                pos = (float(sx + random.uniform(-12.0, 12.0)), float(sz + random.uniform(-12.0, 12.0)))
-            if pos is None:
-                pos = (float(spec.get("fallback_x", CONF.MAIN_WIN.RENDER_TILE_SIZE * 10)),
-                       float(spec.get("fallback_z", CONF.MAIN_WIN.RENDER_TILE_SIZE * 10)))
-
-            # 2. Construir enemy_data para la fábrica principal
-            enemy_data = {
-                "type": spec.get("type", "gargant-soldier"),
-                "position": pos,
-                "collider_box": (CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
-                "algorithm": spec.get("algorithm", CONF.ALG.ALGORITHM.PURSUE),
-                "max_speed": spec.get("max_speed", 120.0),
-                "target_radius_dist": spec.get("target_radius_dist", 40.0),
-                "slow_radius_dist": spec.get("slow_radius_dist", 150.0),
-                "target_radius_deg": spec.get("target_radius_deg", 5 * CONF.CONST.CONVERT_TO_RAD),
-                "slow_radius_deg": spec.get("slow_radius_deg", 60 * CONF.CONST.CONVERT_TO_RAD),
-                "time_to_target": spec.get("time_to_target", 0.1),
-                "max_acceleration": spec.get("max_acceleration", 300.0),
-                "max_rotation": spec.get("max_rotation", 2.0),
-                "max_angular_accel": spec.get("max_angular_accel", 30.0),
-                "max_prediction": spec.get("max_prediction", 0.25),
-                "path": spec.get("path"),
-                "path_offset": spec.get("path_offset", 1),
-                "behavior": spec.get("behavior", None),
-            }
-
-            # 3. Crear enemigo y registrar metadata de lifetime si aplica
-            created = self.create_enemy_from_data(enemy_data, target=self.player)
-            lifetime = spec.get("lifetime", None)
-            if lifetime is not None and created is not None:
-                try:
-                    created.lifetime = float(lifetime)
-                    created.spawned_at = time.time()
-                    self._spawned_entities_meta.append({
-                        "entity": created,
-                        "lifetime": float(lifetime),
-                        "spawned_at": created.spawned_at
-                    })
-                except Exception:
-                    # ignore metadata errors but keep the created entity
-                    pass
-            return created
-        except Exception as exc:
-            print(f"[EntityManager.spawn_enemy] Error: {exc}")
-            return None
 
     def spawn_attack_effect(self, effect_name: str, *, position: tuple[float, float], radius: float = 0.0, **kwargs) -> Dict[str, Any]:
         """
@@ -274,24 +195,14 @@ class EntityManager:
         """
         try:
             now = time.time()
-            new_meta: List[Dict[str, Any]] = []
 
             # 1. Expirar invocados por lifetime
-            for meta in list(self._spawned_entities_meta):
-                ent = meta.get("entity")
-                lifetime = float(meta.get("lifetime", 0.0) or 0.0)
-                spawned_at = float(meta.get("spawned_at", 0.0) or 0.0)
-                if ent is None:
-                    continue
-                if lifetime > 0.0 and (now - spawned_at) >= lifetime:
-                    if getattr(ent, "die", None):
-                        ent.die()
-                    else:
-                        setattr(ent, "alive", False)
-                    # not re-append -> expired
-                else:
-                    new_meta.append(meta)
-            self._spawned_entities_meta = new_meta
+            for enemy in self.enemies:
+                if getattr(enemy, "spawn_meta", None):
+                    lifetime = enemy.spawn_meta.lifetime
+                    spawned_at = enemy.spawn_meta.spawned_at
+                    if lifetime > 0.0 and (now - spawned_at) >= lifetime:
+                        enemy.die()
 
             # 2. Remover enemigos muertos de la lista principal
             alive_list: List[Enemy] = []
@@ -326,10 +237,10 @@ class EntityManager:
         """
         self.enemies.clear()
         enemy_group_data = []
-        if group_type == "map" and group_key in map_levels_enemies_data:
-            enemy_group_data = map_levels_enemies_data[group_key]
-        if group_type == "alg" and group_key in list_of_enemies_data:
-            enemy_group_data = list_of_enemies_data[group_key]
+        if group_type == "map" and group_key in MAP_ENEMIES_DATA:
+            enemy_group_data = MAP_ENEMIES_DATA[group_key]
+        if group_type == "alg" and group_key in ALGORITHM_ENEMIES_DATA:
+            enemy_group_data = ALGORITHM_ENEMIES_DATA[group_key]
         for enemy_data in enemy_group_data:
             self.create_enemy_from_data(enemy_data)
 

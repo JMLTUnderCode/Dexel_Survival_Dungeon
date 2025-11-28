@@ -1,6 +1,7 @@
 import pygame
 import math
 from typing import Tuple
+from entity.entity_spec import *
 from configs.package import CONF
 
 ALGORITHM_USE_ROTATION = [
@@ -44,15 +45,29 @@ class Kinematic:
         velocity: tupla (vx, vy) representando la velocidad en píxeles/segundo
         rotation: velocidad angular en radianes/segundo
     """
-    def __init__(self, position=(0, 0), orientation=0.0, velocity=(0, 0), rotation=0.0):
+    def __init__(self, position=(0, 0), orientation=0.0, velocity=(0, 0), rotation=0.0, statistics: Stats = None, spawn_meta: SpawnedEntityMeta = None):
         self.position = position        # Posicion (x, y)
         self.orientation = orientation  # Orientacion en radianes
         self.velocity = velocity        # Velocidad de desplazamiento en x e y.
         self.rotation = rotation        # Velocidad de rotacion
 
-        self.max_health: float = 100.0
+        self.alive: bool = statistics.alive if statistics else True
+        self.max_health: float = statistics.health if statistics else 100.0
         self.health: float = self.max_health
-        self.alive: bool = True
+        self.max_mana: float = statistics.mana if statistics else 100.0
+        self.mana: float = self.max_mana
+        self.max_armor: float = statistics.armor if statistics else 100.0
+        self.armor: float = self.max_armor
+        self.max_mele_dmg: float = statistics.mele_dmg if statistics else 20.0
+        self.mele_dmg: float = self.max_mele_dmg
+        self.max_mele_cooldown: float = statistics.mele_cooldown if statistics else 3.0
+        self.mele_cooldown: float = self.max_mele_cooldown
+        self.max_range_dmg: float = statistics.range_dmg if statistics else 25.0
+        self.range_dmg: float = self.max_range_dmg
+        self.max_range_cooldown: float = statistics.range_cooldown if statistics else 3.5
+        self.range_cooldown: float = self.max_range_cooldown
+
+        self.spawn_meta: SpawnedEntityMeta | None = spawn_meta
 
         # Nodo del NavMesh donde se encuentra actualmente la entidad (NavMeshNode o node id).
         # Debe inicializarse cuando la entidad se crea (p. ej. EntityManager.create_player/create_enemy_from_data)
