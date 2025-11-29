@@ -46,10 +46,12 @@ import math
 import time
 from typing import Dict, Callable, Any, List, Optional
 
-from kinematics.kinematic import Kinematic, SteeringOutput
-from kinematics.path_following import FollowPath
-from characters.animation import set_animation_state
-from helper.paths import PolylinePath
+from entity.kinematic import Kinematic, SteeringOutput
+from entity.animation import set_animation_state
+from entity.entity_spec import EntitySpec, Stats, Sprite, SpawnedEntityMeta
+from algorithms.path_following import FollowPath
+import algorithms.algorithms_configs as ALG_CONF
+from map.paths import Path
 from configs.package import CONF
 
 from ai.utils import get_spec_param, get_manager, get_player, exception_print
@@ -158,13 +160,13 @@ def start_random_patrol(hinst, entity):
             hinst.set_blackboard("patrol_requested_at", time.time())
             return
 
-        # 6) Construir PolylinePath y FollowPath de forma segura
-        poly = PolylinePath(pts, closed=False)
+        # 6) Construir Path y FollowPath de forma segura
+        poly = Path(pts, closed=False)
         try:
             entity.follow_path = FollowPath(
                 character=entity,
                 path=poly,
-                path_offset=getattr(entity, "path_offset", 1.0),
+                offset=getattr(entity, "path_offset", 1.0),
                 current_param=0.0,
                 max_acceleration=getattr(entity, "max_acceleration", 300.0)
             )
@@ -835,7 +837,7 @@ def start_guardian_patrol(hinst, entity):
         - entity (Any): entidad (Enemy) que iniciará/retomará la patrulla guardian.
 
     Blackboard usado / modificado
-        - guardian_original_path (update): referencia al PolylinePath protegido.
+        - guardian_original_path (update): referencia al Path protegido.
         - is_on_guardian_path (update): marca que indica que la entidad sigue la ruta guardian.
         - is_returning_to_zone (update): limpia la marca de retorno si procede.
         - is_at_protection_zone (update): marcado inicial (False hasta verificar llegada).
@@ -866,7 +868,7 @@ def start_guardian_patrol(hinst, entity):
             entity.follow_path = FollowPath(
                 character=entity,
                 path=original,
-                path_offset=float(get_spec_param(hinst, "path_offset", getattr(entity, "path_offset", 1.0))),
+                offset=getattr(entity, "path_offset", 1.0),
                 current_param=float(start_param),
                 max_acceleration=getattr(entity, "max_acceleration", 300.0)
             )
@@ -941,8 +943,8 @@ def return_to_protection_zone(hinst, entity):
             hinst.set_blackboard("is_at_protection_zone", True)
             return
 
-        # 4) crear PolylinePath y FollowPath temporal
-        poly = PolylinePath(pts, closed=False)
+        # 4) crear Path y FollowPath temporal
+        poly = Path(pts, closed=False)
         try:
             # asegurar primer punto igual a la posición actual para continuidad
             if getattr(poly, "points", None):
@@ -958,11 +960,10 @@ def return_to_protection_zone(hinst, entity):
 
         # limpiar follow_path regular para priorizar temp_follow_path
         entity.follow_path = None
-        temp_offset = min(float(get_spec_param(hinst, "path_offset", getattr(entity, "path_offset", 1.0))), 1.0)
         entity.temp_follow_path = FollowPath(
             character=entity,
             path=poly,
-            path_offset=temp_offset,
+            offset=getattr(entity, "path_offset", 1.0),
             current_param=start_param,
             max_acceleration=getattr(entity, "max_acceleration", 300.0)
         )
@@ -1081,15 +1082,14 @@ def start_return_to_boss_position(hinst, entity):
         if not pts or len(pts) < 2:
             pts = [tuple(entity.get_pos()), target_pos]
 
-        # 5) Construir PolylinePath y FollowPath temporal y asignarlo a la entidad
-        poly = PolylinePath(pts, closed=False)
+        # 5) Construir Path y FollowPath temporal y asignarlo a la entidad
+        poly = Path(pts, closed=False)
         start_param = poly.get_param(entity.get_pos(), 0.0)
-        temp_offset = float(get_spec_param(hinst, "path_offset", getattr(entity, "path_offset", 1.0)))
         entity.follow_path = None
         entity.temp_follow_path = FollowPath(
             character=entity,
             path=poly,
-            path_offset=temp_offset,
+            offset= getattr(entity, "path_offset", 1.0),
             current_param=start_param,
             max_acceleration=getattr(entity, "max_acceleration", 300.0)
         )
@@ -1246,30 +1246,45 @@ def invocation_tick(hinst, entity):
 
         # 1) Calcular interval determinista y spawnear cuando corresponda
         if spawned < total:
-            interval = max(1e-6, float(duration) / float(total))
+            interval = max(CONF.ALG.EPS, float(duration) / float(total))
             next_spawn_time = float(start) + (spawned + 1) * interval
             if time.time() >= next_spawn_time:
-                spawned_spec = {
-                    "type": "gargant-soldier",
-                    "algorithm": CONF.ALG.ALGORITHM.PURSUE,
-                    "behavior": None,
-                    "lifetime": timeout
-                }
-                spawned_ref = None
+                sx, sz = entity.get_pos()
+                spawned_pos = (float(sx + random.uniform(-CONF.ENEMY.TILE_WIDTH, CONF.ENEMY.TILE_WIDTH)), 
+                               float(sz + random.uniform(-CONF.ENEMY.TILE_HEIGHT, CONF.ENEMY.TILE_HEIGHT)))
+                spawned_spec = EntitySpec(
+                    id=spawned + 1,
+                    sprite=Sprite(name="gargant-soldier"),
+                    initial_position=spawned_pos,
+                    collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
+                    initial_algorithm=CONF.ALG.ALGORITHM.PURSUE,
+                    alg_configs={
+                        CONF.ALG.ALGORITHM.PURSUE: ALG_CONF.PursueConfig(
+                            max_speed=120.0,
+                            target_radius_dist=40.0,
+                            slow_radius_dist=160.0,
+                            time_to_target=0.15,
+                            max_acceleration=300.0,
+                            max_prediction=0.5
+                        ),
+                    },
+                    statistics=Stats(alive=True, health=100.0,),
+                    spawn_meta=SpawnedEntityMeta(
+                        lifetime=timeout,
+                        spawned_at=time.time()
+                    )
+                )
+                
                 try:
-                    if mgr and getattr(mgr, "spawn_enemy", None):
-                        spawned_ref = mgr.spawn_enemy(spawned_spec, entity)
-                    else:
-                        spawned_ref = spawned_spec
+                    spawned_ref = mgr.create_enemy_from_data(spawned_spec, target=get_player(hinst))
+                    arr = hinst.get_blackboard("invocation_entities", []) or []
+                    arr.append(spawned_ref)
+                    hinst.set_blackboard("invocation_entities", arr)
+                    hinst.set_blackboard("invocation_spawned_count", spawned + 1)
+                    hinst.set_blackboard("invocation_last_spawn_at", time.time())
                 except Exception as e:
                     exception_print("INVOCATION SPAWN", entity, f"spawn error: {e}")
-                    spawned_ref = spawned_spec
 
-                arr = hinst.get_blackboard("invocation_entities", []) or []
-                arr.append(spawned_ref)
-                hinst.set_blackboard("invocation_entities", arr)
-                hinst.set_blackboard("invocation_spawned_count", spawned + 1)
-                hinst.set_blackboard("invocation_last_spawn_at", time.time())
     except Exception as e:
         exception_print("INVOCATION TICK", entity, str(e))
 
@@ -1396,7 +1411,7 @@ def regen_tick(hinst, entity):
         if dt <= 0.0:
             return
         duration = float(get_spec_param(hinst, "time_for_regeneration", 8.0))
-        per_sec = total / max(1e-6, duration)
+        per_sec = total / max(CONF.ALG.EPS, duration)
         inc = per_sec * dt
         prev = float(hinst.get_blackboard("regen_accum", 0.0) or 0.0)
         to_apply = min(inc, total - prev)

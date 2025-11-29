@@ -47,6 +47,7 @@ import time
 from typing import Any, Dict
 from ai.hsm import HSMInstance
 from ai.utils import get_spec_param, get_player
+from configs.package import CONF
 
 # Registro global de condiciones
 CONDITIONS: Dict[str, callable] = {}
@@ -273,7 +274,7 @@ def PlayerFar(hinst: HSMInstance, entity: Any) -> bool:
                 return False
 
         # 3) calcular safe_anchor (punto en la dirección opuesta al player a distancia safe_distance)
-        d = max(1e-5, dist)
+        d = max(CONF.ALG.EPS, dist)
         sx = ex + (dx / d) * safe_distance
         sz = ez + (dz / d) * safe_distance
         hinst.set_blackboard("safe_anchor", (float(sx), float(sz)))

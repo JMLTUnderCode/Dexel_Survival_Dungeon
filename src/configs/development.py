@@ -24,7 +24,10 @@ TEMP_PATHFOLLOWER = None
 
 HSM = None
 ACTIVE_BEHAVIOR = None
+HSM_HISTORY = None
 MAX_HSM_HISTORY_SIZE = 0
+
+PIVOTS = None
 
 env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
 if os.path.exists(env_path):
@@ -54,8 +57,12 @@ if os.path.exists(env_path):
                     HSM = extract_value_env(value)
                 case "ACTIVE_BEHAVIOR":
                     ACTIVE_BEHAVIOR = extract_value_env(value)
+                case "HSM_HISTORY":
+                    HSM_HISTORY = extract_value_env(value)
                 case "MAX_HSM_HISTORY_SIZE":
                     MAX_HSM_HISTORY_SIZE = extract_value_env(value)
+                case "PIVOTS":
+                    PIVOTS = extract_value_env(value)
 
         
 

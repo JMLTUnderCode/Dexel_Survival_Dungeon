@@ -30,7 +30,9 @@ class DevelopmentConfig:
     TEMP_PATHFOLLOWER: bool = DEV.TEMP_PATHFOLLOWER
     HSM: bool = DEV.HSM
     ACTIVE_BEHAVIOR: bool = DEV.ACTIVE_BEHAVIOR
+    HSM_HISTORY: bool = DEV.HSM_HISTORY
     MAX_HSM_HISTORY_SIZE: int = DEV.MAX_HSM_HISTORY_SIZE
+    PIVOTS: bool = DEV.PIVOTS
 
 @dataclass
 class ConstantsConfig:
@@ -46,6 +48,9 @@ class PlayerConfig:
     COLLIDER_BOX_WIDTH: int = PLAYER.COLLIDER_BOX_WIDTH
     COLLIDER_BOX_HEIGHT: int = PLAYER.COLLIDER_BOX_HEIGHT
     ACTIONS: PLAYER.ACTIONS = PLAYER.ACTIONS
+    PIVOT_MOVE_SPEED: float = PLAYER.PIVOT_MOVE_SPEED
+    PIVOT_RETURN_SPEED: float = PLAYER.PIVOT_RETURN_SPEED
+    PIVOT_EPS: float = PLAYER.PIVOT_EPS
 
 @dataclass
 class EnemyConfig:
@@ -61,8 +66,9 @@ class MapConfig:
     LEVELS: dict = field(default_factory=lambda: dict(MAP.LEVELS))
 
 @dataclass
-class AlgorithmConfig:
+class AlgorithmConfigType:
     ALGORITHM: ALG.ALGORITHM = ALG.ALGORITHM
+    EPS: float = ALG.EPS
 
 @dataclass
 class AlgorithmUIConfig:
@@ -109,7 +115,7 @@ class Config:
     PLAYER: PlayerConfig
     ENEMY: EnemyConfig
     MAP: MapConfig
-    ALG: AlgorithmConfig
+    ALG: AlgorithmConfigType
     ALG_UI: AlgorithmUIConfig
     MAP_UI: MapUIConfig
 
@@ -120,7 +126,7 @@ class Config:
         self.PLAYER = PlayerConfig()
         self.ENEMY = EnemyConfig()
         self.MAP = MapConfig()
-        self.ALG = AlgorithmConfig()
+        self.ALG = AlgorithmConfigType()
         self.ALG_UI = AlgorithmUIConfig()
         self.MAP_UI = MapUIConfig()
 

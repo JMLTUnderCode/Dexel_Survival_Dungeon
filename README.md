@@ -1,6 +1,6 @@
 # **Dexel: Survival Dungeon** 🎮
 
-Un intenso roguelike en 2D pixel donde la supervivencia depende de tu estrategia. Adéntrate en mazmorras procedurales llenas de enemigos IA y lucha por tu vida.
+Un intenso roguelike en 2D pixel donde la supervivencia depende de tu estrategia. Adéntrate en niveles de mazmorras llenas de enemigos IA y lucha por tu vida.
 
 ## Índice
 - [**Dexel: Survival Dungeon** 🎮](#dexel-survival-dungeon-)
@@ -21,10 +21,9 @@ Un intenso roguelike en 2D pixel donde la supervivencia depende de tu estrategia
 
 ## 🎯 **Características Principales**
 
-- **🔫 Combate dinámico 2D** - Control preciso con mouse y teclado
-- **🤖 IA inteligente** - Enemigos que te persiguen, flanquean y emboscan
-- **🎮 Controles fluidos** - Movimiento WASD, apuntado con mouse, recarga táctica
-- **🏰 Mazmorras procedurales** - Cada partida es única con diferentes layouts y obstáculos
+- **🔫 Combate dinámico 2D** - Control preciso con mouse y teclado.
+- **🤖 IA inteligente** - Enemigos que te persiguen, flanquean y emboscan.
+- **🎮 Controles fluidos** - Movimiento WASD y apuntado con mouse.
 - **✨ Pixel art optimizado** - Arte retro con animaciones smooth y rotaciones realistas
 
 ## 🕹️ **Cómo Jugar**
@@ -96,29 +95,58 @@ Ve a la [página oficial](https://jmltundercode.github.io/Dexel_Survival_Dungeon
 
 ```
 dexel-survival-dungeon/
-├── src/                    # Código fuente
-│   ├── main.py            # Punto de entrada
-│   ├── game/              # Módulos del juego
-│   │   ├── player.py      # Controlador del jugador
-│   │   ├── enemies/       # Sistema de IA enemiga
-│   │   ├── weapons/       # Gestión de armas y balas
-│   │   ├── dungeon/       # Generación de mazmorras
-│   │   └── assets/        # Manager de recursos
-│   └── utils/             # Utilidades
-├── assets/                # Recursos del juego
-│   ├── sprites/           # Arte pixel art
-│   ├── sounds/            # Efectos de sonido y música
-│   └── fonts/             # Fuentes del juego
-├── docs/                  # Documentación
-└── requirements.txt       # Dependencias
+├── .github/                 # Guías y workflows
+│   └── workflows/
+│       ├── pages.yml        # Deploy de sitio web.
+│       └── release.yml      # Deploy de releases.
+├── LICENSE                  # Licencia explícita del juego.
+├── play.sh                  # Ejecutar juego en windows.
+├── game                     # Ejecutar juego en Linux/Mac.
+├── requirements.txt         # Requirimientos necesarios para ejecución.
+├── src/                     # Código fuente
+│   ├── main.py              # Punto de entrada
+│   ├── game.py              # Módulo principal
+│   ├── ai/                  # Máquina de Estados (Comportamientos)
+│   │   ├── behavior.py
+│   │   ├── hsm.py
+│   │   ├── hsm_builder.py
+│   │   ├── actions.py
+│   │   └── conditions.py
+│   ├── algorithms/         # Algoritmos de movimientos, aliniamiento y seguimiendo.
+│   ├── assets/             # Tokens y assets usados para entidades, mapas y animaciones.
+│   ├── configs/            # Configuraciones generales del proyecto separadas por módulo y prósito.
+│   │   └── package.py      # Empaquetador principal de configuraciones.
+│   ├── data/               # Especificaciones y datos
+│   │   └── enemies.py      # Definición de estadísticas de enemigos.
+│   ├── entity/             # Entidades definidas dentro del juego.
+│   │   ├── kinematic.py
+│   │   ├── enemy.py
+│   │   ├── player.py
+│   │   ├── animation.py
+│   │   └── entity_manager.py
+│   ├── map/                # Mapa, caminos, malla de navegación y buscador de camino óptimo.
+│   │   ├── map.py
+│   │   ├── navmesh.py
+│   │   ├── pathfinder.py
+│   │   └── paths.py
+│   ├── ui/                 # UI para debugging y pruebas.
+│   │   ├── enemy_set.py
+│   │   └── map_set.py
+│   └── utils/              # Utilidad de búsqueda de archivos en diferentes sistemas.
+├── tools/                  # Herramientas de chequeo.
+│   └── ai_unused_finder.py # Búscador de elementos sin usar en la AI.
+└── web/                    # Sitio web
+    ├── index.html
+    └── index.css
 ```
 
 ## 🎨 **Tecnologías Utilizadas**
 
 - **Python 3.8+** - Lenguaje principal
 - **Pygame 2.5.0** - Motor gráfico y de audio
-- **NumPy** - Cálculos matemáticos para IA y física
-- **PyInstaller** - Empaquetado para distribución
+- **NumPy 2.3.4** - Cálculos matemáticos para IA y física
+- **PyInstaller 6.16.0** - Empaquetado para distribución
+- **matplotlib 3.10.7** - Dibujado y posicionamiento en figuras.
 
 ## 🤝 **Contribuir**
 
