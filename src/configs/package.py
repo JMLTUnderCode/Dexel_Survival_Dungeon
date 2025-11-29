@@ -33,6 +33,7 @@ class DevelopmentConfig:
     HSM_HISTORY: bool = DEV.HSM_HISTORY
     MAX_HSM_HISTORY_SIZE: int = DEV.MAX_HSM_HISTORY_SIZE
     PIVOTS: bool = DEV.PIVOTS
+    TACTICAL_TYPES: bool = DEV.TACTICAL_TYPES
 
 @dataclass
 class ConstantsConfig:

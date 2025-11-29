@@ -264,13 +264,19 @@ class Game:
         if self.game_map:
             self.game_map.draw(self.game_surface, self.camera_x, self.camera_z, self.camera_width, self.camera_height)
 
-        # 2. DEBUG: dibujar el nodo actual de cada entidad (bordes)
-        if CONF.DEV.DEBUG and CONF.DEV.NODE_LOCATION and self.game_map and self.game_map.navmesh:
-            for entity in self.entity_manager.enemies + ([self.entity_manager.player] if self.entity_manager.player else []):
-                node = getattr(entity, "node_location", None)
-                if node and getattr(node, "polygon", None):
-                    pts = [(int(p[0] - self.camera_x), int(p[1] - self.camera_z)) for p in node.polygon]
-                    pygame.draw.polygon(self.game_surface, (255, 0, 0), pts, 2)
+        # 2. DEBUGS
+        if CONF.DEV.DEBUG:
+            # 2.1 Dibujar localización de nodos si está activo
+            if CONF.DEV.NODE_LOCATION and self.game_map and self.game_map.navmesh:
+                for entity in self.entity_manager.enemies + ([self.entity_manager.player] if self.entity_manager.player else []):
+                    node = getattr(entity, "node_location", None)
+                    if node and getattr(node, "polygon", None):
+                        pts = [(int(p[0] - self.camera_x), int(p[1] - self.camera_z)) for p in node.polygon]
+                        pygame.draw.polygon(self.game_surface, (255, 0, 0), pts, 2)
+            
+            # 2.2 Dibujar tipos tácticos de nodos si está activo
+            if CONF.DEV.TACTICAL_TYPES and self.game_map and self.game_map.navmesh:
+                self.game_map.navmesh.draw_tactical_types(self.game_surface, self.camera_x, self.camera_z)
 
         # 3. Dibujar enemigos
         for enemy in self.entity_manager.enemies:
