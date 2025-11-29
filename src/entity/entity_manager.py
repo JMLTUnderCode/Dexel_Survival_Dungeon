@@ -6,11 +6,12 @@ import traceback
 from typing import Optional, List, Dict, Any
 
 from entity.kinematic import Kinematic
-from entity.entity_spec import EntitySpec, SpawnedEntityMeta
+from entity.entity_spec import *
 from entity.player import Player
 from entity.enemy import Enemy
 from map.paths import Path
 from map.pathfinder import Pathfinder
+from algorithms.algorithms_configs import *
 from ai.behavior import Behavior
 from data.map_enemies import MAP_ENEMIES_DATA
 from data.algorithm_enemies import ALGORITHM_ENEMIES_DATA
@@ -37,28 +38,45 @@ class EntityManager:
         self.kills: int = 0
         self.attack_effects: List[Dict[str, Any]] = []
 
-    def create_player(self, **kwargs) -> Player:
+    def create_player(self) -> Player:
         """
         Descripción
             MÉTODO: Crear y registrar la instancia del jugador.
 
         Argumentos
-            - kwargs (dict): Parámetros opcionales para el constructor del jugador.
+            - Ninguno
 
         Retorno
             - Player: instancia creada y registrada.
         """
-        # 1. Preparar valores por defecto y mezclar con overrides
-        defaults = {
-            "type": "oldman",
-            "position": (CONF.MAIN_WIN.RENDER_TILE_SIZE * 20, CONF.MAIN_WIN.RENDER_TILE_SIZE * 30),
-            "collider_box": (CONF.PLAYER.COLLIDER_BOX_WIDTH, CONF.PLAYER.COLLIDER_BOX_HEIGHT),
-            "max_speed": 250,
-        }
-        config = {**defaults, **kwargs}
+        # 1. Preparar datos del player
+        player_data = EntitySpec(
+            id=1,
+            sprite=Sprite(name="oldman"),
+            initial_position=(CONF.MAIN_WIN.RENDER_TILE_SIZE * 20, CONF.MAIN_WIN.RENDER_TILE_SIZE * 30),
+            collider_box=(CONF.PLAYER.COLLIDER_BOX_WIDTH, CONF.PLAYER.COLLIDER_BOX_HEIGHT),
+            initial_algorithm=CONF.ALG.ALGORITHM.FACE,
+            alg_configs={
+                CONF.ALG.ALGORITHM.ARRIVE_DYNAMIC: DynamicArriveConfig(
+                    max_speed=140.0,
+                    target_radius_dist=40.0,
+                    slow_radius_dist=160.0,
+                    time_to_target=0.1,
+                    max_acceleration=300.0
+                ),
+                CONF.ALG.ALGORITHM.FACE: FaceConfig(
+                    target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
+                    slow_radius_deg=60 * CONF.CONST.CONVERT_TO_RAD,
+                    time_to_target=0.1,
+                    max_rotation=2.0,
+                    max_angular_accel=30.0
+                ),
+            },
+            statistics=Stats(alive=True, health=100.0,)
+        )
 
         # 2. Crear la instancia del player y guardarla en el manager
-        self.player = Player(**config)
+        self.player = Player(player_data)
         return self.player
 
     def create_enemy_from_data(self, spec: EntitySpec, target: Optional[Kinematic] = None) -> Enemy:
