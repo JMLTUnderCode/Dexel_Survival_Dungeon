@@ -1,6 +1,6 @@
-from entity.entity_spec import *
+from entity.entity_spec import EntitySpec, Stats, Sprite
 from .paths import PathsData
-from algorithms.algorithms_configs import *
+import algorithms.algorithms_configs as ALG_CONF
 from configs.package import CONF
 
 # Para Kinematic Seek
@@ -13,7 +13,7 @@ enemy_seek_kinematic = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.SEEK_KINEMATIC,
         alg_configs={
-            CONF.ALG.ALGORITHM.SEEK_KINEMATIC: KinematicSeekConfig(
+            CONF.ALG.ALGORITHM.SEEK_KINEMATIC: ALG_CONF.KinematicSeekConfig(
                 max_speed=120.0,
             ),
         },
@@ -31,7 +31,7 @@ enemy_flee_kinematic = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.FLEE_KINEMATIC,
         alg_configs={
-            CONF.ALG.ALGORITHM.FLEE_KINEMATIC: KinematicFleeConfig(
+            CONF.ALG.ALGORITHM.FLEE_KINEMATIC: ALG_CONF.KinematicFleeConfig(
                 max_speed=100.0,
             ),
         },
@@ -51,7 +51,7 @@ enemy_arrive_kinematic = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.ARRIVE_KINEMATIC,
         alg_configs={
-            CONF.ALG.ALGORITHM.ARRIVE_KINEMATIC: KinematicArriveConfig(
+            CONF.ALG.ALGORITHM.ARRIVE_KINEMATIC: ALG_CONF.KinematicArriveConfig(
                 max_speed=120.0,
                 target_radius_dist=40.0,
                 time_to_target=1.2,
@@ -72,7 +72,7 @@ enemy_wander_kinematic = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.WANDER_KINEMATIC,
         alg_configs={
-            CONF.ALG.ALGORITHM.WANDER_KINEMATIC: KinematicWanderConfig(
+            CONF.ALG.ALGORITHM.WANDER_KINEMATIC: ALG_CONF.KinematicWanderConfig(
                 max_speed=60.0,
                 max_rotation=5.0,
             ),
@@ -86,7 +86,7 @@ enemy_wander_kinematic = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.WANDER_KINEMATIC,
         alg_configs={
-            CONF.ALG.ALGORITHM.WANDER_KINEMATIC: KinematicWanderConfig(
+            CONF.ALG.ALGORITHM.WANDER_KINEMATIC: ALG_CONF.KinematicWanderConfig(
                 max_speed=60.0,
                 max_rotation=5.0,
             ),
@@ -100,7 +100,7 @@ enemy_wander_kinematic = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.WANDER_KINEMATIC,
         alg_configs={
-            CONF.ALG.ALGORITHM.WANDER_KINEMATIC: KinematicWanderConfig(
+            CONF.ALG.ALGORITHM.WANDER_KINEMATIC: ALG_CONF.KinematicWanderConfig(
                 max_speed=60.0,
                 max_rotation=5.0,
             ),
@@ -114,7 +114,7 @@ enemy_wander_kinematic = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.WANDER_KINEMATIC,
         alg_configs={
-            CONF.ALG.ALGORITHM.WANDER_KINEMATIC: KinematicWanderConfig(
+            CONF.ALG.ALGORITHM.WANDER_KINEMATIC: ALG_CONF.KinematicWanderConfig(
                 max_speed=60.0,
                 max_rotation=5.0,
             ),
@@ -134,7 +134,7 @@ enemy_seek_dynamic = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.SEEK_DYNAMIC,
         alg_configs={
-            CONF.ALG.ALGORITHM.SEEK_DYNAMIC: DynamicSeekConfig(
+            CONF.ALG.ALGORITHM.SEEK_DYNAMIC: ALG_CONF.DynamicSeekConfig(
                 max_speed=120.0,
                 max_acceleration=300.0
             ),
@@ -154,7 +154,7 @@ enemy_flee_dynamic = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.FLEE_DYNAMIC,
         alg_configs={
-            CONF.ALG.ALGORITHM.FLEE_DYNAMIC: DynamicFleeConfig(
+            CONF.ALG.ALGORITHM.FLEE_DYNAMIC: ALG_CONF.DynamicFleeConfig(
                 max_speed=100.0,
                 max_acceleration=300.0
             ),
@@ -177,7 +177,7 @@ enemy_arrive_dynamic = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.ARRIVE_DYNAMIC,
         alg_configs={
-            CONF.ALG.ALGORITHM.ARRIVE_DYNAMIC: DynamicArriveConfig(
+            CONF.ALG.ALGORITHM.ARRIVE_DYNAMIC: ALG_CONF.DynamicArriveConfig(
                 max_speed=120.0,
                 target_radius_dist=40.0,
                 slow_radius_dist=160.0,
@@ -203,7 +203,7 @@ enemy_align = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.ALIGN,
         alg_configs={
-            CONF.ALG.ALGORITHM.ALIGN: AlignConfig(
+            CONF.ALG.ALGORITHM.ALIGN: ALG_CONF.AlignConfig(
                 target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=60 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
@@ -220,7 +220,7 @@ enemy_align = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.ALIGN,
         alg_configs={
-            CONF.ALG.ALGORITHM.ALIGN: AlignConfig(
+            CONF.ALG.ALGORITHM.ALIGN: ALG_CONF.AlignConfig(
                 target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=60 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
@@ -243,7 +243,7 @@ enemy_velocity_match = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.VELOCITY_MATCH,
         alg_configs={
-            CONF.ALG.ALGORITHM.VELOCITY_MATCH: VelocityMatchConfig(
+            CONF.ALG.ALGORITHM.VELOCITY_MATCH: ALG_CONF.VelocityMatchConfig(
                 time_to_target=0.1,
                 max_acceleration=350.0
             ),
@@ -257,7 +257,7 @@ enemy_velocity_match = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.VELOCITY_MATCH,
         alg_configs={
-            CONF.ALG.ALGORITHM.VELOCITY_MATCH: VelocityMatchConfig(
+            CONF.ALG.ALGORITHM.VELOCITY_MATCH: ALG_CONF.VelocityMatchConfig(
                 time_to_target=0.1,
                 max_acceleration=350.0
             ),
@@ -281,7 +281,7 @@ enemy_pursue = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.PURSUE,
         alg_configs={
-            CONF.ALG.ALGORITHM.PURSUE: PursueConfig(
+            CONF.ALG.ALGORITHM.PURSUE: ALG_CONF.PursueConfig(
                 max_speed=120.0,
                 target_radius_dist=40.0,
                 slow_radius_dist=160.0,
@@ -306,7 +306,7 @@ enemy_evade = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.EVADE,
         alg_configs={
-            CONF.ALG.ALGORITHM.EVADE: EvadeConfig(
+            CONF.ALG.ALGORITHM.EVADE: ALG_CONF.EvadeConfig(
                 max_speed=100.0,
                 max_acceleration=300.0,
                 max_prediction=0.5
@@ -330,7 +330,7 @@ enemy_face = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.FACE,
         alg_configs={
-            CONF.ALG.ALGORITHM.FACE: FaceConfig(
+            CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
                 target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=60 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
@@ -347,7 +347,7 @@ enemy_face = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.FACE,
         alg_configs={
-            CONF.ALG.ALGORITHM.FACE: FaceConfig(
+            CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
                 target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=60 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
@@ -364,7 +364,7 @@ enemy_face = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.FACE,
         alg_configs={
-            CONF.ALG.ALGORITHM.FACE: FaceConfig(
+            CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
                 target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=60 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
@@ -381,7 +381,7 @@ enemy_face = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.FACE,
         alg_configs={
-            CONF.ALG.ALGORITHM.FACE: FaceConfig(
+            CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
                 target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=60 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
@@ -398,7 +398,7 @@ enemy_face = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.FACE,
         alg_configs={
-            CONF.ALG.ALGORITHM.FACE: FaceConfig(
+            CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
                 target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=60 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
@@ -415,7 +415,7 @@ enemy_face = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.FACE,
         alg_configs={
-            CONF.ALG.ALGORITHM.FACE: FaceConfig(
+            CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
                 target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=60 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
@@ -432,7 +432,7 @@ enemy_face = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.FACE,
         alg_configs={
-            CONF.ALG.ALGORITHM.FACE: FaceConfig(
+            CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
                 target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=60 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
@@ -449,7 +449,7 @@ enemy_face = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.FACE,
         alg_configs={
-            CONF.ALG.ALGORITHM.FACE: FaceConfig(
+            CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
                 target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=60 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
@@ -466,7 +466,7 @@ enemy_face = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.FACE,
         alg_configs={
-            CONF.ALG.ALGORITHM.FACE: FaceConfig(
+            CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
                 target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=60 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
@@ -483,7 +483,7 @@ enemy_face = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.FACE,
         alg_configs={
-            CONF.ALG.ALGORITHM.FACE: FaceConfig(
+            CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
                 target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=60 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
@@ -500,7 +500,7 @@ enemy_face = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.FACE,
         alg_configs={
-            CONF.ALG.ALGORITHM.FACE: FaceConfig(
+            CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
                 target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=60 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
@@ -517,7 +517,7 @@ enemy_face = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.FACE,
         alg_configs={
-            CONF.ALG.ALGORITHM.FACE: FaceConfig(
+            CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
                 target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=60 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
@@ -547,14 +547,14 @@ enemy_look_where = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING,
         alg_configs={
-            CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING: LookWhereYouAreGoingConfig(
+            CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING: ALG_CONF.LookWhereYouAreGoingConfig(
                 target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=60 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
                 max_rotation=2.0,
                 max_angular_accel=30.0
             ),
-            CONF.ALG.ALGORITHM.EVADE: EvadeConfig(
+            CONF.ALG.ALGORITHM.EVADE: ALG_CONF.EvadeConfig(
                 max_speed=100.0,
                 max_acceleration=300.0,
                 max_prediction=0.5
@@ -584,7 +584,7 @@ enemy_wander_dynamic = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.WANDER_DYNAMIC,
         alg_configs={
-            CONF.ALG.ALGORITHM.WANDER_DYNAMIC: DynamicWanderConfig(
+            CONF.ALG.ALGORITHM.WANDER_DYNAMIC: ALG_CONF.DynamicWanderConfig(
                 max_speed=100.0,
                 target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=80 * CONF.CONST.CONVERT_TO_RAD,
@@ -607,7 +607,7 @@ enemy_wander_dynamic = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.WANDER_DYNAMIC,
         alg_configs={
-            CONF.ALG.ALGORITHM.WANDER_DYNAMIC: DynamicWanderConfig(
+            CONF.ALG.ALGORITHM.WANDER_DYNAMIC: ALG_CONF.DynamicWanderConfig(
                 max_speed=100.0,
                 target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=80 * CONF.CONST.CONVERT_TO_RAD,
@@ -630,7 +630,7 @@ enemy_wander_dynamic = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.WANDER_DYNAMIC,
         alg_configs={
-            CONF.ALG.ALGORITHM.WANDER_DYNAMIC: DynamicWanderConfig(
+            CONF.ALG.ALGORITHM.WANDER_DYNAMIC: ALG_CONF.DynamicWanderConfig(
                 max_speed=100.0,
                 target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=80 * CONF.CONST.CONVERT_TO_RAD,
@@ -653,7 +653,7 @@ enemy_wander_dynamic = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.WANDER_DYNAMIC,
         alg_configs={
-            CONF.ALG.ALGORITHM.WANDER_DYNAMIC: DynamicWanderConfig(
+            CONF.ALG.ALGORITHM.WANDER_DYNAMIC: ALG_CONF.DynamicWanderConfig(
                 max_speed=100.0,
                 target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=80 * CONF.CONST.CONVERT_TO_RAD,
@@ -682,7 +682,7 @@ enemy_path_following = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         alg_configs={
-            CONF.ALG.ALGORITHM.PATH_FOLLOWING: PathFollowingConfig(
+            CONF.ALG.ALGORITHM.PATH_FOLLOWING: ALG_CONF.PathFollowingConfig(
                 max_acceleration=200.0,
                 path_instance=PathsData.CIRCLE_ZONE_LEVEL0_1
             ),
@@ -696,7 +696,7 @@ enemy_path_following = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         alg_configs={
-            CONF.ALG.ALGORITHM.PATH_FOLLOWING: PathFollowingConfig(
+            CONF.ALG.ALGORITHM.PATH_FOLLOWING: ALG_CONF.PathFollowingConfig(
                 max_acceleration=200.0,
                 path_instance=PathsData.CIRCLE_ZONE_LEVEL0_1
             ),
@@ -710,7 +710,7 @@ enemy_path_following = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         alg_configs={
-            CONF.ALG.ALGORITHM.PATH_FOLLOWING: PathFollowingConfig(
+            CONF.ALG.ALGORITHM.PATH_FOLLOWING: ALG_CONF.PathFollowingConfig(
                 max_acceleration=200.0,
                 path_instance=PathsData.CIRCLE_ZONE_LEVEL0_1
             ),
@@ -724,7 +724,7 @@ enemy_path_following = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         alg_configs={
-            CONF.ALG.ALGORITHM.PATH_FOLLOWING: PathFollowingConfig(
+            CONF.ALG.ALGORITHM.PATH_FOLLOWING: ALG_CONF.PathFollowingConfig(
                 max_acceleration=200.0,
                 path_instance=PathsData.CIRCLE_ZONE_LEVEL0_1
             ),
@@ -738,7 +738,7 @@ enemy_path_following = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         alg_configs={
-            CONF.ALG.ALGORITHM.PATH_FOLLOWING: PathFollowingConfig(
+            CONF.ALG.ALGORITHM.PATH_FOLLOWING: ALG_CONF.PathFollowingConfig(
                 max_acceleration=200.0,
                 path_instance=PathsData.CIRCLE_ZONE_LEVEL0_1
             ),
@@ -752,7 +752,7 @@ enemy_path_following = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         alg_configs={
-            CONF.ALG.ALGORITHM.PATH_FOLLOWING: PathFollowingConfig(
+            CONF.ALG.ALGORITHM.PATH_FOLLOWING: ALG_CONF.PathFollowingConfig(
                 max_acceleration=200.0,
                 path_instance=PathsData.RECT_ZONE_LEVEL0_1
             ),
@@ -766,7 +766,7 @@ enemy_path_following = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         alg_configs={
-            CONF.ALG.ALGORITHM.PATH_FOLLOWING: PathFollowingConfig(
+            CONF.ALG.ALGORITHM.PATH_FOLLOWING: ALG_CONF.PathFollowingConfig(
                 max_acceleration=200.0,
                 path_instance=PathsData.RECT_ZONE_LEVEL0_1
             ),
@@ -780,7 +780,7 @@ enemy_path_following = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         alg_configs={
-            CONF.ALG.ALGORITHM.PATH_FOLLOWING: PathFollowingConfig(
+            CONF.ALG.ALGORITHM.PATH_FOLLOWING: ALG_CONF.PathFollowingConfig(
                 max_acceleration=200.0,
                 path_instance=PathsData.RECT_ZONE_LEVEL0_1
             ),
@@ -794,7 +794,7 @@ enemy_path_following = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         alg_configs={
-            CONF.ALG.ALGORITHM.PATH_FOLLOWING: PathFollowingConfig(
+            CONF.ALG.ALGORITHM.PATH_FOLLOWING: ALG_CONF.PathFollowingConfig(
                 max_acceleration=200.0,
                 path_instance=PathsData.RECT_ZONE_LEVEL0_1
             ),
@@ -808,7 +808,7 @@ enemy_path_following = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         alg_configs={
-            CONF.ALG.ALGORITHM.PATH_FOLLOWING: PathFollowingConfig(
+            CONF.ALG.ALGORITHM.PATH_FOLLOWING: ALG_CONF.PathFollowingConfig(
                 max_acceleration=200.0,
                 path_instance=PathsData.RECT_ZONE_LEVEL0_1
             ),
@@ -822,7 +822,7 @@ enemy_path_following = [
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         alg_configs={
-            CONF.ALG.ALGORITHM.PATH_FOLLOWING: PathFollowingConfig(
+            CONF.ALG.ALGORITHM.PATH_FOLLOWING: ALG_CONF.PathFollowingConfig(
                 max_acceleration=200.0,
                 path_instance=PathsData.RECT_ZONE_LEVEL0_1
             ),

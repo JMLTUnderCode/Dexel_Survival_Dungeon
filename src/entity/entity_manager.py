@@ -6,12 +6,12 @@ import traceback
 from typing import Optional, List, Dict, Any
 
 from entity.kinematic import Kinematic
-from entity.entity_spec import *
+from entity.entity_spec import EntitySpec, Stats, Sprite, SpawnedEntityMeta
 from entity.player import Player
 from entity.enemy import Enemy
 from map.paths import Path
 from map.pathfinder import Pathfinder
-from algorithms.algorithms_configs import *
+import algorithms.algorithms_configs as ALG_CONF
 from ai.behavior import Behavior
 from data.map_enemies import MAP_ENEMIES_DATA
 from data.algorithm_enemies import ALGORITHM_ENEMIES_DATA
@@ -57,14 +57,14 @@ class EntityManager:
             collider_box=(CONF.PLAYER.COLLIDER_BOX_WIDTH, CONF.PLAYER.COLLIDER_BOX_HEIGHT),
             initial_algorithm=CONF.ALG.ALGORITHM.FACE,
             alg_configs={
-                CONF.ALG.ALGORITHM.ARRIVE_DYNAMIC: DynamicArriveConfig(
+                CONF.ALG.ALGORITHM.ARRIVE_DYNAMIC: ALG_CONF.DynamicArriveConfig(
                     max_speed=140.0,
                     target_radius_dist=40.0,
                     slow_radius_dist=160.0,
                     time_to_target=0.1,
                     max_acceleration=300.0
                 ),
-                CONF.ALG.ALGORITHM.FACE: FaceConfig(
+                CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
                     target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
                     slow_radius_deg=60 * CONF.CONST.CONVERT_TO_RAD,
                     time_to_target=0.1,

@@ -48,9 +48,9 @@ from typing import Dict, Callable, Any, List, Optional
 
 from entity.kinematic import Kinematic, SteeringOutput
 from entity.animation import set_animation_state
-from entity.entity_spec import *
+from entity.entity_spec import EntitySpec, Stats, Sprite, SpawnedEntityMeta
 from algorithms.path_following import FollowPath
-from algorithms.algorithms_configs import *
+import algorithms.algorithms_configs as ALG_CONF
 from map.paths import Path
 from configs.package import CONF
 
@@ -1259,7 +1259,7 @@ def invocation_tick(hinst, entity):
                     collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
                     initial_algorithm=CONF.ALG.ALGORITHM.PURSUE,
                     alg_configs={
-                        CONF.ALG.ALGORITHM.PURSUE: PursueConfig(
+                        CONF.ALG.ALGORITHM.PURSUE: ALG_CONF.PursueConfig(
                             max_speed=120.0,
                             target_radius_dist=40.0,
                             slow_radius_dist=160.0,
