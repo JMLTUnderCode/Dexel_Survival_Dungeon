@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="60" height="60" tilewidth="16" tileheight="16" infinite="0" nextlayerid="27" nextobjectid="2263">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="60" height="60" tilewidth="16" tileheight="16" infinite="0" nextlayerid="27" nextobjectid="2294">
  <tileset firstgid="1" name="Dungeon_Tileset" tilewidth="16" tileheight="16" tilecount="100" columns="10">
   <image source="Dungeon_Tileset.png" width="160" height="160"/>
   <tile id="0">
@@ -493,6 +493,9 @@
    <polygon points="0,0 0,-16 16,-32 48,-32 64,-16 64,0 48,16 16,16"/>
   </object>
   <object id="1339" type="Node" x="512" y="384">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 0,16 16,32 48,32 64,16 64,0 48,-16 16,-16"/>
   </object>
   <object id="2005" type="Node" x="512" y="448">
@@ -550,6 +553,9 @@
    <polygon points="0,0 0,-16 16,-32 48,-32 64,-16 64,0 48,16 16,16"/>
   </object>
   <object id="1807" type="Node" x="352" y="112">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 0,-16 16,-32 48,-32 64,-16 64,0 48,16 16,16"/>
   </object>
   <object id="1802" type="Node" x="304" y="80">
@@ -559,18 +565,30 @@
    <polygon points="0,0 0,-16 16,-32 48,-32 64,-16 64,0 48,16 16,16"/>
   </object>
   <object id="1241" type="Node" x="560" y="480">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 0,16 16,32 48,32 64,16 64,0 48,-16 16,-16"/>
   </object>
   <object id="1254" type="Node" x="656" y="480">
    <polygon points="0,0 0,16 16,32 48,32 64,16 64,0 48,-16 16,-16"/>
   </object>
   <object id="1381" type="Node" x="560" y="752">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 0,16 16,32 48,32 64,16 64,0 48,-16 16,-16"/>
   </object>
   <object id="1408" type="Node" x="656" y="752">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 0,16 16,32 48,32 64,16 64,0 48,-16 16,-16"/>
   </object>
   <object id="1427" type="Node" x="752" y="752">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 0,16 16,32 48,32 64,16 64,0 48,-16 16,-16"/>
   </object>
   <object id="1446" type="Node" x="848" y="752">
@@ -595,6 +613,9 @@
    <polygon points="0,0 0,16 16,32 48,32 64,16 64,0 48,-16 16,-16"/>
   </object>
   <object id="1302" type="Node" x="704" y="448">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 0,16 16,32 48,32 64,16 64,0 48,-16 16,-16"/>
   </object>
   <object id="1188" type="Node" x="656" y="80">
@@ -610,12 +631,18 @@
    <polygon points="0,0 32,0 32,16 0,16"/>
   </object>
   <object id="1783" type="Node" x="32" y="32">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 32,0 32,16 0,16"/>
   </object>
   <object id="1152" type="Node" x="416" y="32">
    <polygon points="0,0 32,0 32,16 0,16"/>
   </object>
   <object id="1803" type="Node" x="320" y="32">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 32,0 32,16 0,16"/>
   </object>
   <object id="1183" type="Node" x="576" y="32">
@@ -625,6 +652,9 @@
    <polygon points="0,0 32,0 32,-16 0,-16"/>
   </object>
   <object id="1392" type="Node" x="624" y="768">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 32,0 32,-16 0,-16"/>
   </object>
   <object id="1483" type="Node" x="528" y="768">
@@ -634,9 +664,15 @@
    <polygon points="0,0 32,0 32,16 0,16"/>
   </object>
   <object id="1407" type="Node" x="720" y="768">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 32,0 32,-16 0,-16"/>
   </object>
   <object id="1426" type="Node" x="816" y="768">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 32,0 32,-16 0,-16"/>
   </object>
   <object id="1298" type="Node" x="624" y="560">
@@ -664,6 +700,9 @@
    <polygon points="0,0 32,0 32,16 0,16"/>
   </object>
   <object id="1773" type="Node" x="128" y="96">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 32,0 32,16 0,16"/>
   </object>
   <object id="1781" type="Node" x="32" y="96">
@@ -694,15 +733,27 @@
    <polygon points="0,0 32,0 32,-16 0,-16"/>
   </object>
   <object id="1382" type="Node" x="576" y="736">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 32,0 32,-16 0,-16"/>
   </object>
   <object id="1409" type="Node" x="672" y="736">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 32,0 32,-16 0,-16"/>
   </object>
   <object id="1428" type="Node" x="768" y="736">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 32,0 32,-16 0,-16"/>
   </object>
   <object id="1447" type="Node" x="864" y="736">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 32,0 32,-16 0,-16"/>
   </object>
   <object id="1394" type="Node" x="624" y="704">
@@ -730,24 +781,42 @@
    <polygon points="0,0 32,0 32,-16 0,-16"/>
   </object>
   <object id="1187" type="Node" x="672" y="96">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 32,0 32,16 0,16"/>
   </object>
   <object id="1199" type="Node" x="864" y="96">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 32,0 32,16 0,16"/>
   </object>
   <object id="1340" type="Node" x="528" y="560">
    <polygon points="0,0 0,-16 32,-16 32,0"/>
   </object>
   <object id="1378" type="Node" x="576" y="864">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 0,-16 32,-16 32,0"/>
   </object>
   <object id="1402" type="Node" x="672" y="864">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 0,-16 32,-16 32,0"/>
   </object>
   <object id="1421" type="Node" x="768" y="864">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 0,-16 32,-16 32,0"/>
   </object>
   <object id="1440" type="Node" x="864" y="864">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 0,-16 32,-16 32,0"/>
   </object>
   <object id="1390" type="Node" x="624" y="832">
@@ -760,6 +829,9 @@
    <polygon points="0,0 0,-16 32,-16 32,0"/>
   </object>
   <object id="1202" type="Node" x="608" y="96">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 16,-16 48,-16 64,0 64,16 48,32 16,32 0,16"/>
   </object>
   <object id="1209" type="Node" x="704" y="96">
@@ -781,18 +853,33 @@
    <polygon points="0,0 32,0 32,16 0,16"/>
   </object>
   <object id="1525" type="Node" x="896" y="848">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 32,0 32,32 16,32 0,16"/>
   </object>
   <object id="1526" type="Node" x="912" y="816">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 -16,-16 -16,-32 -48,-32 -48,-16 -64,0"/>
   </object>
   <object id="1527" type="Node" x="752" y="816">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 16,-16 16,-32 48,-32 48,-16 64,0"/>
   </object>
   <object id="1528" type="Node" x="720" y="816">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 -64,0 -48,-16 -48,-32 -16,-32 -16,-16"/>
   </object>
   <object id="1529" type="Node" x="624" y="816">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 -64,0 -48,-16 -48,-32 -16,-32 -16,-16"/>
   </object>
   <object id="1531" type="Node" x="752" y="416">
@@ -823,27 +910,42 @@
    <polygon points="0,0 -32,0 -32,16 0,16"/>
   </object>
   <object id="1599" type="Node" x="304" y="480">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 -32,0 -32,16 0,16"/>
   </object>
   <object id="1613" type="Node" x="208" y="480">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 -32,0 -32,16 0,16"/>
   </object>
   <object id="1627" type="Node" x="112" y="480">
    <polygon points="0,0 -32,0 -32,16 0,16"/>
   </object>
   <object id="1984" type="Node" x="400" y="416">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 16,-16 16,-32 0,-48 -32,-48 -48,-32 -48,-16 -32,0"/>
   </object>
   <object id="2006" type="Node" x="400" y="480">
    <polygon points="0,0 16,-16 16,-32 0,-48 -32,-48 -48,-32 -48,-16 -32,0"/>
   </object>
   <object id="1598" type="Node" x="304" y="480">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 16,-16 16,-32 0,-48 -32,-48 -48,-32 -48,-16 -32,0"/>
   </object>
   <object id="1983" type="Node" x="304" y="416">
    <polygon points="0,0 16,-16 16,-32 0,-48 -32,-48 -48,-32 -48,-16 -32,0"/>
   </object>
   <object id="1612" type="Node" x="208" y="480">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 16,-16 16,-32 0,-48 -32,-48 -48,-32 -48,-16 -32,0"/>
   </object>
   <object id="1982" type="Node" x="208" y="416">
@@ -877,9 +979,15 @@
    <polygon points="0,0 16,16 16,32 0,48 -32,48 -48,32 -48,16 -32,0"/>
   </object>
   <object id="1596" type="Node" x="304" y="496">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 16,16 16,32 0,48 -32,48 -48,32 -48,16 -32,0"/>
   </object>
   <object id="1610" type="Node" x="208" y="496">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 16,16 16,32 0,48 -32,48 -48,32 -48,16 -32,0"/>
   </object>
   <object id="1624" type="Node" x="112" y="496">
@@ -925,9 +1033,15 @@
    <polygon points="0,0 0,16 32,16 32,0"/>
   </object>
   <object id="1600" type="Node" x="224" y="448">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 0,16 32,16 32,0"/>
   </object>
   <object id="1614" type="Node" x="128" y="448">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 0,16 32,16 32,0"/>
   </object>
   <object id="1628" type="Node" x="32" y="448">
@@ -937,9 +1051,15 @@
    <polygon points="0,0 16,-16 48,-16 64,0 64,16 48,32 16,32 0,16"/>
   </object>
   <object id="1597" type="Node" x="208" y="480">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 16,-16 48,-16 64,0 64,16 48,32 16,32 0,16"/>
   </object>
   <object id="1611" type="Node" x="112" y="480">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 16,-16 48,-16 64,0 64,16 48,32 16,32 0,16"/>
   </object>
   <object id="1589" type="Node" x="352" y="576">
@@ -955,9 +1075,15 @@
    <polygon points="0,0 0,16 32,16 32,0"/>
   </object>
   <object id="1595" type="Node" x="224" y="512">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 0,16 32,16 32,0"/>
   </object>
   <object id="1609" type="Node" x="128" y="512">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 0,16 32,16 32,0"/>
   </object>
   <object id="1623" type="Node" x="32" y="512">
@@ -985,9 +1111,15 @@
    <polygon points="0,0 32,0 32,-48 0,-48"/>
   </object>
   <object id="1671" type="Node" x="32" y="224">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 0,32 32,32 32,0"/>
   </object>
   <object id="1672" type="Node" x="128" y="224">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 0,32 32,32 32,0"/>
   </object>
   <object id="1673" type="Node" x="64" y="224">
@@ -1105,6 +1237,9 @@
    <polygon points="0,0 -32,0 -32,16 0,16"/>
   </object>
   <object id="1765" type="Node" x="176" y="80">
+   <properties>
+    <property name="tactical" value="exposed"/>
+   </properties>
    <polygon points="0,0 -16,16 -16,32 0,48 32,48 48,32 48,16 32,0"/>
   </object>
   <object id="1774" type="Node" x="80" y="80">
@@ -1117,9 +1252,15 @@
    <polygon points="0,0 0,16 32,16 32,0"/>
   </object>
   <object id="1788" type="Node" x="32" y="160">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 0,32 32,32 32,0"/>
   </object>
   <object id="2090" type="Node" x="32" y="576">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 0,32 32,32 32,0"/>
   </object>
   <object id="2089" type="Node" x="64" y="576">
@@ -1150,6 +1291,9 @@
    <polygon points="0,0 0,16 -16,32 -16,48 0,64 0,80 16,80 16,0"/>
   </object>
   <object id="1804" type="Node" x="320" y="160">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 0,32 32,32 32,0"/>
   </object>
   <object id="1810" type="Node" x="368" y="64">
@@ -1162,6 +1306,9 @@
    <polygon points="0,0 16,-16 48,-16 64,0 64,16 48,32 16,32 0,16"/>
   </object>
   <object id="1813" type="Node" x="256" y="32">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 16,-16 32,-16 32,32 16,32 0,16"/>
   </object>
   <object id="1814" type="Node" x="352" y="32">
@@ -1204,6 +1351,9 @@
    <polygon points="0,0 32,0 32,16 0,16"/>
   </object>
   <object id="1837" type="Node" x="896" y="16">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 0,32 16,48 32,48 32,0"/>
   </object>
   <object id="1838" type="Node" x="816" y="64">
@@ -1224,93 +1374,6 @@
   <object id="1865" type="Node" x="416" y="192">
    <polygon points="0,0 0,32 32,32 32,0"/>
   </object>
-  <object id="1872" type="Node" x="240" y="240">
-   <polygon points="0,0 -16,16 0,32 16,16"/>
-  </object>
-  <object id="1873" type="Node" x="240" y="224">
-   <polygon points="0,0 0,16 16,32 32,32 32,0"/>
-  </object>
-  <object id="1874" type="Node" x="240" y="224">
-   <polygon points="0,0 -32,0 -32,32 -16,32 0,16"/>
-  </object>
-  <object id="1876" type="Node" x="208" y="256">
-   <polygon points="0,0 0,48 16,48 32,32 32,16 16,0"/>
-  </object>
-  <object id="1877" type="Node" x="224" y="304">
-   <polygon points="0,0 16,16 32,0 16,-16"/>
-  </object>
-  <object id="1879" type="Node" x="208" y="304">
-   <polygon points="0,0 16,0 32,16 32,48 0,48"/>
-  </object>
-  <object id="1884" type="Node" x="400" y="224">
-   <polygon points="0,0 32,0 32,16 16,32 0,32"/>
-  </object>
-  <object id="1885" type="Node" x="416" y="256">
-   <polygon points="0,0 16,16 32,0 16,-16"/>
-  </object>
-  <object id="1886" type="Node" x="432" y="224">
-   <polygon points="0,0 32,0 32,32 16,32 0,16"/>
-  </object>
-  <object id="1887" type="Node" x="464" y="256">
-   <polygon points="0,0 0,48 -16,48 -32,32 -32,16 -16,0"/>
-  </object>
-  <object id="1888" type="Node" x="448" y="304">
-   <polygon points="0,0 16,0 16,48 -16,48 -16,16"/>
-  </object>
-  <object id="1889" type="Node" x="432" y="288">
-   <polygon points="0,0 -16,16 0,32 16,16"/>
-  </object>
-  <object id="1890" type="Node" x="400" y="352">
-   <polygon points="0,0 0,-32 16,-48 32,-32 32,0"/>
-  </object>
-  <object id="1891" type="Node" x="240" y="352">
-   <polygon points="0,0 0,-32 16,-48 32,-32 32,0"/>
-  </object>
-  <object id="1894" type="Node" x="272" y="320">
-   <polygon points="0,0 16,-16 32,0 16,16"/>
-  </object>
-  <object id="1895" type="Node" x="320" y="320">
-   <polygon points="0,0 16,-16 32,0 16,16"/>
-  </object>
-  <object id="1896" type="Node" x="368" y="320">
-   <polygon points="0,0 16,-16 32,0 16,16"/>
-  </object>
-  <object id="1899" type="Node" x="272" y="288">
-   <polygon points="0,0 0,-32 -16,-32 -32,-16 -32,0"/>
-  </object>
-  <object id="1900" type="Node" x="400" y="256">
-   <polygon points="0,0 0,32 32,32 32,16 16,0"/>
-  </object>
-  <object id="1901" type="Node" x="272" y="288">
-   <polygon points="0,0 0,32 -32,0"/>
-  </object>
-  <object id="1902" type="Node" x="272" y="288">
-   <polygon points="0,0 32,0 0,32"/>
-  </object>
-  <object id="1904" type="Node" x="288" y="304">
-   <polygon points="0,0 16,-16 48,-16 48,0 32,16 16,16"/>
-  </object>
-  <object id="1905" type="Node" x="336" y="288">
-   <polygon points="0,0 0,16 16,32 32,32 48,16 32,0"/>
-  </object>
-  <object id="1906" type="Node" x="368" y="288">
-   <polygon points="0,0 32,0 32,32"/>
-  </object>
-  <object id="1907" type="Node" x="400" y="288">
-   <polygon points="0,0 0,32 32,0"/>
-  </object>
-  <object id="1908" type="Node" x="400" y="320">
-   <polygon points="0,0 -32,32 0,32"/>
-  </object>
-  <object id="1909" type="Node" x="272" y="320">
-   <polygon points="0,0 32,32 0,32"/>
-  </object>
-  <object id="1910" type="Node" x="288" y="336">
-   <polygon points="0,0 16,-16 32,-16 48,0 48,16 16,16"/>
-  </object>
-  <object id="1911" type="Node" x="336" y="336">
-   <polygon points="0,0 16,-16 32,-16 48,0 32,16 0,16"/>
-  </object>
   <object id="1912" type="Node" x="576" y="192">
    <polygon points="0,0 0,32 32,32 32,0"/>
   </object>
@@ -1330,27 +1393,75 @@
    <polygon points="0,0 0,32 32,32 32,0"/>
   </object>
   <object id="1920" type="Node" x="560" y="256">
+   <properties>
+    <property name="tactical" value="narrow"/>
+   </properties>
+   <polygon points="0,0 0,48 16,48 32,32 32,16 16,0"/>
+  </object>
+  <object id="2265" type="Node" x="400" y="240">
+   <properties>
+    <property name="tactical" value="narrow"/>
+   </properties>
+   <polygon points="0,0 0,48 16,48 32,32 32,16 16,0"/>
+  </object>
+  <object id="2285" type="Node" x="208" y="240">
+   <properties>
+    <property name="tactical" value="narrow"/>
+   </properties>
    <polygon points="0,0 0,48 16,48 32,32 32,16 16,0"/>
   </object>
   <object id="2252" type="Node" x="656" y="256">
+   <properties>
+    <property name="tactical" value="narrow"/>
+   </properties>
    <polygon points="0,0 0,48 16,48 32,32 32,16 16,0"/>
   </object>
   <object id="2256" type="Node" x="752" y="256">
+   <properties>
+    <property name="tactical" value="narrow"/>
+   </properties>
    <polygon points="0,0 0,48 16,48 32,32 32,16 16,0"/>
   </object>
   <object id="2260" type="Node" x="848" y="256">
+   <properties>
+    <property name="tactical" value="narrow"/>
+   </properties>
    <polygon points="0,0 0,48 16,48 32,32 32,16 16,0"/>
   </object>
   <object id="1921" type="Node" x="608" y="256">
+   <properties>
+    <property name="tactical" value="narrow"/>
+   </properties>
+   <polygon points="0,0 -16,16 -16,32 0,48 16,48 16,0"/>
+  </object>
+  <object id="2264" type="Node" x="448" y="240">
+   <properties>
+    <property name="tactical" value="narrow"/>
+   </properties>
+   <polygon points="0,0 -16,16 -16,32 0,48 16,48 16,0"/>
+  </object>
+  <object id="2286" type="Node" x="256" y="240">
+   <properties>
+    <property name="tactical" value="narrow"/>
+   </properties>
    <polygon points="0,0 -16,16 -16,32 0,48 16,48 16,0"/>
   </object>
   <object id="2253" type="Node" x="704" y="256">
+   <properties>
+    <property name="tactical" value="narrow"/>
+   </properties>
    <polygon points="0,0 -16,16 -16,32 0,48 16,48 16,0"/>
   </object>
   <object id="2257" type="Node" x="800" y="256">
+   <properties>
+    <property name="tactical" value="narrow"/>
+   </properties>
    <polygon points="0,0 -16,16 -16,32 0,48 16,48 16,0"/>
   </object>
   <object id="2261" type="Node" x="896" y="256">
+   <properties>
+    <property name="tactical" value="narrow"/>
+   </properties>
    <polygon points="0,0 -16,16 -16,32 0,48 16,48 16,0"/>
   </object>
   <object id="1952" type="Node" x="752" y="336">
@@ -1378,9 +1489,15 @@
    <polygon points="0,0 48,0 48,48 0,48 16,32 16,16"/>
   </object>
   <object id="1968" type="Node" x="896" y="368">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 32,0 32,48 0,48"/>
   </object>
   <object id="2007" type="Node" x="32" y="784">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 0,16 32,16 32,0"/>
   </object>
   <object id="2029" type="Node" x="80" y="688">
@@ -1390,6 +1507,9 @@
    <polygon points="0,0 -16,16 -16,48 48,48 48,16 32,0"/>
   </object>
   <object id="2021" type="Node" x="624" y="688">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 -16,-16 -16,-48 48,-48 48,-16 32,0"/>
   </object>
   <object id="2105" type="Node" x="624" y="560">
@@ -1402,6 +1522,9 @@
    <polygon points="0,0 -16,16 -16,48 48,48 48,16 32,0"/>
   </object>
   <object id="2022" type="Node" x="720" y="688">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 -16,-16 -16,-48 48,-48 48,-16 32,0"/>
   </object>
   <object id="2104" type="Node" x="720" y="560">
@@ -1414,6 +1537,9 @@
    <polygon points="0,0 -16,16 -16,48 48,48 48,16 32,0"/>
   </object>
   <object id="2023" type="Node" x="816" y="688">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 -16,-16 -16,-48 48,-48 48,-16 32,0"/>
   </object>
   <object id="2103" type="Node" x="816" y="560">
@@ -1444,9 +1570,15 @@
    <polygon points="0,0 32,0 32,-32 0,-32"/>
   </object>
   <object id="2031" type="Node" x="224" y="640">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 32,0 32,32 0,32"/>
   </object>
   <object id="2100" type="Node" x="224" y="944">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 32,0 32,-32 0,-32"/>
   </object>
   <object id="2020" type="Node" x="768" y="640">
@@ -1464,22 +1596,43 @@
   <object id="2024" type="Node" x="864" y="640">
    <polygon points="0,0 32,0 32,32 0,32"/>
   </object>
+  <object id="2293" type="Node" x="896" y="640">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
+   <polygon points="0,0 32,0 32,32 0,32"/>
+  </object>
   <object id="2107" type="Node" x="864" y="608">
    <polygon points="0,0 32,0 32,-32 0,-32"/>
   </object>
   <object id="2034" type="Node" x="416" y="640">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 32,0 32,32 0,32"/>
   </object>
   <object id="2102" type="Node" x="416" y="944">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 32,0 32,-32 0,-32"/>
   </object>
   <object id="2106" type="Node" x="896" y="608">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 32,0 32,-48 16,-48 0,-32"/>
   </object>
   <object id="2035" type="Node" x="32" y="640">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 32,0 32,32 0,32"/>
   </object>
   <object id="2098" type="Node" x="32" y="944">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 32,0 32,-32 0,-32"/>
   </object>
   <object id="2036" type="Node" x="496" y="768">
@@ -1492,6 +1645,9 @@
    <polygon points="0,0 48,0 48,48 0,48"/>
   </object>
   <object id="2054" type="Node" x="448" y="768">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
    <polygon points="0,0 -16,0 -32,16 -32,32 -16,48 0,48"/>
   </object>
   <object id="2055" type="Node" x="416" y="832">
@@ -1522,6 +1678,9 @@
    <polygon points="0,0 0,32 -16,48 -48,48 -64,32 -32,0"/>
   </object>
   <object id="2063" type="Node" x="496" y="688">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 0,-48 48,-48"/>
   </object>
   <object id="2064" type="Node" x="496" y="704">
@@ -1531,15 +1690,24 @@
    <polygon points="0,0 0,-64 32,-64 32,-48 16,-32 16,-16"/>
   </object>
   <object id="2074" type="Node" x="496" y="896">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 0,32 32,32 32,0 16,16"/>
   </object>
   <object id="2076" type="Node" x="864" y="896">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 32,0 32,32 0,32"/>
   </object>
   <object id="2077" type="Node" x="848" y="896">
    <polygon points="0,0 0,-16 16,-32 48,-32 64,-16 64,0"/>
   </object>
   <object id="2078" type="Node" x="896" y="896">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 0,32 32,32 32,-16 16,-16 16,0"/>
   </object>
   <object id="2079" type="Node" x="752" y="896">
@@ -1552,9 +1720,15 @@
    <polygon points="0,0 0,-16 16,-32 48,-32 64,-16 64,0"/>
   </object>
   <object id="2080" type="Node" x="768" y="896">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 32,0 32,32 0,32"/>
   </object>
   <object id="2081" type="Node" x="672" y="896">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 32,0 32,32 0,32"/>
   </object>
   <object id="2083" type="Node" x="576" y="896">
@@ -1564,9 +1738,15 @@
    <polygon points="0,0 0,32 48,32 48,0"/>
   </object>
   <object id="2093" type="Node" x="352" y="576">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 16,-16 48,-16 48,32 0,32"/>
   </object>
   <object id="2111" type="Node" x="528" y="560">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 0,48 48,48 48,16 32,0 0,0"/>
   </object>
   <object id="2118" type="Node" x="176" y="144">
@@ -1596,9 +1776,6 @@
   <object id="2126" type="Node" x="544" y="32">
    <polygon points="0,0 16,-16 32,0 32,16 16,32 0,16"/>
   </object>
-  <object id="2127" type="Node" x="896" y="640">
-   <polygon points="0,0 32,0 32,32 0,32"/>
-  </object>
   <object id="2130" type="Node" x="896" y="672">
    <polygon points="0,0 0,48 32,48 32,0"/>
   </object>
@@ -1615,9 +1792,15 @@
    <polygon points="0,0 0,32 16,48 32,32 32,0 16,-16"/>
   </object>
   <object id="2241" type="Node" x="912" y="208">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 -16,-16 -16,-48 0,-64 16,-64 16,0"/>
   </object>
   <object id="2242" type="Node" x="272" y="208">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 -16,-16 -16,-48 0,-64 16,-64 16,0"/>
   </object>
   <object id="2243" type="Node" x="912" y="832">
@@ -1645,7 +1828,64 @@
    <polygon points="0,0 0,32 64,32 64,0 48,0 32,-16 16,0"/>
   </object>
   <object id="2259" type="Node" x="848" y="304">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
    <polygon points="0,0 0,32 64,32 64,0 48,0 32,-16 16,0"/>
+  </object>
+  <object id="2269" type="Node" x="400" y="224">
+   <polygon points="0,0 64,0 64,16 48,16 32,32 16,16 0,16"/>
+  </object>
+  <object id="2287" type="Node" x="208" y="224">
+   <polygon points="0,0 64,0 64,16 48,16 32,32 16,16 0,16"/>
+  </object>
+  <object id="2274" type="Node" x="464" y="352">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
+   <polygon points="0,0 0,-32 -16,-32 -32,-16 -32,0"/>
+  </object>
+  <object id="2281" type="Node" x="272" y="352">
+   <polygon points="0,0 0,-32 -16,-32 -32,-16 -32,0"/>
+  </object>
+  <object id="2275" type="Node" x="400" y="320">
+   <polygon points="0,0 0,32 32,32 32,16 16,0"/>
+  </object>
+  <object id="2282" type="Node" x="208" y="320">
+   <properties>
+    <property name="tactical" value="cover"/>
+   </properties>
+   <polygon points="0,0 0,32 32,32 32,16 16,0"/>
+  </object>
+  <object id="2276" type="Node" x="320" y="320">
+   <properties>
+    <property name="tactical" value="narrow"/>
+   </properties>
+   <polygon points="0,0 16,-16 32,0 16,16"/>
+  </object>
+  <object id="2277" type="Node" x="336" y="288">
+   <polygon points="0,0 64,0 64,32 16,32 0,16"/>
+  </object>
+  <object id="2278" type="Node" x="336" y="336">
+   <polygon points="0,0 0,16 64,16 64,-16 16,-16"/>
+  </object>
+  <object id="2279" type="Node" x="336" y="336">
+   <polygon points="0,0 -16,-16 -64,-16 -64,16 0,16"/>
+  </object>
+  <object id="2280" type="Node" x="336" y="304">
+   <polygon points="0,0 0,-16 -64,-16 -64,16 -16,16"/>
+  </object>
+  <object id="2288" type="Node" x="400" y="288">
+   <polygon points="0,0 16,0 32,-16 32,48 16,32 0,32"/>
+  </object>
+  <object id="2289" type="Node" x="208" y="288">
+   <polygon points="0,0 16,0 32,-16 32,48 16,32 0,32"/>
+  </object>
+  <object id="2291" type="Node" x="272" y="288">
+   <polygon points="0,0 -16,0 -32,-16 -32,48 -16,32 0,32"/>
+  </object>
+  <object id="2292" type="Node" x="464" y="288">
+   <polygon points="0,0 -16,0 -32,-16 -32,48 -16,32 0,32"/>
   </object>
  </objectgroup>
 </map>
