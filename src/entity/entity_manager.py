@@ -11,6 +11,7 @@ from entity.player import Player
 from entity.enemy import Enemy
 from map.paths import Path
 from map.pathfinder import Pathfinder
+from map.tactical_pathfinder import TacticalPathfinder
 import algorithms.algorithms_configs as ALG_CONF
 from ai.behavior import Behavior
 from data.map_enemies import MAP_ENEMIES_DATA
@@ -35,6 +36,7 @@ class EntityManager:
         self.player: Optional[Player] = None
         self.enemies: List[Enemy] = []
         self.pathfinder: Optional[Pathfinder] = None
+        self.tactical_pathfinder: Optional[TacticalPathfinder] = None
         self.kills: int = 0
         self.attack_effects: List[Dict[str, Any]] = []
 
@@ -53,7 +55,7 @@ class EntityManager:
         player_data = EntitySpec(
             id=1,
             sprite=Sprite(name="oldman"),
-            initial_position=(CONF.MAIN_WIN.RENDER_TILE_SIZE * 20, CONF.MAIN_WIN.RENDER_TILE_SIZE * 30),
+            initial_position=(CONF.MAIN_WIN.RENDER_TILE_SIZE * 34, CONF.MAIN_WIN.RENDER_TILE_SIZE * 36),
             collider_box=(CONF.PLAYER.COLLIDER_BOX_WIDTH, CONF.PLAYER.COLLIDER_BOX_HEIGHT),
             initial_algorithm=CONF.ALG.ALGORITHM.FACE,
             alg_configs={
@@ -66,10 +68,10 @@ class EntityManager:
                 ),
                 CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
                     target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
-                    slow_radius_deg=60 * CONF.CONST.CONVERT_TO_RAD,
+                    slow_radius_deg=50 * CONF.CONST.CONVERT_TO_RAD,
                     time_to_target=0.1,
-                    max_rotation=2.0,
-                    max_angular_accel=30.0
+                    max_rotation=3.0,
+                    max_angular_accel=35.0
                 ),
             },
             statistics=Stats(alive=True, health=100.0,)
@@ -102,23 +104,12 @@ class EntityManager:
         behavior_spec = spec.behavior
         if behavior_spec:
             try:
-                # 3.1 Si behavior es string intentar resolver desde data.enemies (compatibilidad)
-                if isinstance(behavior_spec, str):
-                    try:
-                        data_mod = importlib.import_module("data.enemies")
-                        resolved = getattr(data_mod, behavior_spec, None)
-                        if resolved is not None:
-                            behavior_spec = resolved
-                    except Exception:
-                        # best-effort resolution, continuar si falla
-                        pass
-
-                # 3.2 Construir Behavior usando el builder central
+                # 3.1 Construir Behavior usando el builder central
                 enemy.behavior = Behavior.from_spec(behavior_spec, enemy, self)
                 if enemy.behavior is None:
                     print(f"[EntityManager] Behavior.from_spec returned None for enemy '{getattr(enemy, 'type', 'unknown')}'")
             except Exception as exc:
-                # 3.3 Capturar errores para no romper loop de creación
+                # 3.2 Capturar errores para no romper loop de creación
                 print(f"[EntityManager] Error building behavior for enemy '{getattr(enemy, 'type', 'unknown')}': {exc}")
                 print(traceback.format_exc())
                 enemy.behavior = None
