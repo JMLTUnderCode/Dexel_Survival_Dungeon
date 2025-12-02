@@ -4,6 +4,7 @@ from typing import Optional
 
 from map.map import Map
 from map.pathfinder import Pathfinder
+from map.tactical_pathfinder import TacticalPathfinder
 from ui.enemy_set import EnemySet
 from ui.map_set import MapSet
 from entity.entity_manager import EntityManager
@@ -123,11 +124,14 @@ class Game:
 
         # 3. Construir pathfinder si el mapa tiene navmesh
         self.pathfinder = None
+        self.tactical_pathfinder = None
         if self.game_map.navmesh:
             self.pathfinder = Pathfinder(self.game_map.navmesh)
+            self.tactical_pathfinder = TacticalPathfinder(self.game_map.navmesh)
 
         # 4. Exponer el pathfinder al EntityManager para peticiones de ruta
         self.entity_manager.pathfinder = self.pathfinder
+        self.entity_manager.tactical_pathfinder = self.tactical_pathfinder
 
         # 5. Crear jugador y grupo de enemigos para el nivel
         self.entity_manager.create_player()
