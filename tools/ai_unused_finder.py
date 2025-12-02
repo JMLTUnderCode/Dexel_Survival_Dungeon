@@ -7,6 +7,7 @@ Uso:
 Qué hace:
 - importa los registries runtime: ACTIONS (src/ai/actions.py) y CONDITIONS (src/ai/conditions.py)
 - importa todos los módulos en src/data/ y busca dicts `*_BEHAVIOR` o variables `...` con claves 'states'
+- Soporta diccionarios definidos a nivel de módulo o dentro de clases (ej. BehaviorsData).
 - extrae strings usados en entry/update/exit y transitions.cond
 - reporta acciones/condiciones no referenciadas por ninguna spec
 
@@ -15,6 +16,7 @@ NOTA: no modifica código; solo informa. Requiere ejecutar desde el root del rep
 import sys
 import os
 import importlib
+import inspect
 from typing import Set, Any, Tuple
 
 # add 'src' to path so modules import as e.g. data.enemies, ai.actions
@@ -76,15 +78,28 @@ def scan_data_modules() -> Tuple[Set[str], Set[str], Set[str]]:
             # best-effort: skip modules that raise on import
             print(f"Warning: could not import {mod_name}: {e}")
             continue
-        # inspect module globals for dict-like specs (states etc)
+        
+        # inspect module globals
         for nm, val in vars(mod).items():
+            # 1. Check top-level dicts
             if isinstance(val, dict):
-                # heuristic: dict with key "states" is HSM spec
                 if "states" in val and isinstance(val["states"], dict):
                     collect_strings_from_spec(val, used_actions, used_conds)
                 else:
-                    # also scan any nested dicts in the module
                     collect_strings_from_spec(val, used_actions, used_conds)
+            
+            # 2. Check classes (like BehaviorsData) that might contain static dicts
+            elif inspect.isclass(val):
+                # Iterate over class attributes
+                for attr_name in dir(val):
+                    if attr_name.startswith("__"):
+                        continue
+                    attr_val = getattr(val, attr_name)
+                    if isinstance(attr_val, dict):
+                        # Heuristic: if it has "states" or "root", it's likely a behavior spec
+                        if "states" in attr_val or "root" in attr_val:
+                            collect_strings_from_spec(attr_val, used_actions, used_conds)
+
     return used_actions, used_conds, scanned_modules
 
 def main():
