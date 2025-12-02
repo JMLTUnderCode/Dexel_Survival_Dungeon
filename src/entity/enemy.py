@@ -388,9 +388,13 @@ class Enemy(Kinematic):
                 steering_evade = self.evade.get_steering()
                 steering = SteeringOutput(linear=steering_evade.linear, angular=steering_lwyg.angular)
             case CONF.ALG.ALGORITHM.PATH_FOLLOWING:
-                steering = self.follow_path.get_steering()
+                steering_lwyg = self.look_where.get_steering()
+                steering_path = self.follow_path.get_steering()
+                steering = SteeringOutput(linear=steering_path.linear, angular=steering_lwyg.angular)
             case CONF.ALG.ALGORITHM.TEMP_PATH_FOLLOWING:
-                steering = self.temp_follow_path.get_steering()
+                steering_lwyg = self.look_where.get_steering()
+                steering_tpath = self.temp_follow_path.get_steering()
+                steering = SteeringOutput(linear=steering_tpath.linear, angular=steering_lwyg.angular)
 
         # 3. Aplicar el steering resultante y actualizar la cinemática
         if isinstance(steering, SteeringOutput):
