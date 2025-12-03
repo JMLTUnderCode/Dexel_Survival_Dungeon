@@ -45,16 +45,15 @@ import random
 import math
 import time
 from typing import Dict, Callable, Any, List, Optional
-
 from entity.kinematic import Kinematic, SteeringOutput
 from entity.animation import set_animation_state
 from entity.entity_spec import EntitySpec, Stats, Sprite, SpawnedEntityMeta
 from algorithms.path_following import FollowPath
 import algorithms.algorithms_configs as ALG_CONF
 from map.paths import Path
-from configs.package import CONF
-
+from tacticals.profiles_configs import HUNTER_COMBAT_PROFILE, GUARDIAN_COMBAT_PROFILE, FLEE_PROFILE
 from ai.utils import get_spec_param, get_manager, get_player, exception_print
+from configs.package import CONF
 
 # ACTIONS: mapping string -> callable(hinst, entity)
 ACTIONS: Dict[str, Callable[[Any, Any], None]] = {}
@@ -72,28 +71,89 @@ def _register(name: str):
 # --------------------
 # Helpers locales
 # --------------------
-def _find_best_patrol_path(pathfinder, start_pos, desired_nodes: int, max_attempts: int = 12) -> Optional[List]:
+def _get_tactical_profile(hinst, entity):
+    """
+    Helper para seleccionar el perfil táctico adecuado según la entidad y su estado.
+    """
+    # 1. Si está huyendo, usar perfil de huida (prioridad máxima)
+    if hinst.get_blackboard("is_fleeing", False):
+        return FLEE_PROFILE
+
+    # 2. Determinar tipo de comportamiento base (Hunter vs Guardian)
+    # Intentamos leer el nombre del comportamiento desde la spec del behavior
+    behavior_name = hinst.prototype.name.lower() if hinst.prototype and hasattr(hinst.prototype, "name") else "hunter"
+
+    # 3. Retornar perfil de combate correspondiente
+    if behavior_name == "guardian":
+        return GUARDIAN_COMBAT_PROFILE
+    else:
+        return HUNTER_COMBAT_PROFILE
+    
+def _find_best_patrol_path(pathfinder, start_pos, desired_nodes: int, max_attempts: int = 12, tactical_profile=None) -> Optional[List]:
     """
     Intentar encontrar una ruta (lista de puntos) con al menos desired_nodes.
     Retorna None si no hay navmesh o no se encuentra ruta adecuada.
+    Soporta TacticalPathfinder si se pasa un tactical_profile.
     """
     if not getattr(pathfinder, "navmesh", None):
         return None
-    nodes_list = list(getattr(pathfinder.navmesh, "nodes", {}).values())
-    if not nodes_list:
+    
+    # Acceder a nodos de forma segura
+    nodes_map = getattr(pathfinder.navmesh, "nodes", {})
+    if not nodes_map:
         return None
+    nodes_list = list(nodes_map.values())
+
+    # ---------------------------------------------------------
+    # MEJORA: Selección de objetivos tácticos (Bias Táctico)
+    # ---------------------------------------------------------
+    # En lugar de elegir siempre al azar, identificamos qué nodos son "preferidos"
+    # por la entidad (aquellos con peso negativo en su perfil).
+    tactical_candidates = []
+    if tactical_profile and hasattr(tactical_profile, "weights"):
+        # Identificar tipos con peso < 0 (preferencia/recompensa)
+        preferred_types = {t for t, w in tactical_profile.weights.items() if w < 0}
+        if preferred_types:
+            # Filtrar nodos del mapa que coincidan con estos tipos
+            tactical_candidates = [n for n in nodes_list if getattr(n, "tactical_type", None) in preferred_types]
+    # ---------------------------------------------------------
+
     attempts = 0
     best = None
+    
     while attempts < max_attempts:
-        target_node = random.choice(nodes_list)
+        # 1. Elegir un nodo destino
+        # Si hay candidatos tácticos, usamos un 75% de probabilidad de elegir uno de ellos.
+        # Esto hace que el Hunter patrulle activamente hacia zonas de ventaja (pasillos, zonas abiertas).
+        if tactical_candidates and random.random() < 0.75:
+            target_node = random.choice(tactical_candidates)
+        else:
+            # Fallback: exploración puramente aleatoria (25% o si no hay tácticos)
+            target_node = random.choice(nodes_list)
+        
         try:
-            pts = pathfinder.find_path(start_pos, target_node.center)
+            # 2. Calcular ruta (Táctica o Normal)
+            pts = None
+            # Si es TacticalPathfinder y tenemos perfil, usar find_path con perfil
+            if hasattr(pathfinder, "find_path") and tactical_profile:
+                 # Duck typing check: si el método acepta 'profile' (TacticalPathfinder)
+                 # Como TacticalPathfinder tiene la misma firma excepto por profile, 
+                 # asumimos que si pasamos profile es porque el caller envió el tactical_pathfinder
+                 pts = pathfinder.find_path(start_pos, target_node.center, profile=tactical_profile)
+            else:
+                # Pathfinder normal
+                pts = pathfinder.find_path(start_pos, target_node.center)
         except Exception:
             pts = None
+
+        # 3. Validar longitud de la ruta
         if pts and len(pts) >= desired_nodes:
             return pts
+            
+        # Guardar el mejor intento por si acaso
         if pts and (best is None or len(pts) > len(best)):
             best = pts
+            
         attempts += 1
     return best
 
@@ -116,8 +176,8 @@ def start_random_patrol(hinst, entity):
     """
     Descripción
         FUNCIÓN: Inicia una patrulla aleatoria usando el navmesh/pathfinder.
+        - Integra Tactical Pathfinding: selecciona perfil según comportamiento.
         - No sobreescribe la ruta guardian si `is_on_guardian_path` está a True.
-        - Si no hay navmesh o no se consigue ruta válida, cambia a comportamiento WANDER.
 
     Argumentos
         - hinst (HSMInstance): instancia de la HSM que contiene el blackboard.
@@ -127,19 +187,29 @@ def start_random_patrol(hinst, entity):
         - is_on_guardian_path (read/update): si está en ruta guardian.
         - patrol_target (update): punto final de la patrulla.
         - patrol_requested_at (update): timestamp de última solicitud de patrulla.
-        - 
 
     Parámetros esperados
         - patrol_path_nodes (int): número deseado de nodos en la ruta (default 20).
     """
     try:
-        # 1) Si estamos siguiendo la ruta guardian, no crear ruta aleatoria.
+        # 1) No interferir si estamos en la ruta guardian
         if hinst.get_blackboard("is_on_guardian_path", False):
             return
 
-        # 2) Obtener pathfinder desde el manager; si no existe -> fallback a wander.
+        # 2) Obtener manager y servicios
         manager = get_manager(hinst)
-        pathfinder = getattr(manager, "pathfinder", None)
+        
+        # Intentar usar TacticalPathfinder primero
+        pathfinder = getattr(manager, "tactical_pathfinder", None)
+        profile = None
+        
+        if pathfinder:
+            # Seleccionar perfil táctico
+            profile = _get_tactical_profile(hinst, entity)
+        else:
+            # Fallback a pathfinder normal
+            pathfinder = getattr(manager, "pathfinder", None)
+
         if pathfinder is None or getattr(pathfinder, "navmesh", None) is None:
             # 2.a) No hay navmesh: dejar entidad en wander y actualizar timestamp
             entity.follow_path = None
@@ -152,7 +222,9 @@ def start_random_patrol(hinst, entity):
 
         # 4) Obtener parámetros y buscar ruta en navmesh
         desired_nodes = int(get_spec_param(hinst, "patrol_path_nodes", 20))
-        pts = _find_best_patrol_path(pathfinder, entity.get_pos(), desired_nodes)
+        
+        # Llamada al helper actualizado con perfil táctico
+        pts = _find_best_patrol_path(pathfinder, entity.get_pos(), desired_nodes, tactical_profile=profile)
 
         # 5) Si no hay puntos adecuados -> fallback a wander
         if not pts:
@@ -173,12 +245,10 @@ def start_random_patrol(hinst, entity):
             entity.algorithm = CONF.ALG.ALGORITHM.PATH_FOLLOWING
             hinst.set_blackboard("patrol_target", pts[-1])
             hinst.set_blackboard("patrol_requested_at", time.time())
-            hinst.set_blackboard("is_on_guardian_path", False)
         except Exception as e:
-            # 7) Si Falló la asignación del FollowPath -> fallback y log
-            exception_print("START RANDOM PATROL", entity, f"Could not assign FollowPath: {e}")
+            exception_print("START RANDOM PATROL (FollowPath init)", entity, str(e))
             entity.algorithm = CONF.ALG.ALGORITHM.WANDER_DYNAMIC
-            hinst.set_blackboard("patrol_requested_at", time.time())
+
     except Exception as e:
         exception_print("START RANDOM PATROL", entity, str(e))
 
@@ -187,6 +257,8 @@ def patrol_tick(hinst, entity):
     """
     Descripción
         FUNCIÓN: Tick periódico que mantiene o solicita una nueva patrulla aleatoria.
+        Ahora incluye lógica de ESCANEO (giro 360º) al llegar al destino antes de
+        solicitar una nueva ruta.
 
     Argumentos
         - hinst (HSMInstance): instancia de la HSM.
@@ -195,16 +267,87 @@ def patrol_tick(hinst, entity):
     Blackboard utilizado/modificado
         - is_on_guardian_path (read): si está en ruta guardian.
         - patrol_requested_at (read/update): timestamp de última solicitud de patrulla.
+        - patrol_target (read): punto final de la patrulla actual.
+        - is_scanning_patrol_end (read/update): flag de estado de escaneo al final de ruta.
+        - scan_start_time (read/update): timer para el escaneo.
+        - scan_start_angle (read/update): ángulo inicial para el giro.
+        - scan_initialized (read/update): flag de inicialización del escaneo.
 
     Parámetros esperados
         - patrol_tick_throttle (float): segundos entre posibles nuevas solicitudes (default 3.0).
+        - arrival_threshold (float): distancia para considerar llegada al destino (default 10.0).
+        - scan_duration (float): tiempo para completar el giro de escaneo (default 4.0).
+        - vision_range (float): radio para el objetivo orbital del escaneo (default 300.0).
     """
     try:
-        # 1) No interferir si estamos en la ruta guardian
+        # 1. No interferir si estamos en la ruta guardian (prioridad absoluta)
         if hinst.get_blackboard("is_on_guardian_path", False):
             return
 
-        # 2) Obtener throttling y timestamps para no recalcular cada frame
+        dt = hinst.get_blackboard("_dt", 0.016)
+
+        # ---------------------------------------------------------
+        # LÓGICA DE ESCANEO (Si ya llegó al destino)
+        # ---------------------------------------------------------
+        if hinst.get_blackboard("is_scanning_patrol_end", False):
+            # 2. Obtener parámetros de configuración para el escaneo
+            duration = float(get_spec_param(hinst, "scan_duration", 4.0))
+            radius = float(get_spec_param(hinst, "vision_range", 300.0))
+
+            # 3. Inicialización del escaneo (solo la primera vez)
+            if not hinst.get_blackboard("scan_initialized", False):
+                hinst.set_blackboard("scan_start_time", time.time())
+                hinst.set_blackboard("scan_start_angle", float(getattr(entity, "orientation", 0.0)))
+                hinst.set_blackboard("scan_initialized", True)
+                
+                # 3.1 Detener movimiento lineal completamente
+                entity.velocity = (0.0, 0.0)
+                entity._pending_steering = SteeringOutput(linear=(0.0, 0.0), angular=0.0)
+                
+                # 3.2 Cambiar algoritmo a FACE para rotación natural
+                entity.algorithm = CONF.ALG.ALGORITHM.FACE
+                
+                # 3.3 Crear objetivo cinemático orbital
+                ex, ez = entity.get_pos()
+                ori = float(getattr(entity, "orientation", 0.0))
+                tx = ex + math.cos(ori) * radius
+                tz = ez + math.sin(ori) * radius
+                
+                if hasattr(entity, "face"):
+                    entity.face.target = Kinematic(position=(tx, tz))
+
+            # 4. Actualización del objetivo orbital (giro progresivo)
+            start_time = hinst.get_blackboard("scan_start_time", 0.0)
+            elapsed = time.time() - start_time
+            
+            if elapsed >= duration:
+                # 5. Fin del escaneo: Limpiar flags y solicitar nueva ruta
+                hinst.set_blackboard("is_scanning_patrol_end", False)
+                hinst.set_blackboard("scan_initialized", False)
+                if hasattr(entity, "face"):
+                    entity.face.target = None
+                
+                # Solicitar nueva ruta inmediatamente
+                start_random_patrol(hinst, entity)
+            else:
+                # 6. Calcular posición orbital intermedia
+                progress = elapsed / duration
+                start_angle = hinst.get_blackboard("scan_start_angle", 0.0)
+                target_angle = start_angle + (progress * 2 * math.pi)
+                
+                ex, ez = entity.get_pos()
+                tx = ex + math.cos(target_angle) * radius
+                tz = ez + math.sin(target_angle) * radius
+                
+                if hasattr(entity, "face") and entity.face.target:
+                    entity.face.target.position = (tx, tz)
+            
+            # Retornar para no procesar lógica de movimiento normal
+            return
+
+        # ---------------------------------------------------------
+        # LÓGICA DE MOVIMIENTO / CHEQUEO DE LLEGADA
+        # ---------------------------------------------------------
         throttle = float(get_spec_param(hinst, "patrol_tick_throttle", 3.0))
         last = float(hinst.get_blackboard("patrol_requested_at", 0.0))
         now = time.time()
@@ -212,25 +355,32 @@ def patrol_tick(hinst, entity):
         poly_follow = getattr(entity, "follow_path", None)
         need_new = False
 
-        # 3) Si no hay ruta activa y pasó el throttle -> pedir nueva
+        # 7. Si no hay ruta activa y pasó el throttle -> pedir nueva
         if poly_follow is None:
             if now - last > throttle:
                 need_new = True
         else:
-            # 4) Si existe ruta, comprobar si está en el último segmento (ruta terminada)
-            path_obj = getattr(poly_follow, "path", None)
-            curp = float(getattr(poly_follow, "current_param", 0.0))
-            seg_count = int(getattr(path_obj, "segment_count", 0))
-            if seg_count and curp >= max(0, seg_count - 1):
-                need_new = True
+            # 8. Comprobar si hemos llegado al objetivo físico
+            target = hinst.get_blackboard("patrol_target", None)
+            if target:
+                ex, ez = entity.get_pos()
+                dist_to_target = math.hypot(ex - target[0], ez - target[1])
+                threshold = float(get_spec_param(hinst, "arrival_threshold", 10.0))
+                
+                # 9. Si llegamos, INICIAR ESCANEO en lugar de pedir ruta nueva inmediatamente
+                if dist_to_target < threshold:
+                    hinst.set_blackboard("is_scanning_patrol_end", True)
+                    hinst.set_blackboard("scan_initialized", False)
+                    return
 
-            # 5) Si el algoritmo cambió (no está en PATH_FOLLOWING) y pasó throttle -> re-request
+            # 10. Si el algoritmo cambió externamente (fallback)
             if getattr(entity, "algorithm", None) != CONF.ALG.ALGORITHM.PATH_FOLLOWING and (now - last) > throttle:
                 need_new = True
 
-        # 6) Si se decide pedir nueva ruta, delegar a start_random_patrol
+        # 11. Si se decide pedir nueva ruta (caso fallback o inicio)
         if need_new:
             start_random_patrol(hinst, entity)
+
     except Exception as e:
         exception_print("PATROL TICK", entity, str(e))
 
@@ -565,6 +715,185 @@ def stop_evade(hinst, entity):
     except Exception as e:
         exception_print("STOP EVADE", entity, str(e))
 
+# --------------------
+# Evade / Flee (Tactical)
+# --------------------
+@_register("start_tactical_flee")
+def start_tactical_flee(hinst, entity):
+    """
+    Descripción
+        ACCIÓN: Inicia una huida táctica inteligente.
+        1. Identifica candidatos "SAFE" (nodos Sentry/Cover).
+        2. Filtra aquellos que están peligrosamente cerca del jugador.
+        3. De los seguros, selecciona los mejores candidatos geométricos y evalúa
+           su CAMINO REAL (pathfinding) para elegir el de menor distancia de recorrido.
+        4. Genera una ruta usando FLEE_PROFILE para abrazar paredes.
+
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad que huye.
+
+    Blackboard usado/modificado
+        - is_fleeing (update): True.
+        - prev_algorithm (update): guarda algoritmo anterior.
+        - flee_target_pos (update): posición del punto seguro seleccionado.
+
+    Parámetros esperados
+        - safe_distance (float): distancia mínima al jugador para considerar un punto seguro.
+    """
+    try:
+        # 1. Configuración inicial y obtención de servicios
+        player = get_player(hinst)
+        manager = get_manager(hinst)
+        pathfinder = getattr(manager, "tactical_pathfinder", None)
+
+        # Fallback si no hay sistema táctico
+        if not player or not pathfinder or not getattr(pathfinder, "navmesh", None):
+            start_evade_from_player(hinst, entity)
+            return
+
+        # Guardar estado previo
+        prev_alg = getattr(entity, "algorithm", None)
+        hinst.set_blackboard("prev_algorithm", prev_alg)
+        hinst.set_blackboard("is_fleeing", True)
+
+        # 2. Obtener parámetros
+        safe_dist = float(get_spec_param(hinst, "safe_distance", 450.0))
+        ex, ez = entity.get_pos()
+        px, pz = player.get_pos()
+
+        # 3. Buscar candidatos SAFE (Sentry o Cover)
+        nodes_map = pathfinder.navmesh.nodes
+        pre_candidates = []
+        
+        for node in nodes_map.values():
+            # Filtro Estático: cover
+            if node.tactical_type not in ["cover"]:
+                continue
+            
+            # Filtro Dinámico de Seguridad:
+            # El punto debe estar LEJOS del jugador para ser considerado una opción.
+            nx, nz = node.center
+            dist_to_player = math.hypot(nx - px, nz - pz)
+            
+            if dist_to_player > safe_dist:
+                # Pre-cálculo: Distancia euclidiana a la entidad (heurística inicial)
+                dist_to_me = math.hypot(nx - ex, nz - ez)
+                pre_candidates.append((dist_to_me, node))
+
+        # 4. Seleccionar el mejor candidato basado en CAMINO REAL
+        best_path = None
+        best_path_len = float('inf')
+        target_pos = None
+
+        if pre_candidates:
+            # Ordenar por distancia euclidiana para evaluar solo los más prometedores
+            # (Optimización: evaluar solo los 10 más cercanos geométricamente para no saturar CPU)
+            pre_candidates.sort(key=lambda x: x[0])
+            top_candidates = pre_candidates[:10]
+
+            for _, node in top_candidates:
+                # Calcular ruta real usando el perfil de huida
+                pts = pathfinder.find_path((ex, ez), node.center, profile=FLEE_PROFILE)
+                
+                if pts:
+                    # Calcular longitud real del camino (suma de segmentos)
+                    path_len = 0.0
+                    for i in range(len(pts) - 1):
+                        p1 = pts[i]
+                        p2 = pts[i+1]
+                        path_len += math.hypot(p1[0] - p2[0], p1[1] - p2[1])
+                    
+                    # Si es el camino más corto encontrado hasta ahora, guardarlo
+                    if path_len < best_path_len:
+                        best_path_len = path_len
+                        best_path = pts
+                        target_pos = node.center
+
+        # 5. Asignar ruta si se encontró
+        if best_path and target_pos:
+            poly = Path(best_path, closed=False)
+            entity.follow_path = FollowPath(
+                character=entity,
+                path=poly,
+                offset=1.0,
+                current_param=0.0,
+                max_acceleration=getattr(entity, "max_acceleration", 300.0)
+            )
+            entity.algorithm = CONF.ALG.ALGORITHM.PATH_FOLLOWING
+            hinst.set_blackboard("flee_target_pos", target_pos)
+            return
+
+        # 6. Fallback final: Si no hay candidatos seguros o accesibles
+        # Intentar huir al nodo más lejano geométricamente (pánico)
+        furthest_node = None
+        max_dist = -1.0
+        for node in nodes_map.values():
+            nx, nz = node.center
+            d = math.hypot(nx - px, nz - pz)
+            if d > max_dist:
+                max_dist = d
+                furthest_node = node
+        
+        if furthest_node:
+             # Intento final de ruta
+             pts = pathfinder.find_path((ex, ez), furthest_node.center, profile=FLEE_PROFILE)
+             if pts:
+                poly = Path(pts, closed=False)
+                entity.follow_path = FollowPath(
+                    character=entity,
+                    path=poly,
+                    offset=1.0,
+                    current_param=0.0,
+                    max_acceleration=getattr(entity, "max_acceleration", 300.0)
+                )
+                entity.algorithm = CONF.ALG.ALGORITHM.PATH_FOLLOWING
+                hinst.set_blackboard("flee_target_pos", furthest_node.center)
+                return
+
+        start_evade_from_player(hinst, entity)
+
+    except Exception as e:
+        exception_print("START TACTICAL FLEE", entity, str(e))
+        start_evade_from_player(hinst, entity)
+
+@_register("tactical_flee_tick")
+def tactical_flee_tick(hinst, entity):
+    """
+    Descripción
+        ACCIÓN: Tick de mantenimiento para la huida táctica.
+        Actualiza la distancia al jugador pero NO recalcula la ruta constantemente
+        para evitar que la entidad se quede estática. La entidad debe llegar al destino
+        antes de reevaluar (manejado por transición PathFinished).
+
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad que huye.
+
+    Blackboard usado/modificado
+        - distance_to_player (update): métrica de distancia.
+
+    Parámetros esperados
+        - Ninguno
+    """
+    try:
+        player = get_player(hinst)
+        if not player:
+            return
+
+        # 1. Actualizar distancia al jugador (útil para condiciones globales)
+        ex, ez = entity.get_pos()
+        px, pz = player.get_pos()
+        dist_p = math.hypot(px - ex, pz - ez)
+        hinst.set_blackboard("distance_to_player", float(dist_p))
+
+        # NOTA: Se ha eliminado la lógica de recalculo por proximidad del jugador.
+        # La entidad se comprometerá con su ruta actual hasta que termine (PathFinished)
+        # o hasta que una condición de emergencia (ej. daño recibido) fuerce un cambio de estado.
+
+    except Exception as e:
+        exception_print("TACTICAL FLEE TICK", entity, str(e))
+
 # --------------------------------------
 # Face / Safe Anchor / Movement Helpers
 # --------------------------------------
@@ -896,6 +1225,7 @@ def return_to_protection_zone(hinst, entity):
     Descripción
         ACCIÓN: Construir y asignar una ruta temporal (temp_follow_path) desde la
         posición actual hacia el punto más cercano del path guardian para volver a la ruta.
+        Usa TacticalPathfinder para preferir nodos SENTRY y los marca para escanear.
 
     Argumentos
         - hinst (HSMInstance): instancia HSM.
@@ -908,13 +1238,17 @@ def return_to_protection_zone(hinst, entity):
         - is_on_guardian_path (update): se pone False.
         - is_at_protection_zone (update): False hasta llegada.
         - guardian_last_param (update): hint del param cercano al target.
+        - return_sentry_indices (update): lista de índices de nodos SENTRY en la ruta.
+        - return_scanned_indices (update): set de índices ya escaneados.
+        - is_scanning_sentry (update): flag de estado de escaneo.
 
     Parámetros esperados
         - arrival_threshold (float): umbral de llegada (px) usado por check_return_path_finished.
     """
     try:
         manager = get_manager(hinst)
-        pathfinder = getattr(manager, "pathfinder", None)
+        # Usar TacticalPathfinder si está disponible, sino fallback a normal
+        pathfinder = getattr(manager, "tactical_pathfinder", getattr(manager, "pathfinder", None))
 
         original = hinst.get_blackboard("guardian_original_path", None) or getattr(entity, "path", None)
         if original is None or pathfinder is None:
@@ -932,9 +1266,14 @@ def return_to_protection_zone(hinst, entity):
         # actualizar hint cache
         hinst.set_blackboard("guardian_last_param", float(closest_param))
 
-        # 2) pedir ruta desde la posición actual al punto objetivo
+        # 2) pedir ruta desde la posición actual al punto objetivo usando PERFIL GUARDIAN
+        pts = None
         try:
-            pts = pathfinder.find_path(entity.get_pos(), target_pos)
+            # Duck typing: si tiene find_path con profile es Tactical, sino es normal
+            if hasattr(pathfinder, "find_path") and "profile" in pathfinder.find_path.__code__.co_varnames:
+                pts = pathfinder.find_path(entity.get_pos(), target_pos, profile=GUARDIAN_COMBAT_PROFILE)
+            else:
+                pts = pathfinder.find_path(entity.get_pos(), target_pos)
         except Exception:
             pts = None
 
@@ -943,23 +1282,28 @@ def return_to_protection_zone(hinst, entity):
             hinst.set_blackboard("is_at_protection_zone", True)
             return
 
+        # ---------------------------------------------------------
+        # DETECCIÓN DE NODOS SENTRY EN LA RUTA
+        # ---------------------------------------------------------
+        sentry_indices = []
+        if getattr(pathfinder, "navmesh", None):
+            for i, pt in enumerate(pts):
+                # Saltamos el primero (inicio) y el último (destino final) para evitar bloqueos en bordes
+                if i == 0:
+                    continue
+                node = pathfinder.navmesh.get_node_at(pt)
+                if node and node.tactical_type == "sentry":
+                    sentry_indices.append(i)
+        
+        hinst.set_blackboard("return_sentry_indices", sentry_indices)
+        hinst.set_blackboard("return_scanned_indices", set())
+        hinst.set_blackboard("is_scanning_sentry", False)
+        # ---------------------------------------------------------
+
         # 4) crear Path y FollowPath temporal
         poly = Path(pts, closed=False)
-        try:
-            # asegurar primer punto igual a la posición actual para continuidad
-            if getattr(poly, "points", None):
-                poly.points[0] = tuple(entity.get_pos())
-        except Exception:
-            # Si no podemos establecer el primer punto en la posición de la entidad, continuar sin generar una excepción.
-            pass
+        start_param = poly.get_param(pts[1] if len(pts) > 1 else entity.get_pos(), 0.0)
 
-        try:
-            start_param = poly.get_param(entity.get_pos(), 0.0)
-        except Exception:
-            start_param = 0.0
-
-        # limpiar follow_path regular para priorizar temp_follow_path
-        entity.follow_path = None
         entity.temp_follow_path = FollowPath(
             character=entity,
             path=poly,
@@ -975,9 +1319,129 @@ def return_to_protection_zone(hinst, entity):
         hinst.set_blackboard("is_at_protection_zone", False)
     except Exception as e:
         exception_print("RETURN TO PROTECTION ZONE", entity, str(e))
-        # en caso de fallo, no dejar al NPC en estado inconsistente
+        # fallback seguro
         hinst.set_blackboard("is_at_protection_zone", True)
         hinst.set_blackboard("is_returning_to_zone", False)
+
+@_register("guardian_return_tick")
+def guardian_return_tick(hinst, entity):
+    """
+    Descripción
+        ACCIÓN: Tick avanzado de retorno para el Guardián.
+        Maneja:
+        1. Movimiento por la ruta (TEMP_PATH_FOLLOWING).
+        2. Detección de nodos SENTRY.
+        3. Escaneo 360º natural usando FACE hacia un objetivo orbital.
+        4. Finalización de la ruta.
+
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad.
+
+    Blackboard usado / modificado
+        - is_scanning_sentry (read/update): estado de escaneo.
+        - scan_initialized (read/update): flag de inicio de escaneo.
+        - scan_start_time (read/update): timer para el escaneo.
+        - scan_start_angle (read/update): ángulo inicial de la entidad.
+        - return_sentry_indices (read): lista de puntos de interés.
+        - return_scanned_indices (read/update): registro de puntos visitados.
+    
+    Parámetros esperados
+        - scan_duration (float): tiempo en segundos para completar el giro (default 4.0).
+        - vision_range (float): radio del círculo de escaneo (default 300.0).
+    """
+    try:
+        dt = hinst.get_blackboard("_dt", 0.016)
+        
+        # --- LÓGICA DE ESCANEO (PAUSA Y GIRO) ---
+        if hinst.get_blackboard("is_scanning_sentry", False):
+            # 1. Obtener parámetros de configuración
+            duration = float(get_spec_param(hinst, "scan_duration", 4.0))
+            radius = float(get_spec_param(hinst, "vision_range", 300.0))
+
+            # 2. Inicialización del escaneo (solo la primera vez)
+            if not hinst.get_blackboard("scan_initialized", False):
+                hinst.set_blackboard("scan_start_time", time.time())
+                hinst.set_blackboard("scan_start_angle", float(getattr(entity, "orientation", 0.0)))
+                hinst.set_blackboard("scan_initialized", True)
+                
+                # 2.1 Detener movimiento lineal
+                entity.velocity = (0.0, 0.0)
+                entity._pending_steering = SteeringOutput(linear=(0.0, 0.0), angular=0.0)
+                
+                # 2.2 Cambiar algoritmo a FACE
+                entity.algorithm = CONF.ALG.ALGORITHM.FACE
+                
+                # 2.3 Crear un objetivo cinemático dummy para que FACE lo siga
+                # Inicialmente en la posición actual proyectada hacia adelante
+                ex, ez = entity.get_pos()
+                ori = float(getattr(entity, "orientation", 0.0))
+                tx = ex + math.cos(ori) * radius
+                tz = ez + math.sin(ori) * radius
+                
+                # Asignar target a entity.face
+                if hasattr(entity, "face"):
+                    entity.face.target = Kinematic(position=(tx, tz))
+
+            # 3. Actualización del objetivo orbital
+            start_time = hinst.get_blackboard("scan_start_time", 0.0)
+            elapsed = time.time() - start_time
+            
+            if elapsed >= duration:
+                # 4. Fin del escaneo: Limpieza y restauración
+                hinst.set_blackboard("is_scanning_sentry", False)
+                hinst.set_blackboard("scan_initialized", False)
+                
+                # Restaurar movimiento de ruta
+                entity.algorithm = CONF.ALG.ALGORITHM.TEMP_PATH_FOLLOWING
+                entity.face.target = None # Limpiar target de face
+            else:
+                # 5. Calcular nueva posición del objetivo en la circunferencia
+                # Progreso de 0.0 a 1.0
+                progress = elapsed / duration
+                
+                # Ángulo objetivo: empieza en start_angle y suma 2*PI (360 grados)
+                start_angle = hinst.get_blackboard("scan_start_angle", 0.0)
+                target_angle = start_angle + (progress * 2 * math.pi)
+                
+                # Calcular coordenadas polares
+                ex, ez = entity.get_pos()
+                tx = ex + math.cos(target_angle) * radius
+                tz = ez + math.sin(target_angle) * radius
+                
+                # Actualizar la posición del target existente
+                if hasattr(entity, "face") and entity.face.target:
+                    entity.face.target.position = (tx, tz)
+            
+            return # IMPORTANTE: Salir para no procesar movimiento de ruta
+
+        # --- LÓGICA DE MOVIMIENTO Y DETECCIÓN ---
+        temp_path = getattr(entity, "temp_follow_path", None)
+        if not temp_path:
+            check_return_path_finished(hinst, entity)
+            return
+
+        current_param = getattr(temp_path, "current_param", 0.0)
+        sentry_indices = hinst.get_blackboard("return_sentry_indices", [])
+        scanned_indices = hinst.get_blackboard("return_scanned_indices", set())
+
+        # Verificar si estamos cerca de un nodo Sentry no escaneado
+        for idx in sentry_indices:
+            if idx not in scanned_indices:
+                # Si estamos cerca del índice (margen de 0.5 en param)
+                if abs(current_param - idx) < 0.5:
+                    # INICIAR ESCANEO
+                    hinst.set_blackboard("is_scanning_sentry", True)
+                    hinst.set_blackboard("scan_initialized", False) # Forzar init
+                    scanned_indices.add(idx) # Marcar como visitado
+                    return
+
+        # --- LÓGICA DE FINALIZACIÓN ---
+        check_return_path_finished(hinst, entity)
+
+    except Exception as e:
+        exception_print("GUARDIAN RETURN TICK", entity, str(e))
+        check_return_path_finished(hinst, entity)
 
 @_register("check_return_path_finished")
 def check_return_path_finished(hinst, entity):
@@ -1085,7 +1549,6 @@ def start_return_to_boss_position(hinst, entity):
         # 5) Construir Path y FollowPath temporal y asignarlo a la entidad
         poly = Path(pts, closed=False)
         start_param = poly.get_param(entity.get_pos(), 0.0)
-        entity.follow_path = None
         entity.temp_follow_path = FollowPath(
             character=entity,
             path=poly,
@@ -1128,9 +1591,7 @@ def return_to_boss_tick(hinst, entity):
             ex, ez = entity.get_pos()
             tx, tz = float(target[0]), float(target[1])
             if math.hypot(ex - tx, ez - tz) <= arrival_thresh:
-                # 2) Llegada: limpiar temp path y fijar algoritmo de parada
-                entity.temp_follow_path = None
-                entity.follow_path = None
+                # 2) Llegada: fijar algoritmo de parada
                 entity.algorithm = CONF.ALG.ALGORITHM.ARRIVE_KINEMATIC
                 hinst.set_blackboard("return_arrived_at", time.time())
                 return
@@ -1359,8 +1820,6 @@ def start_regeneration(hinst, entity):
         # 1) Normalizar cinemática y limpiar rutas residuales para evitar micro-desplazamientos
         entity.velocity = (0.0, 0.0)
         entity._pending_steering = SteeringOutput(linear=(0.0, 0.0), angular=0.0)
-        entity.follow_path = None
-        entity.temp_follow_path = None
 
         # 2) Poner algoritmo FACE y fijar target al player o a boss_position como fallback
         try:

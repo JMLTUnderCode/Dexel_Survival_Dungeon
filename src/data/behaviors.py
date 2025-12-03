@@ -69,7 +69,9 @@ class BehaviorsData:
             "player_lost_timeout": 2.0,
             "patrol_path_nodes": 20,
             "face_range_multiplier": 2,
-            "check_los_throttle": 0.12
+            "check_los_throttle": 0.12,
+            "scan_duration": 4.0, # NUEVO: Tiempo para giro 360 al llegar a destino
+            "arrival_threshold": 15.0 # NUEVO: Umbral explícito para detectar llegada a punto
         },
         "root": "EstadoVida",
         "states": {
@@ -114,12 +116,15 @@ class BehaviorsData:
             # Nivel 1: Huyendo (evadir al enemigo)
             "Huyendo": {
                 "type": "leaf",
-                "entry": ["start_evade_from_player", "set_behavior_flag_fleeing"],
-                "update": ["evade_tick"],
+                #"entry": ["start_evade_from_player", "set_behavior_flag_fleeing"],
+                #"update": ["evade_tick"],
+                "entry": ["start_tactical_flee", "set_behavior_flag_fleeing"],
+                "update": ["tactical_flee_tick"], # Usar tick táctico
                 "exit": ["stop_evade", "clear_behavior_flag_fleeing"],
                 "transitions": [
                     # Si el jugador está lejos, pasar a curarse
-                    {"to": "Curarse", "cond": "PlayerFar", "priority": 200}
+                    #{"to": "Curarse", "cond": "PlayerFar", "priority": 200}
+                    {"to": "Curarse", "cond": "PathFinished", "priority": 200}
                 ]
             },
 
@@ -164,6 +169,7 @@ class BehaviorsData:
         - protection_margin (px): distancia al punto MÁS CERCANO del Path que define
             si la entidad está "sobre" su ruta patrulla (p.ej. 40 px).
         - arrival_threshold (px): umbral de llegada usado por la ruta de retorno (p.ej. 40 px).
+        - scan_duration (s): duración del escaneo visual al llegar a un punto del path.
 
     Estados y semántica
       - EstadoVida (composite, history=deep)
@@ -220,7 +226,8 @@ class BehaviorsData:
             "face_range_multiplier": 2,
             "check_los_throttle": 0.25,
             "protection_margin": 40.0,
-            "arrival_threshold": 40.0
+            "arrival_threshold": 40.0,
+            "scan_duration": 4.0,
         },
         "root": "EstadoVida",
         "states": {
@@ -271,7 +278,7 @@ class BehaviorsData:
             "EstadoVida.RegresarAZona": {
                 "type": "leaf",
                 "entry": ["return_to_protection_zone"],
-                "update": ["check_return_path_finished"],
+                "update": ["guardian_return_tick"],
                 "exit": [],
                 "transitions": [
                     # Si ha llegado a la zona protegida, volver a vigilar
@@ -284,12 +291,15 @@ class BehaviorsData:
             # Nivel 1: Huyendo (evadir al enemigo)
             "Huyendo": {
                 "type": "leaf",
-                "entry": ["start_evade_from_player", "set_behavior_flag_fleeing"],
-                "update": ["evade_tick"],
+                #"entry": ["start_evade_from_player", "set_behavior_flag_fleeing"],
+                #"update": ["evade_tick"],
+                "entry": ["start_tactical_flee", "set_behavior_flag_fleeing"],
+                "update": ["tactical_flee_tick"], # Usar tick táctico
                 "exit": ["stop_evade", "clear_behavior_flag_fleeing"],
                 "transitions": [
                     # Si el jugador está lejos, pasar a curarse
-                    {"to": "Curarse", "cond": "PlayerFar", "priority": 200}
+                    #{"to": "Curarse", "cond": "PlayerFar", "priority": 200}
+                    {"to": "Curarse", "cond": "PathFinished", "priority": 200}
                 ]
             },
 

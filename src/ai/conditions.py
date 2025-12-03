@@ -626,3 +626,46 @@ def RecentlyDamaged(hinst: HSMInstance, entity: Any) -> bool:
         return False
     except Exception:
         return False
+
+@condition
+def PathFinished(hinst: HSMInstance, entity: Any) -> bool:
+    """
+    Descripción
+        CONDICIÓN: True si la entidad ha completado su recorrido actual (FollowPath).
+        Se considera terminado si no tiene follow_path asignado o si ha llegado al final.
+
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad que se evalúa.
+
+    Blackboard utilizado/modificado
+        - Ninguno
+
+    Parámetros esperados
+        - arrival_threshold (float): distancia para considerar llegada (default 10.0).
+    """
+    try:
+        # 1. Si no tiene objeto follow_path, asumimos que terminó o no hay ruta
+        follow = getattr(entity, "follow_path", None)
+        if not follow:
+            return True
+
+        # 2. Verificar si el algoritmo actual es PATH_FOLLOWING
+        if getattr(entity, "algorithm", None) != CONF.ALG.ALGORITHM.PATH_FOLLOWING:
+            return True
+
+        # 3. Verificar distancia al punto final del path
+        path = follow.path
+        if not path or not path.points:
+            return True
+
+        end_point = path.points[-1]
+        ex, ez = entity.get_pos()
+        dist = math.hypot(end_point[0] - ex, end_point[1] - ez)
+
+        # 4. Obtener umbral
+        threshold = float(get_spec_param(hinst, "arrival_threshold", 10.0))
+
+        return dist <= threshold
+    except Exception:
+        return False
