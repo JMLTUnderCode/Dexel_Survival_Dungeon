@@ -14,10 +14,10 @@ from .tactical_profile import TacticalProfile
 # - Prefiere 'exposed' para tener libertad de movimiento.
 # - Evita 'sentry' (esquinas) porque limitan su huida.
 HUNTER_COMBAT_PROFILE = TacticalProfile(weights={
-    "narrow": -60.0,       # Gran Negativo (Prefiere mucho: embudo)
-    "exposed": -30.0,      # Medio Negativo (Prefiere: movilidad)
-    "sentry": 10.0,        # Pequeño Positivo (Evita: no le gusta arrinconarse)
-    "cover": 0.0           # Neutro en combate (solo útil al huir)
+    "narrow": -100.0,      # Medio Negativo (Prefiere: movilidad)
+    "exposed": -200.0,     # Gran Negativo (Prefiere mucho: embudo)
+    "sentry": 50.0,        # Pequeño Positivo (Evita: no le gusta arrinconarse)
+    "cover": 0.0           # Indiferente
 })
 
 # PERFIL GUARDIAN (Defensor)
@@ -26,10 +26,10 @@ HUNTER_COMBAT_PROFILE = TacticalProfile(weights={
 # - Ama 'sentry' (esquinas seguras para vigilar).
 # - Evita 'narrow' levemente (prefiere tener visión clara).
 GUARDIAN_COMBAT_PROFILE = TacticalProfile(weights={
-    "narrow": 15.0,        # Pequeño Positivo (Evita levemente)
-    "exposed": 100.0,       # Gran Positivo (Evita fuertemente: peligro)
-    "sentry": -60.0,       # Gran Negativo (Prefiere mucho: posición segura)
-    "cover": 0.0           # Neutro en combate
+    "narrow": 30.0,       # Pequeño Positivo (Evita levemente)
+    "exposed": 100.0,     # Gran Positivo (Evita fuertemente: peligro)
+    "sentry": -100.0,     # Gran Negativo (Prefiere mucho: posición segura)
+    "cover": 0.0          # Indiferente
 })
 
 # PERFIL DE HUIDA (Tactical Flee)
@@ -38,8 +38,8 @@ GUARDIAN_COMBAT_PROFILE = TacticalProfile(weights={
 # - Exposed (Centro): Gran Positivo (Zona de muerte, evitar a toda costa).
 # - Narrow: Neutro/Positivo (Puede ser peligroso si el jugador bloquea, pero útil para romper visión).
 FLEE_PROFILE = TacticalProfile(weights={
-    "narrow": 0.0,         # Indiferente
-    "exposed": 100.0,      # EVITAR el centro abierto
-    "sentry": 0.0,         # Indiferente
-    "cover": -80.0         # Preferir moverse pegado a las paredes
+    "narrow": 0.0,        # Indiferente
+    "exposed": 200.0,     # EVITAR el centro abierto
+    "sentry": 0.0,        # Indiferente
+    "cover": -150.0       # Preferir moverse pegado a las paredes
 })
