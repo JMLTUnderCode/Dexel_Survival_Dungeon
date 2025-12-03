@@ -401,10 +401,7 @@ def stop_patrol(hinst, entity):
         - Ninguno
     """
     try:
-        # 1) Eliminar referencia a follow_path para detener seguimiento
-        entity.follow_path = None
-
-        # 2) Seleccionar algoritmo fallback según bandera is_on_guardian_path
+        # 1) Seleccionar algoritmo fallback según bandera is_on_guardian_path
         if not hinst.get_blackboard("is_on_guardian_path", False):
             entity.algorithm = CONF.ALG.ALGORITHM.WANDER_DYNAMIC
         else:
