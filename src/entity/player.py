@@ -7,6 +7,7 @@ from entity.kinematic import Kinematic, SteeringOutput
 from entity.entity_spec import EntitySpec
 from entity.attack_wave import AttackWave
 from entity.animation import Animation, load_animations, set_animation_state
+import helper.debugging as DEBUG
 from configs.package import CONF
 
 class Player(Kinematic):
@@ -230,6 +231,28 @@ class Player(Kinematic):
         world_mx = mx + camera_x - self.width_ui
         world_my = my + camera_y
         self.pivot_point_mouse.position = (world_mx, world_my)
+            
+    def draw_collision_box(self, surface: pygame.Surface, camera_x: float, camera_z: float) -> None:
+        """
+        Descripción
+            MÉTODO: Dibuja la caja de colisión del jugador para depuración.
+
+        Argumentos
+            - surface (pygame.Surface): Superficie destino.
+            - camera_x (float): Coordenada X de la cámara.
+            - camera_z (float): Coordenada Z de la cámara.
+        """
+        # 1. Calcular rectángulo centrado en la posición del jugador
+        sx = self.position[0] - camera_x
+        sz = self.position[1] - camera_z
+        player_box = pygame.Rect(
+            int(sx - self.collider_box[0] // 2),
+            int(sz - self.collider_box[1] // 2),
+            int(self.collider_box[0]),
+            int(self.collider_box[1]),
+        )
+        # 2. Dibujar rectángulo verde de borde 1
+        pygame.draw.rect(surface, (0, 255, 0), player_box, 1)
 
     def draw(self, surface: pygame.Surface, camera_x: float, camera_z: float) -> None:
         """
@@ -259,48 +282,14 @@ class Player(Kinematic):
         # 4. Dibujar barra de vida
         self.draw_life_bar(surface, camera_x, camera_z)
 
-        # 5. Opciones de debug: cuadro de colisión
-        if CONF.DEV.DEBUG and CONF.DEV.COLLISION_RECTS:
-            self.draw_collision_box(surface, camera_x, camera_z)
-        
-        # 6. Debug: dibujar pivotes y coronas mín/máx del pivot_move
-        if CONF.DEV.DEBUG and CONF.DEV.PIVOTS:
-            pmx, pmy = self.pivot_point_move.position
-            screen_pmx = pmx - camera_x
-            screen_pmy = pmy - camera_z
-            pygame.draw.circle(surface, (0, 255, 0), (int(screen_pmx), int(screen_pmy)), 4)
-
-            # dibujar corona mínima y máxima alrededor del player para visualizar límites
-            player_screen = (int(self.position[0] - camera_x), int(self.position[1] - camera_z))
-            if self.pivot_max_radius > 0:
-                pygame.draw.circle(surface, (0, 100, 255), player_screen, int(self.pivot_max_radius), 1)
-
-            mmx, mmy = self.pivot_point_mouse.position
-            screen_mmx = mmx - camera_x
-            screen_mmy = mmy - camera_z
-            pygame.draw.circle(surface, (255, 200, 0), (int(screen_mmx), int(screen_mmy)), 4)
-
-    def draw_collision_box(self, surface: pygame.Surface, camera_x: float, camera_z: float) -> None:
-        """
-        Descripción
-            MÉTODO: Dibuja la caja de colisión del jugador para depuración.
-
-        Argumentos
-            - surface (pygame.Surface): Superficie destino.
-            - camera_x (float): Coordenada X de la cámara.
-            - camera_z (float): Coordenada Z de la cámara.
-        """
-        # 1. Calcular rectángulo centrado en la posición del jugador
-        sx = self.position[0] - camera_x
-        sz = self.position[1] - camera_z
-        player_box = pygame.Rect(
-            int(sx - self.collider_box[0] // 2),
-            int(sz - self.collider_box[1] // 2),
-            int(self.collider_box[0]),
-            int(self.collider_box[1]),
-        )
-        # 2. Dibujar rectángulo verde de borde 1
-        pygame.draw.rect(surface, (0, 255, 0), player_box, 1)
+        # 5. Opciones de debug
+        if CONF.DEV.DEBUG:
+            # Cuadro de colisión
+            if CONF.DEV.COLLISION_RECTS:
+                self.draw_collision_box(surface, camera_x, camera_z)
+            
+            # Dibujar pivotes y coronas mín/máx del pivot_move
+            DEBUG.draw_player_pivots(self, surface, camera_x, camera_z)
 
     def update(self, collision_rects: List[pygame.Rect], dt: float) -> None:
         """

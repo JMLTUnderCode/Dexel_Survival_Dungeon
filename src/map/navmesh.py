@@ -12,10 +12,10 @@ class NavMeshNode:
     Atributos
         - id (int): Identificador único del nodo (usualmente obj.id de Tiled).
         - polygon (List[Tuple[float,float]]): Lista de vértices del polígono en coordenadas del mundo.
+        - tactical_type (Optional[str]): Tipo táctico ('cover', 'narrow', 'exposed', 'wall_defense').
         - center (Tuple[float,float]): Centro geométrico del polígono.
         - neighbors (List[NavMeshNode]): Lista de nodos conectados (adyacentes).
         - figure (MplPath): Objeto de Matplotlib para consultas puntuales dentro del polígono.
-        - tactical_type (Optional[str]): Tipo táctico ('cover', 'narrow', 'exposed', 'wall_defense').
 
     Propósito
         - Encapsular la información geométrica y topológica de una región transitable.
@@ -83,7 +83,7 @@ class NavMesh:
         self._calculate_edges()
 
         # 4. Fuente de texto para depuración visual
-        self.debug_font = pygame.font.SysFont("Segoe UI", 18)
+        self.debug_font = pygame.font.SysFont("Segoe UI", 18, bold=True)
 
     def get_node_at(self, position: Tuple[float, float]) -> Optional[NavMeshNode]:
         """
@@ -310,30 +310,3 @@ class NavMesh:
 
             # 4. Dibujar el centro del nodo
             pygame.draw.circle(surface, (255, 0, 0), (int(center_on_camera[0]), int(center_on_camera[1])), 4)
-
-    def draw_tactical_types(self, surface: pygame.Surface, camera_x: float, camera_z: float) -> None:
-        """
-        Descripción
-            MÉTODO: Dibuja los tipos tácticos de cada nodo en la superficie indicada.
-
-        Argumentos
-            - surface (pygame.Surface) : Superficie destino donde dibujar.
-            - camera_x (float) : Coordenada X de la cámara.
-            - camera_z (float) : Coordenada Z de la cámara.
-
-        Retorno
-            - Ninguno
-        """
-        # 1. Iterar nodos y dibujar el tipo táctico en el centro
-        for node in self.nodes.values():
-            if node.tactical_type is None:
-                continue
-
-            center_on_camera = (node.center[0] - camera_x, node.center[1] - camera_z)
-            text_surf = self.debug_font.render(node.tactical_type, True, (0, 255, 0))
-            text_rect = text_surf.get_rect(center=(int(center_on_camera[0]), int(center_on_camera[1])))
-            surface.blit(text_surf, text_rect)
-            
-            # 2. Dibujar borde del polígono
-            points_on_camera = [(p[0] - camera_x, p[1] - camera_z) for p in node.polygon]
-            pygame.draw.polygon(surface, (255, 255, 0), points_on_camera, 2)

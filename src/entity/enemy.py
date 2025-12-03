@@ -21,9 +21,8 @@ from algorithms.look_where_youre_going import LookWhereYoureGoing
 from algorithms.path_following import FollowPath
 from entity.animation import Animation, load_animations, set_animation_state
 from ai.behavior import Behavior
+import helper.debugging  as DEBUG
 from configs.package import CONF
-
-
 class Enemy(Kinematic):
     """
     Descripción
@@ -253,64 +252,7 @@ class Enemy(Kinematic):
 
         # 5. Debug overlays condicionales según configuración
         if CONF.DEV.DEBUG:
-            if not hasattr(self.__class__, "_dev_font") or self.__class__._dev_font is None:
-                self.__class__._dev_font = pygame.font.SysFont("Segoe UI", 20, bold=True)
-            font = self.__class__._dev_font
-            anim_h = self.current_animation.get_size()[1]
-            base_y = sz - (anim_h // 2) - 40
-            _, line_h = font.size("Mg")
-
-            # 5.1 Mostrar algoritmo activo si está habilitado
-            if CONF.DEV.ACTIVE_ALG:
-                start_y = base_y + (line_h * 2)
-                alg_text = self.algorithm.value.upper() if hasattr(self.algorithm, "value") else str(self.algorithm).upper()
-                ts = font.render(alg_text, True, (0, 255, 0))
-                tw, th = ts.get_size()
-                y = int(start_y - line_h) - th
-                surface.blit(ts, (sx - tw // 2, y))
-
-            # 5.2 Mostrar historial HSM si existe
-            if CONF.DEV.HSM and getattr(self, "behavior", None):
-                stack = self.behavior.get_active_stack()
-                
-                start_y = base_y
-                if CONF.DEV.HSM_HISTORY and stack:
-                    rep = " > ".join(stack)
-                    hist = getattr(self, "_hsm_stack_history", [])
-                    if not hist or hist[-1] != rep:
-                        hist.append(rep)
-                        if len(hist) > CONF.DEV.MAX_HSM_HISTORY_SIZE:
-                            hist.pop(0)
-                        self._hsm_stack_history = hist
-
-                    start_y -= (line_h * (len(self._hsm_stack_history) - 1))
-                    for i, line in enumerate(self._hsm_stack_history):
-                        ts = font.render(line, True, (255, 255, 255))
-                        tw, th = ts.get_size()
-                        y = int(start_y + i * line_h) - th
-                        surface.blit(ts, (sx - tw // 2, y))
-
-                # 5.2.1 Mostrar comportamiento activo en pantalla si está habilitado
-                if CONF.DEV.ACTIVE_BEHAVIOR:
-                    behavior_text = self.behavior.get_name().upper()
-                    ts = font.render(behavior_text, True, (0, 255, 0))
-                    tw, th = ts.get_size()
-                    y = int(start_y - line_h) - th
-                    surface.blit(ts, (sx - tw // 2, y))
-
-            # 5.3 Opciones de debug adicionales: colisión y paths
-            if CONF.DEV.COLLISION_RECTS:
-                self.draw_collision_box(surface, camera_x, camera_z)
-
-            if CONF.DEV.PATHFOLLOWER and hasattr(self, "follow_path") and self.follow_path is not None:
-                path = getattr(self.follow_path, "path", None)
-                if path is not None:
-                    path.draw(surface, camera_x, camera_z, color=(0, 255, 0), width=2)
-
-            if CONF.DEV.TEMP_PATHFOLLOWER and getattr(self, "temp_follow_path", None) is not None:
-                path = getattr(self.temp_follow_path, "path", None)
-                if path is not None:
-                    path.draw(surface, camera_x, camera_z, color=(0, 0, 255), width=2)
+            DEBUG.draw_enemy_overlays(self, surface, sz, sx, camera_x, camera_z)
 
     def draw_collision_box(self, surface: pygame.Surface, camera_x: float, camera_z: float) -> None:
         """
