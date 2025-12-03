@@ -762,7 +762,7 @@ def start_tactical_flee(hinst, entity):
         ex, ez = entity.get_pos()
         px, pz = player.get_pos()
 
-        # 3. Buscar candidatos SAFE (Sentry o Cover)
+        # 3. Buscar candidatos Cover
         nodes_map = pathfinder.navmesh.nodes
         pre_candidates = []
         
