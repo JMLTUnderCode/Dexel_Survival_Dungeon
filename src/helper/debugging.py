@@ -63,7 +63,7 @@ def draw_tactical_nodes(game_surface: pygame.Surface, game_map, entity_manager, 
             
             pygame.draw.circle(game_surface, color, (int(nx - camera_x), int(nz - camera_z + 20)), 6)
 
-def update_enemy_paths_to(entity_manager, event, ui_panel_width: int, camera_x: float, camera_z: float):
+def update_enemy_paths_to(entity_manager, event, ui_panel_width: float, camera_x: float, camera_z: float):
     # Verificar que el modo pathfinder está activo y que el evento es un clic izquierdo fuera del panel de UI
     if (CONF.DEV.PATHFINDER and 
         event.type == pygame.MOUSEBUTTONDOWN and 

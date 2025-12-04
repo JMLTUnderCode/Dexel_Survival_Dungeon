@@ -162,11 +162,10 @@ class Game:
 
             # 3. Si la UI no lo manejó, procesar eventos con posición para el juego
             if not ui_handled and hasattr(event, "pos"):
-                mx, my = event.pos
 
                 # 3.1 Herramientas de debug: actualizar rutas si se clickea en el world area
                 if CONF.DEV.DEBUG:
-                    DEBUG.update_enemy_paths_to(self.entity_manager, event, (mx, my), self.ui_panel_width, self.camera_x, self.camera_z)
+                    DEBUG.update_enemy_paths_to(self.entity_manager, event, self.ui_panel_width, self.camera_x, self.camera_z)
 
                 # 3.2 Reenviar evento al jugador (con ajuste de coordenadas)
                 self._forward_event_to_player(event)
