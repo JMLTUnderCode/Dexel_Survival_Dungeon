@@ -293,8 +293,6 @@ def patrol_tick(hinst, entity):
         if hinst.get_blackboard("is_on_guardian_path", False):
             return
 
-        dt = hinst.get_blackboard("_dt", 0.016)
-
         # ---------------------------------------------------------
         # LÓGICA DE ESCANEO (Si ya llegó al destino)
         # ---------------------------------------------------------
@@ -1357,8 +1355,6 @@ def guardian_return_tick(hinst, entity):
         - vision_range (float): radio del círculo de escaneo (default 300.0).
     """
     try:
-        dt = hinst.get_blackboard("_dt", 0.016)
-        
         # --- LÓGICA DE ESCANEO (PAUSA Y GIRO) ---
         if hinst.get_blackboard("is_scanning_sentry", False):
             # 1. Obtener parámetros de configuración
