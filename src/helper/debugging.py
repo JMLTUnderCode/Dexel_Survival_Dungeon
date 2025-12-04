@@ -63,11 +63,15 @@ def draw_tactical_nodes(game_surface: pygame.Surface, game_map, entity_manager, 
             
             pygame.draw.circle(game_surface, color, (int(nx - camera_x), int(nz - camera_z + 20)), 6)
 
-def update_enemy_paths_to(entity_manager, target_pos: tuple[float, float], ui_panel_width: int, camera_x: float, camera_z: float):
-    if CONF.DEV.PATHFINDER and target_pos[0] >= ui_panel_width and target_pos[1] >= 0 and target_pos[1] < 1:
-        # Convertir coords de pantalla -> coords world (game_surface)
-        world_x = target_pos[0] - ui_panel_width + camera_x
-        world_z = target_pos[1] + camera_z
+def update_enemy_paths_to(entity_manager, event, ui_panel_width: int, camera_x: float, camera_z: float):
+    # Verificar que el modo pathfinder está activo y que el evento es un clic izquierdo fuera del panel de UI
+    if (CONF.DEV.PATHFINDER and 
+        event.type == pygame.MOUSEBUTTONDOWN and 
+        event.button == 1 and 
+        event.pos[0] >= ui_panel_width):
+        # Convertir coords de pantalla -> coords world
+        world_x = event.pos[0] - ui_panel_width + camera_x
+        world_z = event.pos[1] + camera_z
         entity_manager.update_enemy_paths_to((world_x, world_z))
 
 def draw_enemy_overlays(enemy, surface, sz, sx, camera_x, camera_z):
