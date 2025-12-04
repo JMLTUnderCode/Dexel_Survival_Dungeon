@@ -117,7 +117,7 @@ def _find_best_patrol_path(pathfinder, start_pos, desired_nodes: int, max_attemp
     if not getattr(pathfinder, "navmesh", None):
         return None
     
-    # 1, Acceder a nodos de forma segura
+    # 1. Acceder a nodos de forma segura
     nodes_map = getattr(pathfinder.navmesh, "nodes", {})
     if not nodes_map:
         return None
