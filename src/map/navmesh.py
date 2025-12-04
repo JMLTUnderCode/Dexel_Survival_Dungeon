@@ -75,6 +75,7 @@ class NavMesh:
     def __init__(self, objects: list, zoom: float):
         # 1. Inicializar contenedor de nodos
         self.nodes: Dict[int, NavMeshNode] = {}
+        self.tacticals_nodes: Dict[str, List[NavMeshNode]] = {}
 
         # 2. Construir nodos a partir de los objetos provistos y aplicar zoom
         self._build_nodes(objects, zoom)
@@ -182,6 +183,10 @@ class NavMesh:
                 # 4. Crear nodo con información táctica
                 node_id = obj.id
                 self.nodes[node_id] = NavMeshNode(node_id, polygon_points, tactical_type=tactical_val)
+                if tactical_val:
+                    if tactical_val not in self.tacticals_nodes:
+                        self.tacticals_nodes[tactical_val] = []
+                    self.tacticals_nodes[tactical_val].append(self.nodes[node_id])
 
             except Exception as e:
                 # 5. En caso de error, registrar para depuración y continuar

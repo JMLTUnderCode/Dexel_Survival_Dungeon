@@ -130,7 +130,10 @@ def _find_best_patrol_path(pathfinder, start_pos, desired_nodes: int, max_attemp
         preferred_types = {t for t, w in tactical_profile.weights.items() if w < 0}
         if preferred_types:
             # Filtrar nodos del mapa que coincidan con estos tipos
-            tactical_candidates = [n for n in nodes_list if getattr(n, "tactical_type", None) in preferred_types]
+            tactical_candidates = []
+            for t in preferred_types:
+                tactical_candidates.extend(getattr(pathfinder.navmesh, "tacticals_nodes", {}).get(t, []))
+            tactical_candidates = list(set(tactical_candidates))
 
     # 3. Intentar encontrar ruta válida
     attempts = 0
@@ -766,16 +769,10 @@ def start_tactical_flee(hinst, entity):
         ex, ez = entity.get_pos()
         px, pz = player.get_pos()
 
-        # 3. Buscar candidatos Cover
-        nodes_map = pathfinder.navmesh.nodes
+        # 3. Filtrar nodos cover
+        nodes_map = pathfinder.navmesh.tacticals_nodes[CONF.TACTICAL.TYPES.COVER]
         pre_candidates = []
-        
-        for node in nodes_map.values():
-            # Filtro Estático: cover
-            if node.tactical_type not in ["cover"]:
-                continue
-            
-            # Filtro Dinámico de Seguridad:
+        for node in nodes_map:
             # El punto debe estar LEJOS del jugador para ser considerado una opción.
             nx, nz = node.center
             dist_to_player = math.hypot(nx - px, nz - pz)
@@ -832,7 +829,7 @@ def start_tactical_flee(hinst, entity):
         # Intentar huir al nodo más lejano geométricamente (pánico)
         furthest_node = None
         max_dist = -1.0
-        for node in nodes_map.values():
+        for node in nodes_map:
             nx, nz = node.center
             d = math.hypot(nx - px, nz - pz)
             if d > max_dist:
