@@ -104,7 +104,7 @@ class TacticalPathfinder:
                     tactical_weight = profile.get_weight(nb.tactical_type)
 
                 # Costo total del segmento (Clamp a 1.0 para evitar costos negativos/cero)
-                # Fórmula: C = D + (w * T)
+                # Fórmula: C = D + w
                 segment_cost = max(1.0, dist_cost + tactical_weight)
                 # --------------------------------
 
