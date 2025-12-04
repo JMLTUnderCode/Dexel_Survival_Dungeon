@@ -232,7 +232,7 @@ class Player(Kinematic):
         world_my = my + camera_y
         self.pivot_point_mouse.position = (world_mx, world_my)
             
-    def draw_collision_box(self, surface: pygame.Surface, camera_x: float, camera_z: float) -> None:
+    def _draw_collision_box(self, surface: pygame.Surface, camera_x: float, camera_z: float) -> None:
         """
         Descripción
             MÉTODO: Dibuja la caja de colisión del jugador para depuración.
@@ -286,7 +286,7 @@ class Player(Kinematic):
         if CONF.DEV.DEBUG:
             # Cuadro de colisión
             if CONF.DEV.COLLISION_RECTS:
-                self.draw_collision_box(surface, camera_x, camera_z)
+                self._draw_collision_box(surface, camera_x, camera_z)
             
             # Dibujar pivotes y coronas mín/máx del pivot_move
             DEBUG.draw_player_pivots(self, surface, camera_x, camera_z)
