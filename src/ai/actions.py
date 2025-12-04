@@ -145,20 +145,15 @@ def _find_best_patrol_path(pathfinder, start_pos, desired_nodes: int, max_attemp
             # Fallback: exploración puramente aleatoria (25% o si no hay tácticos)
             target_node = random.choice(nodes_list)
         
-        try:
-            # 3.2. Calcular ruta (Táctica o Normal)
-            pts = None
-            # Si es TacticalPathfinder y tenemos perfil, usar find_path con perfil
-            if hasattr(pathfinder, "find_path") and tactical_profile:
-                 # Duck typing check: si el método acepta 'profile' (TacticalPathfinder)
-                 # Como TacticalPathfinder tiene la misma firma excepto por profile, 
-                 # asumimos que si pasamos profile es porque el caller envió el tactical_pathfinder
-                 pts = pathfinder.find_path(start_pos, target_node.center, profile=tactical_profile)
-            else:
+        # 3.2. Calcular ruta (Táctica o Normal)
+        pts = None
+        if hasattr(pathfinder, "find_path") and tactical_profile:
+            try:
+                # Si es TacticalPathfinder y tenemos perfil, usar find_path con perfil
+                pts = pathfinder.find_path(start_pos, target_node.center, profile=tactical_profile)
+            except Exception:
                 # Pathfinder normal
                 pts = pathfinder.find_path(start_pos, target_node.center)
-        except Exception:
-            pts = None
 
         # 3.3. Validar longitud de la ruta
         if pts and len(pts) >= desired_nodes:
