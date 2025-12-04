@@ -1272,14 +1272,11 @@ def return_to_protection_zone(hinst, entity):
 
         # 2) pedir ruta desde la posición actual al punto objetivo usando PERFIL GUARDIAN
         pts = None
-        try:
-            # Duck typing: si tiene find_path con profile es Tactical, sino es normal
-            if hasattr(pathfinder, "find_path") and "profile" in pathfinder.find_path.__code__.co_varnames:
+        if hasattr(pathfinder, "find_path"):
+            try:
                 pts = pathfinder.find_path(entity.get_pos(), target_pos, profile=GUARDIAN_COMBAT_PROFILE)
-            else:
+            except Exception:
                 pts = pathfinder.find_path(entity.get_pos(), target_pos)
-        except Exception:
-            pts = None
 
         # 3) si no hay path válido, no forzamos retorno (evitar bloquear)
         if not pts or len(pts) < 2:
