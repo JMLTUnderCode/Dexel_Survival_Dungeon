@@ -109,6 +109,8 @@ class FollowPath:
 
         # 6. Actualizar el dummy_target con la posición calculada y sincronizar parámetros del delegado
         self.dummy_target.position = (tx, tz)
+        self._seek.target = self.dummy_target
+        self._arrive.target = self.dummy_target
 
         # 7. Delegar el cálculo al DynamicSeek si el path es cerrado
         if self.path.closed:
