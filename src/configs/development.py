@@ -29,6 +29,8 @@ MAX_HSM_HISTORY_SIZE = 0
 
 PIVOTS = None
 
+TACTICAL_TYPES = None
+
 env_path = os.path.join(os.path.dirname(__file__), "..", ".env")
 if os.path.exists(env_path):
     with open(env_path) as f:
@@ -63,6 +65,8 @@ if os.path.exists(env_path):
                     MAX_HSM_HISTORY_SIZE = extract_value_env(value)
                 case "PIVOTS":
                     PIVOTS = extract_value_env(value)
+                case "TACTICAL_TYPES":
+                    TACTICAL_TYPES = extract_value_env(value)
 
         
 

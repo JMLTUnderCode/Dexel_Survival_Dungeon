@@ -12,6 +12,7 @@ class NavMeshNode:
     Atributos
         - id (int): Identificador único del nodo (usualmente obj.id de Tiled).
         - polygon (List[Tuple[float,float]]): Lista de vértices del polígono en coordenadas del mundo.
+        - tactical_type (Optional[str]): Tipo táctico ('cover', 'narrow', 'exposed', 'wall_defense').
         - center (Tuple[float,float]): Centro geométrico del polígono.
         - neighbors (List[NavMeshNode]): Lista de nodos conectados (adyacentes).
         - figure (MplPath): Objeto de Matplotlib para consultas puntuales dentro del polígono.
@@ -19,18 +20,21 @@ class NavMeshNode:
     Propósito
         - Encapsular la información geométrica y topológica de una región transitable.
     """
-    def __init__(self, id: int, polygon: List[Tuple[float, float]]):
+    def __init__(self, id: int, polygon: List[Tuple[float, float]], tactical_type: Optional[str] = None):
         # 1. Guardar identificador y lista de puntos del polígono
         self.id = id
         self.polygon = polygon
 
-        # 2. Calcular centro como promedio de vértices
+        # 2. Propiedad táctica leída desde Tiled
+        self.tactical_type = tactical_type
+        
+        # 3. Calcular centro como promedio de vértices
         self.center = (
             sum(p[0] for p in polygon) / len(polygon),
             sum(p[1] for p in polygon) / len(polygon)
         )
 
-        # 3. Inicializar lista de vecinos y figura para pruebas puntuales
+        # 4. Inicializar lista de vecinos y figura para pruebas puntuales
         self.neighbors: List[NavMeshNode] = []
         self.figure = MplPath(self.polygon)
 
@@ -71,12 +75,16 @@ class NavMesh:
     def __init__(self, objects: list, zoom: float):
         # 1. Inicializar contenedor de nodos
         self.nodes: Dict[int, NavMeshNode] = {}
+        self.tacticals_nodes: Dict[str, List[NavMeshNode]] = {}
 
         # 2. Construir nodos a partir de los objetos provistos y aplicar zoom
         self._build_nodes(objects, zoom)
 
         # 3. Calcular aristas entre nodos adyacentes
         self._calculate_edges()
+
+        # 4. Fuente de texto para depuración visual
+        self.debug_font = pygame.font.SysFont("Segoe UI", 18, bold=True)
 
     def get_node_at(self, position: Tuple[float, float]) -> Optional[NavMeshNode]:
         """
@@ -146,6 +154,7 @@ class NavMesh:
         """
         Descripción
             MÉTODO: Crea los nodos del grafo a partir de los objetos poligonales de Tiled.
+            Lee la propiedad personalizada 'tactical' si existe.
 
         Argumentos
             - objects (list) : Lista de objetos provenientes de la capa 'graph' de Tiled.
@@ -163,12 +172,24 @@ class NavMesh:
                     for p in obj.points
                 ]
 
-                # 3. Usar obj.id como clave estable para el nodo
+                # 3. Extraer tipo táctico de las propiedades de Tiled
+                # Tiled almacena propiedades en un dict llamado 'properties'
+                tactical_val = None
+                if hasattr(obj, "properties") and isinstance(obj.properties, dict):
+                    tactical_val = obj.properties.get("tactical", None)
+                    if tactical_val and tactical_val not in CONF.TACTICAL.TYPES:
+                        print(f"[NavMesh] Warning: Unknown tactical type '{tactical_val}' for node {obj.id}")
+
+                # 4. Crear nodo con información táctica
                 node_id = obj.id
-                self.nodes[node_id] = NavMeshNode(node_id, polygon_points)
+                self.nodes[node_id] = NavMeshNode(node_id, polygon_points, tactical_type=tactical_val)
+                if tactical_val:
+                    if tactical_val not in self.tacticals_nodes:
+                        self.tacticals_nodes[tactical_val] = []
+                    self.tacticals_nodes[tactical_val].append(self.nodes[node_id])
 
             except Exception as e:
-                # 4. En caso de error, registrar para depuración y continuar
+                # 5. En caso de error, registrar para depuración y continuar
                 print(f"[NavMesh] Error al procesar objeto NavMesh id={getattr(obj, 'id', 'unknown')}: {e}")
 
     def _calculate_edges(self) -> None:

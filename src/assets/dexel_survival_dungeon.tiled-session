@@ -70,8 +70,8 @@
             "scale": 2,
             "selectedLayer": 3,
             "viewCenter": {
-                "x": 617,
-                "y": 209.75
+                "x": 695.5,
+                "y": 504.75
             }
         },
         "maps/level_2.tmx#Dungeon_Tileset": {
@@ -113,7 +113,7 @@
         "maps/level_2.tmx"
     ],
     "project": "dexel_survival_dungeon.tiled-project",
-    "property.type": "object",
+    "property.type": "string",
     "recentFiles": [
         "maps/level_1.tmx",
         "maps/level_2.tmx",

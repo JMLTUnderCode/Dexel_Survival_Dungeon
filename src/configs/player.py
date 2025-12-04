@@ -9,6 +9,6 @@ class ACTIONS(str, enum.Enum):
     IDLE = "idle"
     MOVE = "move"
     ATTACK = "attack"
-PIVOT_MOVE_SPEED = 400.0
-PIVOT_RETURN_SPEED = 400.0
+PIVOT_MOVE_SPEED = 700.0
+PIVOT_RETURN_SPEED = 700.0
 PIVOT_EPS = 1e-3

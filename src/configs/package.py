@@ -8,6 +8,7 @@ from . import map as MAP
 from . import algorithms as ALG
 from . import algorithms_ui as ALG_UI
 from . import map_ui as MAP_UI
+from . import tactical as TACTICAL
 
 @dataclass
 class MainWindowConfig:
@@ -33,6 +34,7 @@ class DevelopmentConfig:
     HSM_HISTORY: bool = DEV.HSM_HISTORY
     MAX_HSM_HISTORY_SIZE: int = DEV.MAX_HSM_HISTORY_SIZE
     PIVOTS: bool = DEV.PIVOTS
+    TACTICAL_TYPES: bool = DEV.TACTICAL_TYPES
 
 @dataclass
 class ConstantsConfig:
@@ -69,6 +71,10 @@ class MapConfig:
 class AlgorithmConfigType:
     ALGORITHM: ALG.ALGORITHM = ALG.ALGORITHM
     EPS: float = ALG.EPS
+
+@dataclass
+class TacticalTypes:
+    TYPES: TACTICAL.TYPES = TACTICAL.TYPES
 
 @dataclass
 class AlgorithmUIConfig:
@@ -118,6 +124,7 @@ class Config:
     ALG: AlgorithmConfigType
     ALG_UI: AlgorithmUIConfig
     MAP_UI: MapUIConfig
+    TACTICAL: TacticalTypes
 
     def __init__(self):
         self.MAIN_WIN = MainWindowConfig()
@@ -129,5 +136,6 @@ class Config:
         self.ALG = AlgorithmConfigType()
         self.ALG_UI = AlgorithmUIConfig()
         self.MAP_UI = MapUIConfig()
+        self.TACTICAL = TacticalTypes()
 
 CONF = Config()

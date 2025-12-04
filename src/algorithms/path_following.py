@@ -1,5 +1,6 @@
 from entity.kinematic import Kinematic, SteeringOutput
 from algorithms.dynamic_seek import DynamicSeek
+from algorithms.dynamic_arrive import DynamicArrive
 from map.paths import Path
 
 class FollowPath:
@@ -13,12 +14,17 @@ class FollowPath:
         - path (Path): objeto que representa la ruta (debe exponer get_param/get_position).
         - offset (float): distancia a lo largo de la ruta para definir el objetivo.
         - current_param (float): parámetro estimado actual en la ruta (se mantiene entre frames).
-        - max_acceleration (float): aceleración máxima pasada al DynamicSeek.
+        - max_speed (float): velocidad máxima deseada (unidades/segundo).
+        - target_radius (float): distancia a la que se considera que ha llegado (unidades).
+        - slow_radius (float): radio desde el cual se empieza a desacelerar (unidades).
+        - time_to_target (float): tiempo objetivo para alcanzar la velocidad deseada (segundos).
+        - max_acceleration (float): aceleración máxima permitida (unidades/segundo²).
         - dummy_target (Kinematic): target temporal usado para delegar en DynamicSeek.
         - _seek (DynamicSeek): instancia delegada que calcula el steering lineal.
+        - _arrive (DynamicArrive): instancia delegada que calcula el steering lineal.
 
     Métodos y Funciones
-        - get_steering(): Calcula y devuelve el SteeringOutput delegando en DynamicSeek.
+        - get_steering(): Calcula y devuelve un SteeringOutput delegando en DynamicSeek.
 
     Propósito
         - Proveer un objetivo puntual sobre la ruta y delegar la persecución de ese objetivo
@@ -30,6 +36,10 @@ class FollowPath:
         path: Path,
         offset: float = 12.0,
         current_param: float = 0.0,
+        max_speed: float = 120.0,
+        target_radius: float = 1.0,
+        slow_radius: float = 100.0,
+        time_to_target: float = 0.2,
         max_acceleration: float = 300.0,
     ) -> None:
         # 1. Guardar referencias y parámetros del comportamiento
@@ -37,17 +47,35 @@ class FollowPath:
         self.path = path
         self.offset = float(offset)
         self.current_param = float(current_param)
+        self.max_speed = float(max_speed)
+        self.target_radius = float(target_radius)
+        self.slow_radius = float(slow_radius)
+        self.time_to_target = float(time_to_target)
         self.max_acceleration = float(max_acceleration)
 
-        # 2. Preparar target temporal y delegado DynamicSeek
+        # 2. Preparar target temporal y delegados DynamicSeek y DynamicArrive
         self.dummy_target = Kinematic(position=(0.0, 0.0), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
-        self._seek = DynamicSeek(character=self.character, target=self.dummy_target, max_acceleration=self.max_acceleration)
+        self._seek = DynamicSeek(
+            character=self.character, 
+            target=self.dummy_target, 
+            max_acceleration=self.max_acceleration
+        )
+        self._arrive = DynamicArrive(
+            character=self.character, 
+            target=self.dummy_target, 
+            max_speed=self.max_speed,
+            target_radius=self.target_radius,
+            slow_radius=self.slow_radius,
+            time_to_target=self.time_to_target,
+            max_acceleration=self.max_acceleration
+        )
  
     def get_steering(self) -> SteeringOutput:
         """
         Descripción
             MÉTODO: Calcula y devuelve un SteeringOutput que mueve `character` hacia
-            un punto adelantado sobre la `path` (chase-the-rabbit), delegando en DynamicSeek.
+            un punto adelantado sobre la `path` (chase-the-rabbit), delegando en DynamicSeek
+            si la path es cerrada o en DynamicArrive si es abierta.
 
         Argumentos
             - Ninguno
@@ -82,7 +110,10 @@ class FollowPath:
         # 6. Actualizar el dummy_target con la posición calculada y sincronizar parámetros del delegado
         self.dummy_target.position = (tx, tz)
         self._seek.target = self.dummy_target
-        self._seek.max_acceleration = self.max_acceleration
+        self._arrive.target = self.dummy_target
 
-        # 7. Delegar el cálculo al DynamicSeek y devolver el resultado
-        return self._seek.get_steering()
+        # 7. Delegar el cálculo al DynamicSeek si el path es cerrado
+        if self.path.closed:
+            return self._seek.get_steering()
+        else:
+            return self._arrive.get_steering()

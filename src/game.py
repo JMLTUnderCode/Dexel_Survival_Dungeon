@@ -1,12 +1,13 @@
 import sys
 import pygame
 from typing import Optional
-
 from map.map import Map
 from map.pathfinder import Pathfinder
+from map.tactical_pathfinder import TacticalPathfinder
 from ui.enemy_set import EnemySet
 from ui.map_set import MapSet
 from entity.entity_manager import EntityManager
+import helper.debugging  as DEBUG
 from configs.package import CONF
 
 class Game:
@@ -123,11 +124,14 @@ class Game:
 
         # 3. Construir pathfinder si el mapa tiene navmesh
         self.pathfinder = None
+        self.tactical_pathfinder = None
         if self.game_map.navmesh:
             self.pathfinder = Pathfinder(self.game_map.navmesh)
+            self.tactical_pathfinder = TacticalPathfinder(self.game_map.navmesh)
 
         # 4. Exponer el pathfinder al EntityManager para peticiones de ruta
         self.entity_manager.pathfinder = self.pathfinder
+        self.entity_manager.tactical_pathfinder = self.tactical_pathfinder
 
         # 5. Crear jugador y grupo de enemigos para el nivel
         self.entity_manager.create_player()
@@ -157,15 +161,10 @@ class Game:
 
             # 3. Si la UI no lo manejó, procesar eventos con posición para el juego
             if not ui_handled and hasattr(event, "pos"):
-                mx, my = event.pos
 
                 # 3.1 Herramientas de debug: actualizar rutas si se clickea en el world area
                 if CONF.DEV.DEBUG:
-                    if CONF.DEV.PATHFINDER and mx >= self.ui_panel_width and event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
-                        # Convertir coords de pantalla -> coords world (game_surface)
-                        world_x = mx - self.ui_panel_width + self.camera_x
-                        world_z = my + self.camera_z
-                        self.entity_manager.update_enemy_paths_to((world_x, world_z))
+                    DEBUG.update_enemy_paths_to(self.entity_manager, event, self.ui_panel_width, self.camera_x, self.camera_z)
 
                 # 3.2 Reenviar evento al jugador (con ajuste de coordenadas)
                 self._forward_event_to_player(event)
@@ -264,13 +263,13 @@ class Game:
         if self.game_map:
             self.game_map.draw(self.game_surface, self.camera_x, self.camera_z, self.camera_width, self.camera_height)
 
-        # 2. DEBUG: dibujar el nodo actual de cada entidad (bordes)
-        if CONF.DEV.DEBUG and CONF.DEV.NODE_LOCATION and self.game_map and self.game_map.navmesh:
-            for entity in self.entity_manager.enemies + ([self.entity_manager.player] if self.entity_manager.player else []):
-                node = getattr(entity, "node_location", None)
-                if node and getattr(node, "polygon", None):
-                    pts = [(int(p[0] - self.camera_x), int(p[1] - self.camera_z)) for p in node.polygon]
-                    pygame.draw.polygon(self.game_surface, (255, 0, 0), pts, 2)
+        # 2. DEBUGS
+        if CONF.DEV.DEBUG:
+            # 2.1 Dibujar localización de nodos si está activo
+            DEBUG.draw_node_location(self.game_surface, self.game_map, self.entity_manager, self.camera_x, self.camera_z)
+            
+            # 2.2 Dibujar nodos tácticos si está activo
+            DEBUG.draw_tactical_nodes(self.game_surface, self.game_map, self.entity_manager, self.camera_x, self.camera_z)
 
         # 3. Dibujar enemigos
         for enemy in self.entity_manager.enemies:
