@@ -1425,10 +1425,11 @@ def guardian_return_tick(hinst, entity):
         scanned_indices = hinst.get_blackboard("return_scanned_indices", set())
 
         # Verificar si estamos cerca de un nodo Sentry no escaneado
+        SENTRY_DETECTION_MARGIN = 0.2
         for idx in sentry_indices:
             if idx not in scanned_indices:
                 # Si estamos cerca del índice (margen de 0.5 en param)
-                if abs(current_param - idx) < 0.5:
+                if abs(current_param - idx) < SENTRY_DETECTION_MARGIN:
                     # INICIAR ESCANEO
                     hinst.set_blackboard("is_scanning_sentry", True)
                     hinst.set_blackboard("scan_initialized", False) # Forzar init
