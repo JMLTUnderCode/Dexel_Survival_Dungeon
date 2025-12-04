@@ -8,6 +8,7 @@ from . import map as MAP
 from . import algorithms as ALG
 from . import algorithms_ui as ALG_UI
 from . import map_ui as MAP_UI
+from . import tactical as TACTICAL
 
 @dataclass
 class MainWindowConfig:
@@ -72,6 +73,10 @@ class AlgorithmConfigType:
     EPS: float = ALG.EPS
 
 @dataclass
+class TacticalTypes:
+    TYPES: TACTICAL.TYPES = TACTICAL.TYPES
+
+@dataclass
 class AlgorithmUIConfig:
     ACTIVE: bool = ALG_UI.ACTIVE
     PANEL_WIDTH: int = ALG_UI.PANEL_WIDTH
@@ -119,6 +124,7 @@ class Config:
     ALG: AlgorithmConfigType
     ALG_UI: AlgorithmUIConfig
     MAP_UI: MapUIConfig
+    TACTICAL: TacticalTypes
 
     def __init__(self):
         self.MAIN_WIN = MainWindowConfig()
@@ -130,5 +136,6 @@ class Config:
         self.ALG = AlgorithmConfigType()
         self.ALG_UI = AlgorithmUIConfig()
         self.MAP_UI = MapUIConfig()
+        self.TACTICAL = TacticalTypes()
 
 CONF = Config()

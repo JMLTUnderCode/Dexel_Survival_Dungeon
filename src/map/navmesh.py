@@ -174,8 +174,10 @@ class NavMesh:
                 # 3. Extraer tipo táctico de las propiedades de Tiled
                 # Tiled almacena propiedades en un dict llamado 'properties'
                 tactical_val = None
-                if hasattr(obj, "properties") and obj.properties:
+                if hasattr(obj, "properties") and isinstance(obj.properties, dict):
                     tactical_val = obj.properties.get("tactical", None)
+                    if tactical_val and tactical_val not in CONF.TACTICAL.TYPES:
+                        print(f"[NavMesh] Warning: Unknown tactical type '{tactical_val}' for node {obj.id}")
 
                 # 4. Crear nodo con información táctica
                 node_id = obj.id
