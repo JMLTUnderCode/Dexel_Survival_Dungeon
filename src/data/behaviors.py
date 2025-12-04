@@ -22,6 +22,8 @@ class BehaviorsData:
         - patrol_path_nodes (int): número mínimo de nodos deseados para patrulla aleatoria.
         - face_range_multiplier: multiplica vision_range para decidir cuándo "mirar" al jugador.
         - check_los_throttle (s): throttling para checks de línea de visión.
+        - scan_duration (s): duración del escaneo visual al llegar a un punto de patrulla.
+        - arrival_threshold (px): umbral de distancia para considerar que se llegó a un punto.
 
     Estados y semántica
       - EstadoVida (composite, history=deep)
@@ -70,8 +72,8 @@ class BehaviorsData:
             "patrol_path_nodes": 20,
             "face_range_multiplier": 2,
             "check_los_throttle": 0.12,
-            "scan_duration": 4.0, # NUEVO: Tiempo para giro 360 al llegar a destino
-            "arrival_threshold": 15.0 # NUEVO: Umbral explícito para detectar llegada a punto
+            "scan_duration": 6.0,
+            "arrival_threshold": 15.0
         },
         "root": "EstadoVida",
         "states": {
@@ -227,7 +229,7 @@ class BehaviorsData:
             "check_los_throttle": 0.25,
             "protection_margin": 40.0,
             "arrival_threshold": 40.0,
-            "scan_duration": 4.0,
+            "scan_duration": 6.0,
         },
         "root": "EstadoVida",
         "states": {
