@@ -1,8 +1,6 @@
 import sys
 import pygame
-import math
 from typing import Optional
-
 from map.map import Map
 from map.pathfinder import Pathfinder
 from map.tactical_pathfinder import TacticalPathfinder
@@ -11,6 +9,7 @@ from ui.map_set import MapSet
 from entity.entity_manager import EntityManager
 import helper.debugging  as DEBUG
 from configs.package import CONF
+
 class Game:
     """
     Descripción
