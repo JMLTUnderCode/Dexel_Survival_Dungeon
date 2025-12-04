@@ -73,7 +73,15 @@ def _register(name: str):
 # --------------------
 def _get_tactical_profile(hinst, entity):
     """
-    Helper para seleccionar el perfil táctico adecuado según la entidad y su estado.
+    Descripción
+        FUNCION: Helper para seleccionar el perfil táctico adecuado según la entidad y su estado.
+
+    Argumentos
+        hinst: instancia del comportamiento o sistema que llama a esta función.
+        entity: la entidad para la cual se selecciona el perfil táctico.
+    
+    Retorno
+        Perfil táctico (TacticalProfile) adecuado para la entidad.
     """
     # 1. Si está huyendo, usar perfil de huida (prioridad máxima)
     if hinst.get_blackboard("is_fleeing", False):
@@ -91,24 +99,31 @@ def _get_tactical_profile(hinst, entity):
     
 def _find_best_patrol_path(pathfinder, start_pos, desired_nodes: int, max_attempts: int = 12, tactical_profile=None) -> Optional[List]:
     """
-    Intentar encontrar una ruta (lista de puntos) con al menos desired_nodes.
-    Retorna None si no hay navmesh o no se encuentra ruta adecuada.
-    Soporta TacticalPathfinder si se pasa un tactical_profile.
+    Descripción
+        FUNCION: Intentar encontrar una ruta (lista de puntos) con al menos desired_nodes.
+        Retorna None si no hay navmesh o no se encuentra ruta adecuada.
+        Soporta TacticalPathfinder si se pasa un tactical_profile.
+    
+    Argumentos
+        pathfinder: instancia de Pathfinder o TacticalPathfinder con navmesh.
+        start_pos: posición inicial (x, z) desde donde iniciar la ruta.
+        desired_nodes: número mínimo de nodos en la ruta deseada.
+        max_attempts: número máximo de intentos para encontrar una ruta válida.
+        tactical_profile: perfil táctico opcional para rutas tácticas.
+
+    Retorno
+        Lista de puntos (tuplas) que conforman la ruta, o None si no se encuentra.
     """
     if not getattr(pathfinder, "navmesh", None):
         return None
     
-    # Acceder a nodos de forma segura
+    # 1, Acceder a nodos de forma segura
     nodes_map = getattr(pathfinder.navmesh, "nodes", {})
     if not nodes_map:
         return None
     nodes_list = list(nodes_map.values())
 
-    # ---------------------------------------------------------
-    # MEJORA: Selección de objetivos tácticos (Bias Táctico)
-    # ---------------------------------------------------------
-    # En lugar de elegir siempre al azar, identificamos qué nodos son "preferidos"
-    # por la entidad (aquellos con peso negativo en su perfil).
+    # 2. Identificamos qué nodos son "preferidos" por la entidad (aquellos con peso negativo en su perfil).
     tactical_candidates = []
     if tactical_profile and hasattr(tactical_profile, "weights"):
         # Identificar tipos con peso < 0 (preferencia/recompensa)
@@ -116,13 +131,12 @@ def _find_best_patrol_path(pathfinder, start_pos, desired_nodes: int, max_attemp
         if preferred_types:
             # Filtrar nodos del mapa que coincidan con estos tipos
             tactical_candidates = [n for n in nodes_list if getattr(n, "tactical_type", None) in preferred_types]
-    # ---------------------------------------------------------
 
+    # 3. Intentar encontrar ruta válida
     attempts = 0
     best = None
-    
     while attempts < max_attempts:
-        # 1. Elegir un nodo destino
+        # 3.1. Elegir un nodo destino
         # Si hay candidatos tácticos, usamos un 75% de probabilidad de elegir uno de ellos.
         # Esto hace que el Hunter patrulle activamente hacia zonas de ventaja (pasillos, zonas abiertas).
         if tactical_candidates and random.random() < 0.75:
@@ -132,7 +146,7 @@ def _find_best_patrol_path(pathfinder, start_pos, desired_nodes: int, max_attemp
             target_node = random.choice(nodes_list)
         
         try:
-            # 2. Calcular ruta (Táctica o Normal)
+            # 3.2. Calcular ruta (Táctica o Normal)
             pts = None
             # Si es TacticalPathfinder y tenemos perfil, usar find_path con perfil
             if hasattr(pathfinder, "find_path") and tactical_profile:
@@ -146,11 +160,11 @@ def _find_best_patrol_path(pathfinder, start_pos, desired_nodes: int, max_attemp
         except Exception:
             pts = None
 
-        # 3. Validar longitud de la ruta
+        # 3.3. Validar longitud de la ruta
         if pts and len(pts) >= desired_nodes:
             return pts
             
-        # Guardar el mejor intento por si acaso
+        # 3.4. Guardar el mejor intento por si acaso
         if pts and (best is None or len(pts) > len(best)):
             best = pts
             
