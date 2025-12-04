@@ -124,8 +124,7 @@ class BehaviorsData:
                 "update": ["tactical_flee_tick"], # Usar tick táctico
                 "exit": ["stop_evade", "clear_behavior_flag_fleeing"],
                 "transitions": [
-                    # Si el jugador está lejos, pasar a curarse
-                    #{"to": "Curarse", "cond": "PlayerFar", "priority": 200}
+                    # Si hemos llegado al anchor seguro, pasar a curarse
                     {"to": "Curarse", "cond": "PathFinished", "priority": 200}
                 ]
             },
@@ -299,8 +298,7 @@ class BehaviorsData:
                 "update": ["tactical_flee_tick"], # Usar tick táctico
                 "exit": ["stop_evade", "clear_behavior_flag_fleeing"],
                 "transitions": [
-                    # Si el jugador está lejos, pasar a curarse
-                    #{"to": "Curarse", "cond": "PlayerFar", "priority": 200}
+                    # Si hemos llegado al anchor seguro, pasar a curarse
                     {"to": "Curarse", "cond": "PathFinished", "priority": 200}
                 ]
             },
