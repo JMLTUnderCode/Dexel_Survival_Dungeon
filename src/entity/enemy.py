@@ -224,29 +224,6 @@ class Enemy(Kinematic):
                     self.path_offset = alg_config.path_offset
                     self.temp_follow_path: FollowPath | None = None         # Para caminos temporales y mantener original.
 
-    def _draw_collision_box(self, surface: pygame.Surface, camera_x: float, camera_z: float) -> None:
-        """
-        Descripción
-            MÉTODO: Dibuja la caja de colisión del enemigo para depuración.
-
-        Argumentos
-            - surface (pygame.Surface): Superficie destino.
-            - camera_x (float): posición x de la cámara.
-            - camera_z (float): posición z de la cámara.
-        """
-        # 1. Calcular posición relativa
-        sx = self.position[0] - camera_x
-        sz = self.position[1] - camera_z
-
-        # 2. Construir rectángulo de colisión y dibujarlo en verde
-        enemy_box = pygame.Rect(
-            int(sx - self.collider_box[0] // 2),
-            int(sz - self.collider_box[1] // 2),
-            int(self.collider_box[0]),
-            int(self.collider_box[1]),
-        )
-        pygame.draw.rect(surface, (0, 255, 0), enemy_box, 1)
-
     def draw(self, surface: pygame.Surface, camera_x: float, camera_z: float) -> None:
         """
         Descripción
@@ -275,7 +252,7 @@ class Enemy(Kinematic):
 
         # 5. Debug overlays condicionales según configuración
         if CONF.DEV.DEBUG:
-            DEBUG._draw_enemy_overlays(self, surface, sz, sx, camera_x, camera_z)
+            DEBUG.draw_enemy_overlays(self, surface, sx, sz, camera_x, camera_z)
 
     def update(self, collision_rects: list[pygame.Rect], dt: float) -> None:
         """

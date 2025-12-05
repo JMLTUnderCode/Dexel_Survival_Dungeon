@@ -74,7 +74,27 @@ def update_enemy_paths_to(entity_manager, event, ui_panel_width: float, camera_x
         world_z = event.pos[1] + camera_z
         entity_manager.update_enemy_paths_to((world_x, world_z))
 
-def draw_enemy_overlays(enemy, surface, sz, sx, camera_x, camera_z):
+def draw_collision_box(entity, surface: pygame.Surface, sx: float, sz: float) -> None:
+    """
+    Descripción
+        MÉTODO: Dibuja la caja de colisión de la entidad para depuración.
+
+    Argumentos
+        - entity: Entidad asociada a la caja de colisión.
+        - surface (pygame.Surface): Superficie destino.
+        - sx (float): Posición en x relativa a la cámara.
+        - sz (float): Posición en z relativa a la cámara.
+    """
+    # 1. Calcular rectángulo centrado en la posición del jugador
+    box = pygame.Rect(
+        int(sx - entity.collider_box[0] // 2),
+        int(sz - entity.collider_box[1] // 2),
+        int(entity.collider_box[0]),
+        int(entity.collider_box[1]),
+    )
+    pygame.draw.rect(surface, (0, 255, 0), box, 1)
+
+def draw_enemy_overlays(enemy, surface, sx, sz, camera_x, camera_z):
     font = pygame.font.SysFont("Segoe UI", 20, bold=True)
     anim_h = enemy.current_animation.get_size()[1]
     base_y = sz - (anim_h // 2) - 40
@@ -120,7 +140,7 @@ def draw_enemy_overlays(enemy, surface, sz, sx, camera_x, camera_z):
 
     # 5.3 Opciones de debug adicionales: colisión y paths
     if CONF.DEV.COLLISION_RECTS:
-        enemy.draw_collision_box(surface, camera_x, camera_z)
+        draw_collision_box(enemy, surface, sx, sz)
 
     if CONF.DEV.PATHFOLLOWER and hasattr(enemy, "follow_path") and enemy.follow_path is not None:
         path = getattr(enemy.follow_path, "path", None)
@@ -148,3 +168,12 @@ def draw_player_pivots(player, surface, camera_x, camera_z):
         screen_mmx = mmx - camera_x
         screen_mmy = mmy - camera_z
         pygame.draw.circle(surface, (255, 200, 0), (int(screen_mmx), int(screen_mmy)), 4)
+
+def draw_player_overlays(player, surface, sx, sz, camera_x, camera_z):
+    # Cuadro de colisión
+    if CONF.DEV.COLLISION_RECTS:
+        draw_collision_box(player, surface, sx, sz)
+    
+    # Dibujar pivotes y coronas mín/máx del pivot_move
+    if CONF.DEV.PIVOTS:
+        draw_player_pivots(player, surface, camera_x, camera_z)

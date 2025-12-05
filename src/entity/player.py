@@ -231,28 +231,6 @@ class Player(Kinematic):
         world_mx = mx + camera_x - self.width_ui
         world_my = my + camera_y
         self.pivot_point_mouse.position = (world_mx, world_my)
-            
-    def _draw_collision_box(self, surface: pygame.Surface, camera_x: float, camera_z: float) -> None:
-        """
-        Descripción
-            MÉTODO: Dibuja la caja de colisión del jugador para depuración.
-
-        Argumentos
-            - surface (pygame.Surface): Superficie destino.
-            - camera_x (float): Coordenada X de la cámara.
-            - camera_z (float): Coordenada Z de la cámara.
-        """
-        # 1. Calcular rectángulo centrado en la posición del jugador
-        sx = self.position[0] - camera_x
-        sz = self.position[1] - camera_z
-        player_box = pygame.Rect(
-            int(sx - self.collider_box[0] // 2),
-            int(sz - self.collider_box[1] // 2),
-            int(self.collider_box[0]),
-            int(self.collider_box[1]),
-        )
-        # 2. Dibujar rectángulo verde de borde 1
-        pygame.draw.rect(surface, (0, 255, 0), player_box, 1)
 
     def draw(self, surface: pygame.Surface, camera_x: float, camera_z: float) -> None:
         """
@@ -282,15 +260,10 @@ class Player(Kinematic):
         # 4. Dibujar barra de vida
         self.draw_life_bar(surface, camera_x, camera_z)
 
-        # 5. Opciones de debug
+        # 5. Debug overlays condicionales según configuración
         if CONF.DEV.DEBUG:
-            # Cuadro de colisión
-            if CONF.DEV.COLLISION_RECTS:
-                self._draw_collision_box(surface, camera_x, camera_z)
+            DEBUG.draw_player_overlays(self, surface, sx, sz, camera_x, camera_z)
             
-            # Dibujar pivotes y coronas mín/máx del pivot_move
-            DEBUG.draw_player_pivots(self, surface, camera_x, camera_z)
-
     def update(self, collision_rects: List[pygame.Rect], dt: float) -> None:
         """
         Descripción
