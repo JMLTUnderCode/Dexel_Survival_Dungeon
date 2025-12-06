@@ -41,8 +41,8 @@ class Stats:
         - armor (Optional[float]): valor de armadura/reducción de daño.
         - mele_dmg (Optional[float]): daño cuerpo a cuerpo.
         - mele_cooldown (Optional[float]): tiempo entre ataques cuerpo a cuerpo.
-        - range_dmg (Optional[float]): daño a distancia.
-        - range_cooldown (Optional[float]): tiempo entre ataques a distancia.
+        - magic_dmg (Optional[float]): daño a distancia.
+        - magic_cooldown (Optional[float]): tiempo entre ataques a distancia.
     
     Propósito
         - Proveer un contenedor simple para estadísticas usadas por la lógica de combate.
@@ -53,8 +53,8 @@ class Stats:
     armor: Optional[float] = 0.0
     mele_dmg: Optional[float] = 20.0
     mele_cooldown: Optional[float] = 3.0
-    range_dmg: Optional[float] = 25.0
-    range_cooldown: Optional[float] = 3.5
+    magic_dmg: Optional[float] = 25.0
+    magic_cooldown: Optional[float] = 3.5
 
 @dataclass
 class Sprite:

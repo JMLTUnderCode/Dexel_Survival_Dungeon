@@ -99,20 +99,36 @@ class Kinematic:
         self.mana: float = self.max_mana
         self.max_armor: float = statistics.armor if statistics and statistics.armor is not None else 0.0
         self.armor: float = self.max_armor
-        self.max_mele_dmg: float = statistics.mele_dmg if statistics and statistics.mele_dmg is not None else 20.0
-        self.mele_dmg: float = self.max_mele_dmg
-        self.max_mele_cooldown: float = statistics.mele_cooldown if statistics and statistics.mele_cooldown is not None else 3.0
-        self.mele_cooldown: float = self.max_mele_cooldown
-        self.max_range_dmg: float = statistics.range_dmg if statistics and statistics.range_dmg is not None else 25.0
-        self.range_dmg: float = self.max_range_dmg
-        self.max_range_cooldown: float = statistics.range_cooldown if statistics and statistics.range_cooldown is not None else 3.5
-        self.range_cooldown: float = self.max_range_cooldown
+        
+        self.mele_dmg: float = statistics.mele_dmg if statistics and statistics.mele_dmg is not None else 20.0
+        self.max_mele_dmg: float = 2 * self.mele_dmg
+        self.mele_cooldown: float = statistics.mele_cooldown if statistics and statistics.mele_cooldown is not None else 1.2
+        self.curr_mele_cooldown: float = 0.0
+        
+        self.magic_dmg: float = statistics.magic_dmg if statistics and statistics.magic_dmg is not None else 25.0
+        self.max_magic_dmg: float = 2 * self.magic_dmg
+        self.magic_cooldown: float = statistics.magic_cooldown if statistics and statistics.magic_cooldown is not None else 1.2
+        self.curr_magic_cooldown: float = 0.0
 
         # 3. Metadatos de spawn (si aplica)
         self.spawn_meta: Optional[SpawnedEntityMeta] = spawn_meta
 
         # 4. Nodo del NavMesh donde se encuentra la entidad (puede permanecer None)
         self.node_location = None
+
+    def update_cooldowns(self, dt: float) -> None:
+        """
+        Descripción
+            MÉTODO: Actualiza los contadores de cooldown de habilidades.
+
+        Argumentos
+            - dt (float): delta time en segundos.
+        """
+        if self.curr_mele_cooldown > 0:
+            self.curr_mele_cooldown = max(0.0, self.curr_mele_cooldown - dt)
+        
+        if self.curr_magic_cooldown > 0:
+            self.curr_magic_cooldown = max(0.0, self.curr_magic_cooldown - dt)
 
     def take_damage(self, amount: float) -> float:
         """
@@ -382,3 +398,41 @@ class Kinematic:
         fill_w = int(bar_w * hp_ratio)
         pygame.draw.rect(surface, (0, 200, 0), (bar_x, bar_y, fill_w, bar_h))
         pygame.draw.rect(surface, (0, 0, 0), (bar_x, bar_y, bar_w, bar_h), 1)
+
+    def draw_attack_effect(self, surface: pygame.Surface, camera_x: float, camera_z: float, sx: float, sz: float, deg: float) -> None:
+        if self.current_effect and not self.current_effect.is_finished:
+            effect_frame = self.current_effect.get_frame()
+            effect_draw_pos = (sx, sz) # Por defecto sobre el jugador
+
+            # 3.1 Lógica específica por tipo de efecto
+            if self.current_effect_type == "mele":
+                # Offset de 30px en la dirección de la orientación
+                offset_dist = 30.0
+                off_x = math.cos(self.orientation) * offset_dist
+                off_y = math.sin(self.orientation) * offset_dist
+                effect_draw_pos = (sx + off_x, sz + off_y)
+                rotated_effect = pygame.transform.rotate(effect_frame, deg)
+
+            elif self.current_effect_type == "magic":
+                # Interpolación lineal (Lerp) desde start hasta target
+                # Calculamos progreso suave: (frame_actual * duracion_frame + tiempo_acumulado) / duracion_total
+                anim = self.current_effect
+                total_duration = anim.frame_count * anim.frame_duration
+                elapsed = anim.current_frame * anim.frame_duration + anim.time_acc
+                progress = min(1.0, elapsed / total_duration) if total_duration > 0 else 0.0
+                
+                # Posiciones globales
+                start_x, start_z = self.magic_start_pos
+                target_x, target_z = self.magic_target_pos
+                
+                # Posición actual interpolada
+                curr_x = start_x + (target_x - start_x) * progress
+                curr_z = start_z + (target_z - start_z) * progress
+                
+                # Convertir a coordenadas de pantalla
+                effect_draw_pos = (curr_x - camera_x, curr_z - camera_z)
+                rotated_effect = pygame.transform.rotate(effect_frame, deg - 120.0)
+
+            # 3.2 Dibujar el efecto en la posición calculada
+            effect_rect = rotated_effect.get_rect(center=effect_draw_pos)
+            surface.blit(rotated_effect, effect_rect)
