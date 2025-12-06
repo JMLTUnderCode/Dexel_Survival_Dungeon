@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="60" height="60" tilewidth="16" tileheight="16" infinite="0" nextlayerid="27" nextobjectid="2294">
+<map version="1.10" tiledversion="1.11.2" orientation="orthogonal" renderorder="right-down" width="60" height="60" tilewidth="16" tileheight="16" infinite="0" nextlayerid="27" nextobjectid="2302">
  <tileset firstgid="1" name="Dungeon_Tileset" tilewidth="16" tileheight="16" tilecount="100" columns="10">
   <image source="Dungeon_Tileset.png" width="160" height="160"/>
   <tile id="0">
@@ -1149,6 +1149,12 @@
   <object id="1694" type="Node" x="320" y="784">
    <polygon points="0,0 0,16 32,16 32,0"/>
   </object>
+  <object id="2298" type="Node" x="416" y="720">
+   <polygon points="0,0 0,16 32,16 32,0"/>
+  </object>
+  <object id="2299" type="Node" x="416" y="848">
+   <polygon points="0,0 0,16 32,16 32,0"/>
+  </object>
   <object id="1696" type="Node" x="304" y="816">
    <polygon points="0,0 0,16 16,32 48,32 64,16 64,0 48,-16 16,-16"/>
   </object>
@@ -1225,6 +1231,12 @@
    <polygon points="0,0 0,16 32,16 32,0"/>
   </object>
   <object id="1755" type="Node" x="400" y="688">
+   <polygon points="0,0 0,16 16,32 48,32 64,16 64,0 48,-16 16,-16"/>
+  </object>
+  <object id="2294" type="Node" x="400" y="752">
+   <polygon points="0,0 0,16 16,32 48,32 64,16 64,0 48,-16 16,-16"/>
+  </object>
+  <object id="2295" type="Node" x="400" y="816">
    <polygon points="0,0 0,16 16,32 48,32 64,16 64,0 48,-16 16,-16"/>
   </object>
   <object id="1762" type="Node" x="32" y="672">
@@ -1641,27 +1653,6 @@
   <object id="2037" type="Node" x="528" y="768">
    <polygon points="0,0 32,0 48,16 48,32 32,48 0,48"/>
   </object>
-  <object id="2053" type="Node" x="448" y="768">
-   <polygon points="0,0 48,0 48,48 0,48"/>
-  </object>
-  <object id="2054" type="Node" x="448" y="768">
-   <properties>
-    <property name="tactical" value="sentry"/>
-   </properties>
-   <polygon points="0,0 -16,0 -32,16 -32,32 -16,48 0,48"/>
-  </object>
-  <object id="2055" type="Node" x="416" y="832">
-   <polygon points="0,0 16,-16 32,-16 32,32 0,32"/>
-  </object>
-  <object id="2056" type="Node" x="400" y="816">
-   <polygon points="0,0 16,16 32,0 16,-16 0,0"/>
-  </object>
-  <object id="2057" type="Node" x="400" y="768">
-   <polygon points="0,0 16,-16 32,0 16,16"/>
-  </object>
-  <object id="2058" type="Node" x="416" y="720">
-   <polygon points="0,0 0,32 16,48 32,48 32,0"/>
-  </object>
   <object id="2060" type="Node" x="512" y="720">
    <polygon points="0,0 16,-16 48,-16 64,0 64,16 48,32 16,32 0,16"/>
   </object>
@@ -1886,6 +1877,15 @@
   </object>
   <object id="2292" type="Node" x="464" y="288">
    <polygon points="0,0 -16,0 -32,-16 -32,48 -16,32 0,32"/>
+  </object>
+  <object id="2300" type="Node" x="464" y="768">
+   <properties>
+    <property name="tactical" value="sentry"/>
+   </properties>
+   <polygon points="0,0 0,48 -16,32 -48,32 -48,16 -16,16"/>
+  </object>
+  <object id="2301" type="Node" x="464" y="768">
+   <polygon points="0,0 32,0 32,48 0,48"/>
   </object>
  </objectgroup>
 </map>
