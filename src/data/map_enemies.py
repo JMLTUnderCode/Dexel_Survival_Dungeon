@@ -11,13 +11,13 @@ map_1_group = [
 map_2_group = [
     EntitySpec(
         id=1,
-        sprite=Sprite(name="gargant-soldier",),
+        sprite=Sprite(name="gargant-soldier", frame_duration=0.11,),
         initial_position=(CONF.MAIN_WIN.RENDER_TILE_SIZE * 4, CONF.MAIN_WIN.RENDER_TILE_SIZE * 15),
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         alg_configs={
             CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING: ALG_CONF.LookWhereYouAreGoingConfig(
-                target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
+                target_radius_deg=1 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=50 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
                 max_rotation=3.0,
@@ -29,7 +29,7 @@ map_2_group = [
                 max_prediction=0.5
             ),
             CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
-                target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
+                target_radius_deg=1 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=50 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
                 max_rotation=3.0,
@@ -47,18 +47,18 @@ map_2_group = [
                 path_offset=1.0
             )
         },
-        statistics=Stats(alive=True, health=100.0,),
+        statistics=Stats(alive=True, health=100.0, mele_cooldown=1.4, magic_cooldown=1.6),
         behavior=BehaviorsData.HUNTER,
     ),
     EntitySpec(
         id=2,
-        sprite=Sprite(name="gargant-lord",),
+        sprite=Sprite(name="gargant-lord", frame_duration=0.11,),
         initial_position=(CONF.MAIN_WIN.RENDER_TILE_SIZE * 28, CONF.MAIN_WIN.RENDER_TILE_SIZE * 49),
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.FACE,
         alg_configs={
             CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING: ALG_CONF.LookWhereYouAreGoingConfig(
-                target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
+                target_radius_deg=1 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=50 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
                 max_rotation=3.0,
@@ -70,7 +70,7 @@ map_2_group = [
                 max_prediction=0.5
             ),
             CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
-                target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
+                target_radius_deg=1 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=50 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
                 max_rotation=3.0,
@@ -92,18 +92,18 @@ map_2_group = [
                 path_offset=1.0
             )
         },
-        statistics=Stats(alive=True, health=100.0,),
+        statistics=Stats(alive=True, health=100.0, mele_cooldown=1.4, magic_cooldown=1.6),
         behavior=BehaviorsData.GUARDIAN,
     ),
     EntitySpec(
         id=2,
-        sprite=Sprite(name="gargant-berserker",),
+        sprite=Sprite(name="gargant-berserker", frame_duration=0.11,),
         initial_position=(CONF.MAIN_WIN.RENDER_TILE_SIZE * 10, CONF.MAIN_WIN.RENDER_TILE_SIZE * 7),
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.FACE,
         alg_configs={
             CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING: ALG_CONF.LookWhereYouAreGoingConfig(
-                target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
+                target_radius_deg=1 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=50 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
                 max_rotation=3.0,
@@ -115,7 +115,7 @@ map_2_group = [
                 max_prediction=0.5
             ),
             CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
-                target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
+                target_radius_deg=1 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=50 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
                 max_rotation=3.0,
@@ -137,25 +137,25 @@ map_2_group = [
                 path_offset=1.0
             )
         },
-        statistics=Stats(alive=True, health=100.0,),
+        statistics=Stats(alive=True, health=100.0, mele_cooldown=1.4, magic_cooldown=1.6),
         behavior=BehaviorsData.GUARDIAN,
     ),
     EntitySpec(
         id=4,
-        sprite=Sprite(name="gargant-boss",),
+        sprite=Sprite(name="gargant-boss", frame_duration=0.11,),
         initial_position=(CONF.MAIN_WIN.RENDER_TILE_SIZE * 55, CONF.MAIN_WIN.RENDER_TILE_SIZE * 47),
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.FACE,
         alg_configs={
             CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING: ALG_CONF.LookWhereYouAreGoingConfig(
-                target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
+                target_radius_deg=1 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=50 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
                 max_rotation=3.0,
                 max_angular_accel=35.0
             ),
             CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
-                target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
+                target_radius_deg=1 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=50 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
                 max_rotation=3.0,
@@ -173,18 +173,18 @@ map_2_group = [
                 path_offset=1.0
             )
         },
-        statistics=Stats(alive=True, health=500.0,),
+        statistics=Stats(alive=True, health=500.0, mele_cooldown=1.4, magic_cooldown=1.6),
         behavior=BehaviorsData.INVOKER_BOSS,
     ),
     EntitySpec(
         id=5,
-        sprite=Sprite(name="gargant-soldier",),
+        sprite=Sprite(name="gargant-soldier", frame_duration=0.11,),
         initial_position=(CONF.MAIN_WIN.RENDER_TILE_SIZE * 57, CONF.MAIN_WIN.RENDER_TILE_SIZE * 57),
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
         initial_algorithm=CONF.ALG.ALGORITHM.PATH_FOLLOWING,
         alg_configs={
             CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING: ALG_CONF.LookWhereYouAreGoingConfig(
-                target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
+                target_radius_deg=1 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=50 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
                 max_rotation=3.0,
@@ -196,7 +196,7 @@ map_2_group = [
                 max_prediction=0.5
             ),
             CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
-                target_radius_deg=5 * CONF.CONST.CONVERT_TO_RAD,
+                target_radius_deg=1 * CONF.CONST.CONVERT_TO_RAD,
                 slow_radius_deg=50 * CONF.CONST.CONVERT_TO_RAD,
                 time_to_target=0.1,
                 max_rotation=3.0,
@@ -214,7 +214,7 @@ map_2_group = [
                 path_offset=1.0
             )
         },
-        statistics=Stats(alive=True, health=100.0,),
+        statistics=Stats(alive=True, health=100.0, mele_cooldown=1.4, magic_cooldown=1.6),
         behavior=BehaviorsData.HUNTER,
     ),
 ]
