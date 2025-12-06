@@ -12,7 +12,7 @@ class ACTIONS(str, enum.Enum):
 FOLDER_EFFECTS = "attacks"
 EFFECTS = {
     "mele": {
-        "file": "mele.png",
+        "file": "mele-1.png",
         "frames": 11,
         "w": TILE_WIDTH,
         "h": TILE_HEIGHT,
