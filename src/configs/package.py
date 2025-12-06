@@ -58,13 +58,15 @@ class PlayerConfig:
 
 @dataclass
 class EnemyConfig:
-    FOLDER: str = ENEMY.FOLDER
+    FOLDER_ANIM: str = ENEMY.FOLDER_ANIM
     TILE_WIDTH: int = ENEMY.TILE_WIDTH
     TILE_HEIGHT: int = ENEMY.TILE_HEIGHT
     COLLIDER_BOX_WIDTH: int = ENEMY.COLLIDER_BOX_WIDTH
     COLLIDER_BOX_HEIGHT: int = ENEMY.COLLIDER_BOX_HEIGHT
     ACTIONS: ENEMY.ACTIONS = ENEMY.ACTIONS
-
+    FOLDER_EFFECTS: str = ENEMY.FOLDER_EFFECTS
+    EFFECTS: dict = field(default_factory=lambda: dict(ENEMY.EFFECTS))
+    
 @dataclass
 class MapConfig:
     LEVELS: dict = field(default_factory=lambda: dict(MAP.LEVELS))
