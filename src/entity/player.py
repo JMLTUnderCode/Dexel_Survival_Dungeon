@@ -158,8 +158,6 @@ class Player(Kinematic):
                         self.current_effect_type = "magic"
                         self.current_effect.reset()
                         
-                        # Calcular posiciones para el proyectil
-                        mx, my = pygame.mouse.get_pos()
                         # Usamos la posición del pivot_mouse que ya está en 
                         # coordenadas de mundo y se actualiza cada frame.
                         self.magic_target_pos = self.pivot_point_mouse.position
