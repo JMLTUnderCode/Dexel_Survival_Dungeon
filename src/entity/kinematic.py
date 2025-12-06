@@ -11,6 +11,7 @@ ALGORITHM_USE_ROTATION = [
     CONF.ALG.ALGORITHM.WANDER_DYNAMIC,
     CONF.ALG.ALGORITHM.ALIGN,
     CONF.ALG.ALGORITHM.FACE,
+    CONF.ALG.ALGORITHM.PURSUE,
     CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING,
     CONF.ALG.ALGORITHM.VELOCITY_MATCH,
     CONF.ALG.ALGORITHM.PATH_FOLLOWING,
@@ -411,7 +412,7 @@ class Kinematic:
                 off_x = math.cos(self.orientation) * offset_dist
                 off_y = math.sin(self.orientation) * offset_dist
                 effect_draw_pos = (sx + off_x, sz + off_y)
-                rotated_effect = pygame.transform.rotate(effect_frame, deg)
+                rotated_effect = pygame.transform.rotate(effect_frame, deg + 90.0)
 
             elif self.current_effect_type == "magic":
                 # Interpolación lineal (Lerp) desde start hasta target
@@ -433,6 +434,9 @@ class Kinematic:
                 effect_draw_pos = (curr_x - camera_x, curr_z - camera_z)
                 rotated_effect = pygame.transform.rotate(effect_frame, deg - 120.0)
 
+            else:
+                rotated_effect = pygame.transform.rotate(effect_frame, deg)
+                
             # 3.2 Dibujar el efecto en la posición calculada
             effect_rect = rotated_effect.get_rect(center=effect_draw_pos)
             surface.blit(rotated_effect, effect_rect)
