@@ -271,24 +271,24 @@ class Player(Kinematic):
             - camera_x (float): Posición X de la cámara.
             - camera_z (float): Posición Z (Y en 2D) de la cámara.
         """
-        # 1. Calcular posición en pantalla del jugador
+        # 1. Calcular posición en pantalla relativa a la cámara
         sx = self.position[0] - camera_x
         sz = self.position[1] - camera_z
 
-        # 2. Rotar y dibujar el sprite del jugador
+        # 2. Rotar el frame actual según la orientación del enemigo
         deg = -math.degrees(self.orientation) - 90.0
         frame = self.current_animation.get_frame()
         rotated = pygame.transform.rotate(frame, deg)
         rect = rotated.get_rect(center=(sx, sz))
         surface.blit(rotated, rect)
 
-        # 3. Dibujar efecto visual activo (si existe y no ha terminado)
+        # 3. Dibujar efecto visual activo (método heredado en Kinematic)
         self.draw_attack_effect(surface, camera_x, camera_z, sx, sz, deg)
 
-        # 4. Dibujar barra de vida
+        # 4. Dibujar la barra de vida encima del sprite (método heredado en Kinematic)
         self.draw_life_bar(surface, camera_x, camera_z)
 
-        # 5. Debug overlays
+        # 5. Debug overlays condicionales según configuración
         if CONF.DEV.DEBUG:
             DEBUG.draw_player_overlays(self, surface, sx, sz, camera_x, camera_z)
             
