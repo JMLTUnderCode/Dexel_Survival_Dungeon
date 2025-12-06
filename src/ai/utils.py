@@ -12,35 +12,6 @@ Objetivo:
 from typing import Any, Optional
 from ai.hsm import HSMInstance
 
-def get_spec_param(hinst: HSMInstance, key: Optional[str], default: Any = None) -> Any:
-    """
-    Descripción
-        FUNCIÓN: Resuelve un parámetro que puede ser:
-            - un número (int/float) -> devuelto tal cual,
-            - una clave string que existe en `_spec_params` del blackboard -> su valor,
-            - un literal numérico en forma de string -> convertido a float,
-            - None -> default.
-    Argumentos
-        - hinst (HSMInstance): instancia de la HSM que contiene el blackboard.
-        - key (Optional[str]): clave o literal a resolver.
-        - default (Any): valor por defecto si no se resuelve.
-    Retorno
-        - Any: valor resuelto o default.
-    """
-    spec = hinst.blackboard.get("_spec_params", {})
-    if key is None:
-        return default
-    if isinstance(key, (int, float)):
-        return key
-    if isinstance(key, str):
-        if key in spec:
-            return spec[key]
-        try:
-            return float(key)
-        except Exception:
-            return default
-    return default
-
 def get_manager(hinst: HSMInstance) -> Optional[Any]:
     """
     Obtiene manager de forma segura desde el blackboard.
@@ -60,3 +31,33 @@ def get_player(hinst: HSMInstance) -> Optional[Any]:
 def exception_print(tag: str, entity: Any, err: str):
     """Wrapper ligero para mensajes de debug (se puede reemplazar por logger)."""
     print(f"[{tag}] Entity: {entity}. \n\n {err}")
+
+def get_spec_param(hinst: HSMInstance, key: Optional[str], default: Any = None) -> Any:
+    """
+    Descripción
+        FUNCIÓN: Resuelve un parámetro que puede ser:
+            - un número (int/float) -> devuelto tal cual,
+            - una clave string que existe en `_spec_params` del blackboard -> su valor,
+            - un literal numérico en forma de string -> convertido a float,
+            - None -> default.
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM que contiene el blackboard.
+        - key (Optional[str]): clave o literal a resolver.
+        - default (Any): valor por defecto si no se resuelve.
+    Retorno
+        - Any: valor resuelto o default.
+    """
+    spec = hinst.blackboard.get("_spec_params", {})
+    if key is None:
+        exception_print("get_spec_param", hinst.blackboard.get("entity"), "Key is None, returning default.")
+        return default
+    if isinstance(key, (int, float)):
+        return key
+    if isinstance(key, str):
+        if key in spec:
+            return spec[key]
+        else:
+            exception_print("get_spec_param", hinst.blackboard.get("entity"), f"Key '{key}' not in spec, returning default.")
+            return default
+    exception_print("get_spec_param", hinst.blackboard.get("entity"), f"Key '{key}' is of unsupported type, returning default.")
+    return default
