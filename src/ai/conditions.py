@@ -516,8 +516,7 @@ def IsAtBossPosition(hinst: HSMInstance, entity: Any) -> bool:
         - arrival_threshold (float): umbral en píxeles para considerar llegada.
     """
     try:
-        boss_pos = hinst.blackboard.get("_spec_params", {}).get("boss_position", None) \
-                   or get_spec_param(hinst, "boss_position", None)
+        boss_pos = get_spec_param(hinst, "boss_position", None)
         if not boss_pos:
             return True
         ex, ez = entity.get_pos()
