@@ -1,10 +1,8 @@
 from __future__ import annotations
 import math
 import time
-import importlib
 import traceback
 from typing import Optional, List, Dict, Any
-
 from entity.kinematic import Kinematic
 from entity.entity_spec import EntitySpec, Stats, Sprite, SpawnedEntityMeta
 from entity.player import Player
@@ -118,79 +116,6 @@ class EntityManager:
         self.enemies.append(enemy)
         return enemy
 
-    def spawn_attack_effect(self, effect_name: str, *, position: tuple[float, float], radius: float = 0.0, **kwargs) -> Dict[str, Any]:
-        """
-        Descripción
-            MÉTODO: Registrar y retornar un efecto de ataque (AOE / VFX).
-
-        Argumentos
-            - effect_name (str): Identificador del efecto.
-            - position (tuple[float, float]): Posición (x,z) donde se crea el efecto.
-            - radius (float): Radio del efecto.
-            - kwargs: Parámetros adicionales guardados en el efecto.
-
-        Retorno
-            - dict: Representación del efecto creado.
-        """
-        # 1. Construir la estructura del efecto con marca de tiempo
-        try:
-            effect = {
-                "name": effect_name,
-                "position": (float(position[0]), float(position[1])),
-                "radius": float(radius),
-                "created_at": time.time(),
-                **kwargs
-            }
-
-            # 2. Registrar y devolver
-            self.attack_effects.append(effect)
-            return effect
-        except Exception as exc:
-            # 3. Manejo de error defensivo
-            print(f"[EntityManager.spawn_attack_effect] Error: {exc}")
-            return {}
-
-    def process_player_attacks(self) -> None:
-        """
-        Descripción
-            MÉTODO: Procesa las ondas de ataque del jugador y aplica daño a enemigos dentro del radio.
-
-        Argumentos
-            - Ninguno
-
-        Blackboard utilizado/modificado
-            - player.attack_waves (read): colección de ondas pendientes del jugador.
-        """
-        # 1. Validaciones rápidas: requiere player y enemigos
-        if not self.player:
-            return
-        if not self.enemies:
-            return
-
-        # 2. Iterar sobre las ondas activas y aplicar daño por proximidad
-        for wave in list(self.player.attack_waves):
-            if not getattr(wave, "applied", False):
-                wx, wz = wave.x, wave.z
-                r = wave.max_radius
-                for enemy in list(self.enemies):
-                    if not getattr(enemy, "alive", True):
-                        continue
-                    ex, ez = enemy.get_pos()
-                    dist = math.hypot(ex - wx, ez - wz)
-                    if dist <= r:
-                        # 2.1 Calcular daño y aplicarlo (defensivo ante excepciones)
-                        dmg = 0.20 * getattr(enemy, "max_health", 100.0)
-                        try:
-                            enemy.take_damage(dmg)
-                        except Exception:
-                            enemy.health = max(0.0, getattr(enemy, "health", 0.0) - dmg)
-
-                # 2.2 Marcar onda como aplicada
-                try:
-                    wave.mark_applied()
-                except Exception:
-                    wave.applied = True
-
     def remove_dead_enemies(self) -> None:
         """
         Descripción
@@ -290,3 +215,88 @@ class EntityManager:
                 poly = Path(pts, closed=False)
                 if getattr(enemy, "follow_path", None):
                     enemy.follow_path.path = poly
+
+    def resolve_attack_damage(self) -> None:
+        """
+        Descripción
+            MÉTODO: Resuelve el daño de los ataques activos (Mele y Magic) basándose en la posición
+            visual de los efectos. Se ejecuta frame a frame.
+        
+        Argumentos
+            - Ninguno
+        """
+        # 1. Recopilar todas las entidades vivas (Player + Enemigos)
+        all_entities: List[Kinematic] = []
+        if self.player and self.player.is_alive():
+            all_entities.append(self.player)
+        all_entities.extend([e for e in self.enemies if e.is_alive()])
+
+        # 2. Iterar sobre cada entidad para verificar si está atacando
+        for attacker in all_entities:
+            # 2.1 Verificar si tiene un efecto activo y si NO ha aplicado daño aún
+            # NOTA: Para proyectiles mágicos, podríamos querer que golpeen a múltiples objetivos o se destruyan.
+            # Aquí asumimos un golpe único por activación de efecto para simplificar.
+            if getattr(attacker, "current_effect", None) and not getattr(attacker, "current_effect", None).is_finished:
+                if not attacker.effect_damage_applied:
+                    
+                    # 3. Obtener posición del "hitbox" del efecto
+                    hit_pos = attacker.get_current_effect_center()
+                    if not hit_pos:
+                        continue
+                    
+                    # 4. Definir objetivos (Player ataca Enemigos, Enemigos atacan Player)
+                    targets = []
+                    if isinstance(attacker, Player):
+                        targets = [e for e in self.enemies if e.is_alive()]
+                    elif isinstance(attacker, Enemy) and self.player and self.player.is_alive():
+                        targets = [self.player]
+                    
+                    # 5. Definir radio de colisión del efecto (aprox. mitad de un tile o ajustado)
+                    effect_radius = 24.0 
+
+                    # 6. Verificar colisión contra objetivos
+                    hit_occurred = False
+                    for target in targets:
+                        tx, tz = target.get_pos()
+                        hx, hz = hit_pos
+                        dist = math.hypot(tx - hx, tz - hz)
+                        
+                        # Radio del objetivo (aprox)
+                        target_radius = 24.0
+                        
+                        if dist < (effect_radius + target_radius):
+                            # 7. ¡IMPACTO! Aplicar daño
+                            dmg = 0.0
+                            if attacker.current_effect_type == "mele":
+                                dmg = getattr(attacker, "mele_dmg", 10.0)
+                            elif attacker.current_effect_type == "magic":
+                                dmg = getattr(attacker, "magic_dmg", 15.0)
+                            
+                            target.take_damage(dmg)
+                            hit_occurred = True
+                            
+                            # Si es magia (proyectil), visualmente podría detenerse aquí, 
+                            # pero por ahora solo marcamos el daño.
+                            
+                    # 8. Si hubo al menos un impacto, marcar el efecto como "gastado"
+                    if hit_occurred:
+                        attacker.effect_damage_applied = True
+                        
+                        # Opcional: Si es magia, forzar finalización visual al impactar
+                        if attacker.current_effect_type == "magic":
+                             attacker.current_effect.finished = True
+
+    def update(self, dt: float) -> None:
+        """
+        Descripción
+            MÉTODO: Actualización centralizada del manager. Ejecuta la resolución de daños,
+            procesamiento de ataques y limpieza de entidades.
+
+        Argumentos
+            - dt (float): Delta time en segundos.
+        """
+        # 1. Resolver daños por colisión de efectos visuales (Hitbox activa)
+        self.resolve_attack_damage()
+
+        # 2. Eliminar enemigos muertos o expirados
+        self.remove_dead_enemies()

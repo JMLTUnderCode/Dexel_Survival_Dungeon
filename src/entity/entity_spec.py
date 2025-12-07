@@ -105,5 +105,5 @@ class EntitySpec:
     initial_algorithm: str
     alg_configs: Dict[str, AlgorithmConfigType]
     statistics: Optional[Stats] = None
-    behavior: Optional[str] = None
+    behavior: Optional[Dict] = None
     spawn_meta: Optional[SpawnedEntityMeta] = None

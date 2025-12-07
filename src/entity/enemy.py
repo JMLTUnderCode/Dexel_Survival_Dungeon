@@ -267,7 +267,7 @@ class Enemy(Kinematic):
         surface.blit(rotated, rect)
 
         # 3. Dibujar efecto visual activo (método heredado en Kinematic)
-        self.draw_attack_effect(surface, camera_x, camera_z, sx, sz, deg)
+        self.draw_attack_effect(surface, camera_x, camera_z, deg)
 
         # 4. Dibujar la barra de vida encima del sprite (método heredado en Kinematic)
         self.draw_life_bar(surface, camera_x, camera_z)

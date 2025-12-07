@@ -67,7 +67,7 @@ class BehaviorsData:
             "flee_threshold": 0.30,
             "restore_threshold": 0.70,
             "heal_rate_per_sec": 0.05,
-            "safe_distance": 450.0,
+            "safe_distance": 500.0,
             "player_lost_timeout": 2.0,
             "patrol_path_nodes": 20,
             "face_range_multiplier": 2,
@@ -223,7 +223,7 @@ class BehaviorsData:
             "flee_threshold": 0.30,
             "restore_threshold": 0.70,
             "heal_rate_per_sec": 0.05,
-            "safe_distance": 450.0,
+            "safe_distance": 500.0,
             "player_lost_timeout": 2.0,
             "face_range_multiplier": 2,
             "check_los_throttle": 0.25,
@@ -499,7 +499,7 @@ class BehaviorsData:
             "Regenerar": {
                 "type": "leaf",
                 "entry": ["start_regeneration"],
-                "update": ["regen_tick", "face_towards_safe_anchor", "monitor_player_presence"],
+                "update": ["regen_tick", "monitor_player_presence"],
                 "exit": ["stop_regeneration", "reset_lost_health_accum"],
                 "transitions": [
                     # Al completar la regeneración, volver al EstadoVida (restaurando historia)

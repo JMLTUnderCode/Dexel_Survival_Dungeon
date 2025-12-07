@@ -227,9 +227,9 @@ class Game:
         # 3. Actualizar jugador y enemigos (fisica y animaciones)
         player.update(self.game_map.collision_rects, self.dt)
 
-        # 4. Procesar ataques del jugador (aplicar daño desde attack_waves)
+        # 4. Actualizar el estado del EntityManager (procesar ataques, resolver daños, limpiar)
         try:
-            self.entity_manager.process_player_attacks()
+            self.entity_manager.update(self.dt)
         except Exception:
             pass
 
@@ -243,12 +243,6 @@ class Game:
             enemy.update(self.game_map.collision_rects, self.dt)
             if self.game_map.navmesh:
                 enemy.node_location = self.game_map.navmesh.find_node_from(enemy.node_location, enemy.get_pos())
-
-        # 7. Limpiar enemigos muertos
-        try:
-            self.entity_manager.remove_dead_enemies()
-        except Exception:
-            pass
 
     def _render(self) -> None:
         """

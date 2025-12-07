@@ -122,6 +122,9 @@ class Player(Kinematic):
         self.width_ui = CONF.MAP_UI.PANEL_WIDTH if CONF.MAP_UI.ACTIVE else 0.0
         self.width_ui = CONF.ALG_UI.PANEL_WIDTH if CONF.ALG_UI.ACTIVE and not CONF.MAP_UI.ACTIVE else self.width_ui
 
+        # 6. Bandera para comunicar lógica de ataque al EntityManager
+        self.pending_attack: Optional[str] = None # "mele" | "magic"
+
     def handle_event(self, event: pygame.event.Event) -> None:
         """
         Descripción
@@ -144,6 +147,8 @@ class Player(Kinematic):
                         self.current_effect = self.effects["mele"]
                         self.current_effect_type = "mele"
                         self.current_effect.reset()
+                        # Resetear bandera de daño
+                        self.effect_damage_applied = False
             
             # 2. Click Derecho -> Ataque Mágico
             elif event.button == 3:
@@ -157,9 +162,10 @@ class Player(Kinematic):
                         self.current_effect = self.effects["magic"]
                         self.current_effect_type = "magic"
                         self.current_effect.reset()
+                        # Resetear bandera de daño
+                        self.effect_damage_applied = False
                         
-                        # Usamos la posición del pivot_mouse que ya está en 
-                        # coordenadas de mundo y se actualiza cada frame.
+                        # Calcular posiciones para el proyectil
                         self.magic_target_pos = self.pivot_point_mouse.position
                         self.magic_start_pos = self.position
 
@@ -281,7 +287,7 @@ class Player(Kinematic):
         surface.blit(rotated, rect)
 
         # 3. Dibujar efecto visual activo (método heredado en Kinematic)
-        self.draw_attack_effect(surface, camera_x, camera_z, sx, sz, deg)
+        self.draw_attack_effect(surface, camera_x, camera_z, deg)
 
         # 4. Dibujar la barra de vida encima del sprite (método heredado en Kinematic)
         self.draw_life_bar(surface, camera_x, camera_z)

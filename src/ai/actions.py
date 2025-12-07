@@ -52,6 +52,7 @@ from algorithms.path_following import FollowPath
 import algorithms.algorithms_configs as ALG_CONF
 from map.paths import Path
 from tacticals.profiles_configs import HUNTER_COMBAT_PROFILE, GUARDIAN_COMBAT_PROFILE, FLEE_PROFILE
+from data.behaviors import BehaviorsData
 from ai.utils import get_spec_param, get_manager, get_player, exception_print
 from configs.package import CONF
 
@@ -235,8 +236,19 @@ def start_random_patrol(hinst, entity):
         # 4) Obtener parámetros y buscar ruta en navmesh
         desired_nodes = int(get_spec_param(hinst, "patrol_path_nodes", 20))
         
-        # Llamada al helper actualizado con perfil táctico
-        pts = _find_best_patrol_path(pathfinder, entity.get_pos(), desired_nodes, tactical_profile=profile)
+        # 4.1) Caso especial: La entidad es una invocación
+        pts = None
+        if entity.spawn_meta:
+            if hasattr(pathfinder, "find_path") and profile:
+                try:
+                    # Si es TacticalPathfinder y tenemos perfil, usar find_path con perfil
+                    pts = pathfinder.find_path(entity.get_pos(), get_player(hinst).get_pos(), profile=profile)
+                except Exception:
+                    # Pathfinder normal
+                    pts = pathfinder.find_path(entity.get_pos(), get_player(hinst).get_pos())
+        else:
+            # Llamada al helper actualizado con perfil táctico
+            pts = _find_best_patrol_path(pathfinder, entity.get_pos(), desired_nodes, tactical_profile=profile)
 
         # 5) Si no hay puntos adecuados -> fallback a wander
         if not pts:
@@ -619,20 +631,22 @@ def try_melee_attack(hinst, entity):
         # 3) Si está en rango, intentar disparar animación de ataque
         if dist <= attack_r:
             # Verificar cooldown
-            if entity.curr_mele_cooldown <= 0:
+            if getattr(entity, "curr_mele_cooldown", 0.0) <= 0:
                 try:
                     # Activar estado de animación ATTACK
                     set_animation_state(entity, CONF.ENEMY.ACTIONS.ATTACK)
                     entity.current_animation.reset()
                     
                     # Reiniciar cooldown
-                    entity.curr_mele_cooldown = entity.mele_cooldown
+                    entity.curr_mele_cooldown = getattr(entity, "mele_cooldown", 1.2)
                     
                     # Activar efecto visual 'mele'
-                    if "mele" in entity.effects:
+                    if "mele" in getattr(entity, "effects", {}):
                         entity.current_effect = entity.effects["mele"]
                         entity.current_effect_type = "mele"
                         entity.current_effect.reset()
+                        # Resetear bandera de daño para este nuevo ataque
+                        entity.effect_damage_applied = False
 
                 except Exception as e:
                     exception_print("TRY MELEE ATTACK", entity, f"Anim error: {e}")
@@ -673,22 +687,24 @@ def try_magic_attack(hinst, entity):
         # 3. Si está en rango, intentar disparar
         if dist <= magic_r:
             # Verificar cooldown mágico
-            if entity.curr_magic_cooldown <= 0:
+            if getattr(entity, "curr_magic_cooldown", 0.0) <= 0:
                 try:
-                    # 3.1 Activar animación de ataque (generalmente la misma que melee o específica)
+                    # 3.1 Activar animación de ataque
                     set_animation_state(entity, CONF.ENEMY.ACTIONS.ATTACK)
                     entity.current_animation.reset()
 
                     # 3.2 Reiniciar cooldown
-                    entity.curr_magic_cooldown = entity.magic_cooldown
+                    entity.curr_magic_cooldown = getattr(entity, "magic_cooldown", 1.5)
 
                     # 3.3 Activar efecto visual 'magic'
-                    if "magic" in entity.effects :
+                    if "magic" in getattr(entity, "effects", {}):
                         entity.current_effect = entity.effects["magic"]
                         entity.current_effect_type = "magic"
                         entity.current_effect.reset()
+                        # Resetear bandera de daño
+                        entity.effect_damage_applied = False
                         
-                        # 3.4 Configurar trayectoria del proyectil (para interpolación visual)
+                        # Configurar trayectoria visual
                         entity.magic_start_pos = (ex, ez)
                         entity.magic_target_pos = (px, pz)
                 
@@ -1032,16 +1048,14 @@ def face_towards_safe_anchor(hinst, entity):
         - safe_distance (float): distancia a usar para calcular anchor seguro.
         - vision_radius (float): rango de visión para considerar al jugador.
         - vision_fov_deg (float): ángulo de visión (grados).
-        - face_range_multiplier (float): multiplicador para ampliar rango de facing.
     """
     # 1) Preparar parámetros y referencias (player, thresholds, fov)
     try:
         player = get_player(hinst)
         safe_distance = float(get_spec_param(hinst, "safe_distance", 200.0))
         vision = float(get_spec_param(hinst, "vision_radius", 300.0))
+        face_range = vision
         fov_deg = float(get_spec_param(hinst, "vision_fov_deg", 120.0))
-        face_mult = float(get_spec_param(hinst, "face_range_multiplier", 1.5))
-        face_range = vision * face_mult
         half_fov = math.radians(max(0.0, min(180.0, fov_deg)) / 2.0)
 
         # 2) Leer blackboard: posición conocida del jugador y anchor seguro (si existe)
@@ -1826,11 +1840,25 @@ def invocation_tick(hinst, entity):
                                float(sz + random.uniform(-CONF.ENEMY.TILE_HEIGHT, CONF.ENEMY.TILE_HEIGHT)))
                 spawned_spec = EntitySpec(
                     id=spawned + 1,
-                    sprite=Sprite(name="gargant-soldier"),
+                    sprite=Sprite(name="gargant-soldier", frame_duration=0.11,),
                     initial_position=spawned_pos,
                     collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
-                    initial_algorithm=CONF.ALG.ALGORITHM.PURSUE,
+                    initial_algorithm=CONF.ALG.ALGORITHM.TEMP_PATH_FOLLOWING,
                     alg_configs={
+                        CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING: ALG_CONF.LookWhereYouAreGoingConfig(
+                            target_radius_deg=1 * CONF.CONST.CONVERT_TO_RAD,
+                            slow_radius_deg=50 * CONF.CONST.CONVERT_TO_RAD,
+                            time_to_target=0.1,
+                            max_rotation=3.0,
+                            max_angular_accel=35.0
+                        ),
+                        CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
+                            target_radius_deg=1 * CONF.CONST.CONVERT_TO_RAD,
+                            slow_radius_deg=50 * CONF.CONST.CONVERT_TO_RAD,
+                            time_to_target=0.1,
+                            max_rotation=3.0,
+                            max_angular_accel=35.0
+                        ),
                         CONF.ALG.ALGORITHM.PURSUE: ALG_CONF.PursueConfig(
                             max_speed=120.0,
                             target_radius_dist=40.0,
@@ -1839,8 +1867,12 @@ def invocation_tick(hinst, entity):
                             max_acceleration=300.0,
                             max_prediction=0.5
                         ),
+                        CONF.ALG.ALGORITHM.TEMP_PATH_FOLLOWING: ALG_CONF.TempPathFollowingConfig(
+                            path_offset=1.0
+                        )
                     },
                     statistics=Stats(alive=True, health=60.0, mele_dmg=10.0, mele_cooldown=1.4),
+                    behavior=BehaviorsData.HUNTER,
                     spawn_meta=SpawnedEntityMeta(
                         lifetime=timeout,
                         spawned_at=time.time()

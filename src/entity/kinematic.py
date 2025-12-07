@@ -117,6 +117,9 @@ class Kinematic:
         # 4. Nodo del NavMesh donde se encuentra la entidad (puede permanecer None)
         self.node_location = None
 
+        # 5. Bandera para controlar si el efecto actual ya aplicó daño
+        self.effect_damage_applied: bool = False
+
     def update_cooldowns(self, dt: float) -> None:
         """
         Descripción
@@ -149,14 +152,7 @@ class Kinematic:
         # 2. Reducir la vida y comprobar si alcanza 0
         self.health = max(0.0, self.health - float(amount))
         if self.health <= 0.0:
-            self.alive = False
-            try:
-                # 3. Llamada a hook para subclases que quieran extender comportamiento
-                self.die()
-            except Exception:
-                # 4. Ignorar errores en hooks de subclases para evitar romper el flujo
-                pass
-        return self.health
+            self.die()
 
     def is_alive(self) -> bool:
         """
@@ -400,43 +396,72 @@ class Kinematic:
         pygame.draw.rect(surface, (0, 200, 0), (bar_x, bar_y, fill_w, bar_h))
         pygame.draw.rect(surface, (0, 0, 0), (bar_x, bar_y, bar_w, bar_h), 1)
 
-    def draw_attack_effect(self, surface: pygame.Surface, camera_x: float, camera_z: float, sx: float, sz: float, deg: float) -> None:
-        if self.current_effect and not self.current_effect.is_finished:
+    def get_current_effect_center(self) -> Optional[Tuple[float, float]]:
+        """
+        Descripción
+            FUNCIÓN: Calcula la posición central (x, z) del efecto de ataque activo en coordenadas de mundo.
+            Reutiliza la lógica visual para asegurar que la hitbox coincida con el sprite.
+
+        Argumentos
+            - Ninguno
+
+        Retorno
+            - Optional[Tuple[float, float]]: Coordenadas (x, z) del centro del efecto, o None si no hay efecto activo.
+        """
+        # 1. Validar si hay efecto activo
+        if not self.current_effect or self.current_effect.is_finished:
+            return None
+
+        # 2. Calcular posición según el tipo de efecto
+        cx, cz = self.position[0], self.position[1]
+
+        if self.current_effect_type == "mele":
+            # 2.1 Mele: Offset fijo en la dirección de la orientación
+            offset_dist = 30.0
+            off_x = math.cos(self.orientation) * offset_dist
+            off_y = math.sin(self.orientation) * offset_dist
+            return (cx + off_x, cz + off_y)
+
+        elif self.current_effect_type == "magic":
+            # 2.2 Magic: Interpolación lineal (Lerp) basada en el progreso de la animación
+            anim = self.current_effect
+            total_duration = anim.frame_count * anim.frame_duration
+            elapsed = anim.current_frame * anim.frame_duration + anim.time_acc
+            progress = min(1.0, elapsed / total_duration) if total_duration > 0 else 0.0
+
+            start_x, start_z = self.magic_start_pos
+            target_x, target_z = self.magic_target_pos
+            
+            curr_x = start_x + (target_x - start_x) * progress
+            curr_z = start_z + (target_z - start_z) * progress
+            return (curr_x, curr_z)
+
+        # 2.3 Default: Sobre la entidad
+        return (cx, cz)
+
+    def draw_attack_effect(self, surface: pygame.Surface, camera_x: float, camera_z: float, deg: float) -> None:
+        """
+        Descripción
+            MÉTODO: Dibuja el efecto de ataque activo usando la posición calculada centralizada.
+        """
+        # 1. Obtener posición de mundo del efecto
+        world_pos = self.get_current_effect_center()
+        
+        if world_pos:
+            # 2. Convertir a coordenadas de pantalla
+            wx, wz = world_pos
+            effect_draw_pos = (wx - camera_x, wz - camera_z)
+            
+            # 3. Obtener frame y rotar
             effect_frame = self.current_effect.get_frame()
-            effect_draw_pos = (sx, sz) # Por defecto sobre el jugador
-
-            # 3.1 Lógica específica por tipo de efecto
+            
             if self.current_effect_type == "mele":
-                # Offset de 30px en la dirección de la orientación
-                offset_dist = 30.0
-                off_x = math.cos(self.orientation) * offset_dist
-                off_y = math.sin(self.orientation) * offset_dist
-                effect_draw_pos = (sx + off_x, sz + off_y)
                 rotated_effect = pygame.transform.rotate(effect_frame, deg + 90.0)
-
             elif self.current_effect_type == "magic":
-                # Interpolación lineal (Lerp) desde start hasta target
-                # Calculamos progreso suave: (frame_actual * duracion_frame + tiempo_acumulado) / duracion_total
-                anim = self.current_effect
-                total_duration = anim.frame_count * anim.frame_duration
-                elapsed = anim.current_frame * anim.frame_duration + anim.time_acc
-                progress = min(1.0, elapsed / total_duration) if total_duration > 0 else 0.0
-                
-                # Posiciones globales
-                start_x, start_z = self.magic_start_pos
-                target_x, target_z = self.magic_target_pos
-                
-                # Posición actual interpolada
-                curr_x = start_x + (target_x - start_x) * progress
-                curr_z = start_z + (target_z - start_z) * progress
-                
-                # Convertir a coordenadas de pantalla
-                effect_draw_pos = (curr_x - camera_x, curr_z - camera_z)
                 rotated_effect = pygame.transform.rotate(effect_frame, deg - 120.0)
-
             else:
                 rotated_effect = pygame.transform.rotate(effect_frame, deg)
-                
-            # 3.2 Dibujar el efecto en la posición calculada
+
+            # 4. Dibujar
             effect_rect = rotated_effect.get_rect(center=effect_draw_pos)
             surface.blit(rotated_effect, effect_rect)

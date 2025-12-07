@@ -14,7 +14,7 @@ map_2_group = [
         sprite=Sprite(name="gargant-soldier", frame_duration=0.11,),
         initial_position=(CONF.MAIN_WIN.RENDER_TILE_SIZE * 4, CONF.MAIN_WIN.RENDER_TILE_SIZE * 15),
         collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
-        initial_algorithm=CONF.ALG.ALGORITHM.PATH_FOLLOWING,
+        initial_algorithm=CONF.ALG.ALGORITHM.TEMP_PATH_FOLLOWING,
         alg_configs={
             CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING: ALG_CONF.LookWhereYouAreGoingConfig(
                 target_radius_deg=1 * CONF.CONST.CONVERT_TO_RAD,
