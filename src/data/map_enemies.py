@@ -47,7 +47,7 @@ map_2_group = [
                 path_offset=1.0
             )
         },
-        statistics=Stats(alive=True, health=100.0, mele_cooldown=1.4, magic_cooldown=1.6),
+        statistics=Stats(alive=True, health=100.0, mele_dmg=10.0, mele_cooldown=1.4),
         behavior=BehaviorsData.HUNTER,
     ),
     EntitySpec(
@@ -92,7 +92,7 @@ map_2_group = [
                 path_offset=1.0
             )
         },
-        statistics=Stats(alive=True, health=100.0, mele_cooldown=1.4, magic_cooldown=1.6),
+        statistics=Stats(alive=True, health=100.0, mele_dmg=10.0, mele_cooldown=1.4),
         behavior=BehaviorsData.GUARDIAN,
     ),
     EntitySpec(
@@ -137,7 +137,7 @@ map_2_group = [
                 path_offset=1.0
             )
         },
-        statistics=Stats(alive=True, health=100.0, mele_cooldown=1.4, magic_cooldown=1.6),
+        statistics=Stats(alive=True, health=100.0, mele_dmg=10.0, mele_cooldown=1.4),
         behavior=BehaviorsData.GUARDIAN,
     ),
     EntitySpec(
@@ -173,7 +173,7 @@ map_2_group = [
                 path_offset=1.0
             )
         },
-        statistics=Stats(alive=True, health=500.0, mele_cooldown=1.4, magic_cooldown=1.6),
+        statistics=Stats(alive=True, health=500.0, mele_dmg=30.0, mele_cooldown=1.4, magic_dmg=35.0, magic_cooldown=1.6),
         behavior=BehaviorsData.INVOKER_BOSS,
     ),
     EntitySpec(
@@ -214,7 +214,7 @@ map_2_group = [
                 path_offset=1.0
             )
         },
-        statistics=Stats(alive=True, health=100.0, mele_cooldown=1.4, magic_cooldown=1.6),
+        statistics=Stats(alive=True, health=100.0, mele_dmg=10.0, mele_cooldown=1.4),
         behavior=BehaviorsData.HUNTER,
     ),
 ]

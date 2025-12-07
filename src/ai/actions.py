@@ -1840,7 +1840,7 @@ def invocation_tick(hinst, entity):
                             max_prediction=0.5
                         ),
                     },
-                    statistics=Stats(alive=True, health=100.0,),
+                    statistics=Stats(alive=True, health=60.0, mele_dmg=10.0, mele_cooldown=1.4),
                     spawn_meta=SpawnedEntityMeta(
                         lifetime=timeout,
                         spawned_at=time.time()

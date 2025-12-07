@@ -74,7 +74,7 @@ class EntityManager:
                     max_angular_accel=35.0
                 ),
             },
-            statistics=Stats(alive=True, health=100.0, mele_cooldown=0.8, magic_cooldown=1.0)
+            statistics=Stats(alive=True, health=300.0, mele_dmg=15.0, mele_cooldown=0.8, magic_cooldown=1.0, magic_dmg=20.0)
         )
 
         # 2. Crear la instancia del player y guardarla en el manager
