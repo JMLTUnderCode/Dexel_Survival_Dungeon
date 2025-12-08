@@ -52,6 +52,7 @@ from algorithms.path_following import FollowPath
 import algorithms.algorithms_configs as ALG_CONF
 from map.paths import Path
 from tacticals.profiles_configs import HUNTER_COMBAT_PROFILE, GUARDIAN_COMBAT_PROFILE, FLEE_PROFILE
+from data.behaviors import BehaviorsData
 from ai.utils import get_spec_param, get_manager, get_player, exception_print
 from configs.package import CONF
 
@@ -235,8 +236,19 @@ def start_random_patrol(hinst, entity):
         # 4) Obtener parámetros y buscar ruta en navmesh
         desired_nodes = int(get_spec_param(hinst, "patrol_path_nodes", 20))
         
-        # Llamada al helper actualizado con perfil táctico
-        pts = _find_best_patrol_path(pathfinder, entity.get_pos(), desired_nodes, tactical_profile=profile)
+        # 4.1) Caso especial: La entidad es una invocación
+        pts = None
+        if entity.spawn_meta:
+            if hasattr(pathfinder, "find_path") and profile:
+                try:
+                    # Si es TacticalPathfinder y tenemos perfil, usar find_path con perfil
+                    pts = pathfinder.find_path(entity.get_pos(), get_player(hinst).get_pos(), profile=profile)
+                except Exception:
+                    # Pathfinder normal
+                    pts = pathfinder.find_path(entity.get_pos(), get_player(hinst).get_pos())
+        else:
+            # Llamada al helper actualizado con perfil táctico
+            pts = _find_best_patrol_path(pathfinder, entity.get_pos(), desired_nodes, tactical_profile=profile)
 
         # 5) Si no hay puntos adecuados -> fallback a wander
         if not pts:
@@ -289,7 +301,7 @@ def patrol_tick(hinst, entity):
         - patrol_tick_throttle (float): segundos entre posibles nuevas solicitudes (default 3.0).
         - arrival_threshold (float): distancia para considerar llegada al destino (default 10.0).
         - scan_duration (float): tiempo para completar el giro de escaneo (default 4.0).
-        - vision_range (float): radio para el objetivo orbital del escaneo (default 300.0).
+        - vision_radius (float): radio para el objetivo orbital del escaneo (default 300.0).
     """
     try:
         # 1. No interferir si estamos en la ruta guardian (prioridad absoluta)
@@ -302,7 +314,7 @@ def patrol_tick(hinst, entity):
         if hinst.get_blackboard("is_scanning_patrol_end", False):
             # 2. Obtener parámetros de configuración para el escaneo
             duration = float(get_spec_param(hinst, "scan_duration", 4.0))
-            radius = float(get_spec_param(hinst, "vision_range", 300.0))
+            radius = float(get_spec_param(hinst, "vision_radius", 300.0))
 
             # 3. Inicialización del escaneo (solo la primera vez)
             if not hinst.get_blackboard("scan_initialized", False):
@@ -442,7 +454,7 @@ def throttle_check_player_visibility(hinst, entity):
 
     Parámetros esperados
         - check_los_throttle (float): segundos entre comprobaciones (default 0.25)
-        - vision_range (float): distancia máxima de visión (px)
+        - vision_radius (float): distancia máxima de visión (px)
         - vision_fov_deg (float): ángulo de visión en grados (0..180)
     """
     try:
@@ -465,7 +477,7 @@ def throttle_check_player_visibility(hinst, entity):
         px, pz = player.get_pos()
         dx, dz = px - ex, pz - ez
         dist = math.hypot(dx, dz)
-        vision = float(get_spec_param(hinst, "vision_range", 300.0))
+        vision = float(get_spec_param(hinst, "vision_radius", 300.0))
 
         # 3.a) Si fuera de rango, marcar no visible y salir
         if dist > vision:
@@ -586,12 +598,11 @@ def stop_pursue(hinst, entity):
     except Exception as e:
         exception_print("STOP PURSUE", entity, str(e))
 
-
 @_register("try_melee_attack")
 def try_melee_attack(hinst, entity):
     """
     Descripción
-        ACCIÓN: Intento de ataque cuerpo a cuerpo. Dispara la animación si el jugador está en rango.
+        ACCIÓN: Intento de ataque cuerpo a cuerpo. Dispara la animación y efecto si el jugador está en rango.
 
     Argumentos
         - hinst (HSMInstance): instancia de la HSM.
@@ -601,7 +612,7 @@ def try_melee_attack(hinst, entity):
         - Ninguno
 
     Parámetros esperados
-        - attack_range (float): distancia en px considerada para ejecutar el ataque.
+        - mele_dist (float): distancia en px considerada para ejecutar el ataque (hit).
     """
     try:
         player = get_player(hinst)
@@ -613,17 +624,136 @@ def try_melee_attack(hinst, entity):
         px, pz = player.get_pos()
         dist = math.hypot(px - ex, pz - ez)
 
-        # 2) Obtener rango de ataque desde el spec (fallback 48)
-        attack_r = float(get_spec_param(hinst, "attack_range", 48.0))
+        # 2) Obtener rango de ataque desde el spec (mele_dist)
+        # NOTA: mele_dist es la distancia para GOLPEAR, no para acercarse (mele_radius)
+        attack_r = float(get_spec_param(hinst, "mele_dist", 48.0))
 
         # 3) Si está en rango, intentar disparar animación de ataque
         if dist <= attack_r:
-            try:
-                set_animation_state(entity, CONF.ENEMY.ACTIONS.ATTACK)
-            except Exception as e:
-                exception_print("TRY MELEE ATTACK", entity, f"Anim error: {e}")
+            # Verificar cooldown
+            if getattr(entity, "curr_mele_cooldown", 0.0) <= 0:
+                try:
+                    # Activar estado de animación ATTACK
+                    set_animation_state(entity, CONF.ENEMY.ACTIONS.ATTACK)
+                    entity.current_animation.reset()
+                    
+                    # Reiniciar cooldown
+                    entity.curr_mele_cooldown = getattr(entity, "mele_cooldown", 1.2)
+                    
+                    # Activar efecto visual 'mele'
+                    if "mele" in getattr(entity, "effects", {}):
+                        entity.current_effect = entity.effects["mele"]
+                        entity.current_effect_type = "mele"
+                        entity.current_effect.reset()
+                        # Resetear bandera de daño para este nuevo ataque
+                        entity.effect_damage_applied = False
+
+                except Exception as e:
+                    exception_print("TRY MELEE ATTACK", entity, f"Anim error: {e}")
     except Exception as e:
         exception_print("TRY MELEE ATTACK", entity, str(e))
+
+@_register("try_magic_attack")
+def try_magic_attack(hinst, entity):
+    """
+    Descripción
+        ACCIÓN: Intento de ataque mágico/distancia. 
+        Verifica si el objetivo está dentro del 'magic_radius' y ejecuta la animación y efecto 'magic'.
+        Calcula las posiciones de inicio y fin para proyectiles interpolados.
+
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad que realiza el ataque.
+
+    Blackboard utilizado/modificado
+        - Ninguno
+
+    Parámetros esperados
+        - magic_radius (float): radio máximo para permitir el lanzamiento del ataque mágico.
+    """
+    try:
+        player = get_player(hinst)
+        if not player:
+            return
+
+        # 1. Calcular distancia
+        ex, ez = entity.get_pos()
+        px, pz = player.get_pos()
+        dist = math.hypot(px - ex, pz - ez)
+
+        # 2. Obtener radio mágico permitido
+        magic_r = float(get_spec_param(hinst, "magic_radius", 500.0))
+
+        # 3. Si está en rango, intentar disparar
+        if dist <= magic_r:
+            # Verificar cooldown mágico
+            if getattr(entity, "curr_magic_cooldown", 0.0) <= 0:
+                try:
+                    # 3.1 Activar animación de ataque
+                    set_animation_state(entity, CONF.ENEMY.ACTIONS.ATTACK)
+                    entity.current_animation.reset()
+
+                    # 3.2 Reiniciar cooldown
+                    entity.curr_magic_cooldown = getattr(entity, "magic_cooldown", 1.5)
+
+                    # 3.3 Activar efecto visual 'magic'
+                    if "magic" in getattr(entity, "effects", {}):
+                        entity.current_effect = entity.effects["magic"]
+                        entity.current_effect_type = "magic"
+                        entity.current_effect.reset()
+                        # Resetear bandera de daño
+                        entity.effect_damage_applied = False
+                        
+                        # Configurar trayectoria visual
+                        entity.magic_start_pos = (ex, ez)
+                        entity.magic_target_pos = (px, pz)
+                
+                except Exception as e:
+                    exception_print("TRY MAGIC ATTACK", entity, f"Anim/Effect error: {e}")
+
+    except Exception as e:
+        exception_print("TRY MAGIC ATTACK", entity, str(e))
+
+@_register("start_facing_player")
+def start_facing_player(hinst, entity):
+    """
+    Descripción
+        ACCIÓN: Configura a la entidad para que se quede estática y rote encarando al jugador.
+        Útil para estados de ataque a distancia estacionarios.
+
+    Argumentos
+        - hinst (HSMInstance): instancia de la HSM.
+        - entity (Any): entidad que rotará.
+
+    Blackboard utilizado/modificado
+        - prev_algorithm (update): guarda el algoritmo anterior para restauración manual si se requiere.
+
+    Parámetros esperados
+        - Ninguno
+    """
+    try:
+        player = get_player(hinst)
+        if not player:
+            return
+
+        # 1. Guardar algoritmo previo (opcional, por si se necesita en lógica custom)
+        hinst.set_blackboard("prev_algorithm", entity.algorithm)
+
+        # 2. Detener movimiento lineal
+        entity.velocity = (0.0, 0.0)
+        
+        # 3. Cambiar algoritmo a FACE y asignar target
+        entity.algorithm = CONF.ALG.ALGORITHM.FACE
+        
+        # Asegurar que entity.face existe (debería por spec, si no, fallback manual)
+        if hasattr(entity, "face"):
+            entity.face.target = player
+        else:
+            # Fallback: crear un target dummy si no tiene algoritmo face instanciado (raro)
+            pass
+
+    except Exception as e:
+        exception_print("START FACING PLAYER", entity, str(e))
 
 # --------------------
 # Evade / Flee
@@ -916,18 +1046,16 @@ def face_towards_safe_anchor(hinst, entity):
 
     Parámetros esperados
         - safe_distance (float): distancia a usar para calcular anchor seguro.
-        - vision_range (float): rango de visión para considerar al jugador.
+        - vision_radius (float): rango de visión para considerar al jugador.
         - vision_fov_deg (float): ángulo de visión (grados).
-        - face_range_multiplier (float): multiplicador para ampliar rango de facing.
     """
     # 1) Preparar parámetros y referencias (player, thresholds, fov)
     try:
         player = get_player(hinst)
         safe_distance = float(get_spec_param(hinst, "safe_distance", 200.0))
-        vision = float(get_spec_param(hinst, "vision_range", 300.0))
+        vision = float(get_spec_param(hinst, "vision_radius", 300.0))
+        face_range = vision
         fov_deg = float(get_spec_param(hinst, "vision_fov_deg", 120.0))
-        face_mult = float(get_spec_param(hinst, "face_range_multiplier", 1.5))
-        face_range = vision * face_mult
         half_fov = math.radians(max(0.0, min(180.0, fov_deg)) / 2.0)
 
         # 2) Leer blackboard: posición conocida del jugador y anchor seguro (si existe)
@@ -1073,6 +1201,16 @@ def start_heal_tick(hinst, entity):
         now = time.time()
         hinst.set_blackboard("last_heal_at", now)
         hinst.set_blackboard("heal_started_at", now)
+
+        # 2) Iniciar efecto de invocación
+        if "healing" in getattr(entity, "effects", {}):
+            entity.current_effect = entity.effects["healing"]
+            entity.current_effect_type = "healing"
+            entity.current_effect.reset()
+            manager = get_manager(hinst)
+            if manager and manager.audio_manager:
+                manager.audio_manager.play_sfx("healing", loops=-1)
+
     except Exception as e:
         exception_print("START HEAL TICK", entity, str(e))
 
@@ -1149,6 +1287,10 @@ def stop_heal_tick(hinst, entity):
         if "heal_started_at" in hinst.blackboard:
             del hinst.blackboard["heal_started_at"]
         # conservar last_heal_at para diagnósticos, pero es opcional quitarlo
+        entity.current_effect.finished = True
+        manager = get_manager(hinst)
+        if manager and manager.audio_manager:
+            manager.audio_manager.stop_sfx("healing")
     except Exception as e:
         exception_print("STOP HEAL TICK", entity, str(e))
 
@@ -1346,14 +1488,14 @@ def guardian_return_tick(hinst, entity):
     
     Parámetros esperados
         - scan_duration (float): tiempo en segundos para completar el giro (default 4.0).
-        - vision_range (float): radio del círculo de escaneo (default 300.0).
+        - vision_radius (float): radio del círculo de escaneo (default 300.0).
     """
     try:
         # --- LÓGICA DE ESCANEO (PAUSA Y GIRO) ---
         if hinst.get_blackboard("is_scanning_sentry", False):
             # 1. Obtener parámetros de configuración
             duration = float(get_spec_param(hinst, "scan_duration", 4.0))
-            radius = float(get_spec_param(hinst, "vision_range", 300.0))
+            radius = float(get_spec_param(hinst, "vision_radius", 300.0))
 
             # 2. Inicialización del escaneo (solo la primera vez)
             if not hinst.get_blackboard("scan_initialized", False):
@@ -1664,6 +1806,15 @@ def start_invocation(hinst, entity):
                 if last:
                     tgt = Kinematic(position=tuple(last), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
                     entity.face.target = tgt
+            # 2.1) Iniciar efecto de invocación
+            if "invocation" in getattr(entity, "effects", {}):
+                entity.current_effect = entity.effects["invocation"]
+                entity.current_effect_type = "invocation"
+                entity.current_effect.reset()
+                manager = get_manager(hinst)
+                if manager and manager.audio_manager:
+                    manager.audio_manager.play_sfx("invocation", loops=-1)
+
         except Exception as e:
             exception_print("START INVOCATION", entity, f"Setting face target: {e}")
     except Exception as e:
@@ -1712,11 +1863,25 @@ def invocation_tick(hinst, entity):
                                float(sz + random.uniform(-CONF.ENEMY.TILE_HEIGHT, CONF.ENEMY.TILE_HEIGHT)))
                 spawned_spec = EntitySpec(
                     id=spawned + 1,
-                    sprite=Sprite(name="gargant-soldier"),
+                    sprite=Sprite(name="gargant-soldier", frame_duration=0.11,),
                     initial_position=spawned_pos,
                     collider_box=(CONF.ENEMY.COLLIDER_BOX_WIDTH, CONF.ENEMY.COLLIDER_BOX_HEIGHT),
-                    initial_algorithm=CONF.ALG.ALGORITHM.PURSUE,
+                    initial_algorithm=CONF.ALG.ALGORITHM.TEMP_PATH_FOLLOWING,
                     alg_configs={
+                        CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING: ALG_CONF.LookWhereYouAreGoingConfig(
+                            target_radius_deg=1 * CONF.CONST.CONVERT_TO_RAD,
+                            slow_radius_deg=50 * CONF.CONST.CONVERT_TO_RAD,
+                            time_to_target=0.1,
+                            max_rotation=3.0,
+                            max_angular_accel=35.0
+                        ),
+                        CONF.ALG.ALGORITHM.FACE: ALG_CONF.FaceConfig(
+                            target_radius_deg=1 * CONF.CONST.CONVERT_TO_RAD,
+                            slow_radius_deg=50 * CONF.CONST.CONVERT_TO_RAD,
+                            time_to_target=0.1,
+                            max_rotation=3.0,
+                            max_angular_accel=35.0
+                        ),
                         CONF.ALG.ALGORITHM.PURSUE: ALG_CONF.PursueConfig(
                             max_speed=120.0,
                             target_radius_dist=40.0,
@@ -1725,8 +1890,12 @@ def invocation_tick(hinst, entity):
                             max_acceleration=300.0,
                             max_prediction=0.5
                         ),
+                        CONF.ALG.ALGORITHM.TEMP_PATH_FOLLOWING: ALG_CONF.TempPathFollowingConfig(
+                            path_offset=1.0
+                        )
                     },
-                    statistics=Stats(alive=True, health=100.0,),
+                    statistics=Stats(alive=True, health=60.0, mele_dmg=10.0, mele_cooldown=1.4),
+                    behavior=BehaviorsData.HUNTER,
                     spawn_meta=SpawnedEntityMeta(
                         lifetime=timeout,
                         spawned_at=time.time()
@@ -1778,6 +1947,10 @@ def stop_invocation(hinst, entity):
                 exception_print("STOP INVOCATION", entity, str(e))
 
         entity.face.target = None
+        entity.current_effect.finished = True
+        manager = get_manager(hinst)
+        if manager and manager.audio_manager:
+            manager.audio_manager.stop_sfx("invocation")
         
         for k in ("invocation_started_at", "invocation_spawned_count", "invocation_last_spawn_at"):
             if k in hinst.blackboard:
@@ -1829,6 +2002,16 @@ def start_regeneration(hinst, entity):
                 if boss_pos:
                     tgt = Kinematic(position=(float(boss_pos[0]), float(boss_pos[1])), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
                     entity.face.target = tgt
+            
+            # 2.1) Iniciar efecto de invocación
+            if "healing" in getattr(entity, "effects", {}):
+                entity.current_effect = entity.effects["healing"]
+                entity.current_effect_type = "healing"
+                entity.current_effect.reset()
+                manager = get_manager(hinst)
+                if manager and manager.audio_manager:
+                    manager.audio_manager.play_sfx("healing", loops=-1)
+
         except Exception as e:
             exception_print("START REGENERATION", entity, f"Setting face target: {e}")
 
@@ -1905,6 +2088,10 @@ def stop_regeneration(hinst, entity):
             del hinst.blackboard["regen_total_amount"]
         if "regen_accum" in hinst.blackboard:
             del hinst.blackboard["regen_accum"]
+        entity.current_effect.finished = True
+        manager = get_manager(hinst)
+        if manager and manager.audio_manager:
+            manager.audio_manager.stop_sfx("healing")
     except Exception as e:
         exception_print("STOP REGENERATION", entity, str(e))
 
@@ -2010,142 +2197,6 @@ def start_attention_facing(hinst, entity):
             exception_print("START ATTENTION FACING", entity, f"Setting face target: {e}")
     except Exception as e:
         exception_print("START ATTENTION FACING", entity, str(e))
-
-# --------------------
-# Boss ranged attack
-# --------------------
-@_register("start_boss_range_attack_mode")
-def start_boss_range_attack_mode(hinst, entity):
-    """
-    Descripción
-        ACCIÓN: Inicializar modo de ataque a distancia.
-        - Pone al boss estático, guarda algoritmo previo y activa FACE mirando al player.
-
-    Argumentos
-        - hinst (HSMInstance): instancia HSM.
-        - entity (Any): boss que cambia a modo ranged.
-
-    Blackboard utilizado/modificado
-        - boss_range_last_at (update): timestamp del último ataque (inicializado a 0).
-        - boss_range_cooldown (update): cooldown del ataque (se establece desde spec).
-        - boss_prev_algorithm (update): algoritmo previo guardado.
-
-    Parámetros esperados
-        - stomp_cooldown (float): cooldown entre ataques a distancia.
-        - ranged_attack_range (float): radio del efecto AOE a usar en boss_range_attack_tick.
-    """
-    try:
-        hinst.set_blackboard("boss_range_last_at", 0.0)
-        hinst.set_blackboard("boss_range_cooldown", float(get_spec_param(hinst, "stomp_cooldown", 6.0)))
-
-        prev_alg = getattr(entity, "algorithm", None)
-        hinst.set_blackboard("boss_prev_algorithm", prev_alg)
-
-        entity.velocity = (0.0, 0.0)
-        entity._pending_steering = SteeringOutput(linear=(0.0, 0.0), angular=0.0)
-        entity.rotation = 0.0
-
-        try:
-            player = get_player(hinst)
-            entity.algorithm = CONF.ALG.ALGORITHM.FACE
-            if player:
-                entity.face.target = player
-            else:
-                last = hinst.get_blackboard("last_known_player_pos", None)
-                if last:
-                    tgt = Kinematic(position=tuple(last), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
-                    entity.face.target = tgt
-        except Exception as e:
-            exception_print("START BOSS RANGE ATTACK MODE", entity, f"Setting face target: {e}")
-    except Exception as e:
-        exception_print("START BOSS RANGE ATTACK MODE", entity, str(e))
-
-@_register("boss_range_attack_tick")
-def boss_range_attack_tick(hinst, entity):
-    """
-    Descripción
-        ACCIÓN: Ejecutar ataque de rango AOE simple manteniendo FACE y sin movimiento.
-        - Cuando el cooldown expira, genera un efecto mediante manager.spawn_attack_effect
-          o registra en blackboard si el manager no está presente.
-
-    Argumentos
-        - hinst (HSMInstance): instancia HSM.
-        - entity (Any): boss en modo ranged.
-
-    Blackboard utilizado/modificado
-        - boss_range_last_at (read/update): timestamp del último ataque.
-        - boss_range_cooldown (read): cooldown entre ataques.
-        - last_boss_range_effect (update): fallback si no se pudo usar manager.
-
-    Parámetros esperados
-        - ranged_attack_range (float): radio del AOE a aplicar.
-        - stomp_cooldown (float): cooldown entre ataques.
-    """
-    try:
-        player = get_player(hinst)
-        if not player:
-            return
-
-        entity.velocity = (0.0, 0.0)
-        entity._pending_steering = SteeringOutput(linear=(0.0, 0.0), angular=0.0)
-
-        try:
-            entity.face.target = player
-        except Exception:
-            entity.face.target = Kinematic(position=player.get_pos(), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
-
-        last = float(hinst.get_blackboard("boss_range_last_at", 0.0))
-        cd = float(hinst.get_blackboard("boss_range_cooldown", get_spec_param(hinst, "stomp_cooldown", 6.0)))
-        now = time.time()
-        if now - last < cd:
-            return
-
-        mgr = get_manager(hinst)
-        pos = player.get_pos()
-        try:
-            if mgr and getattr(mgr, "spawn_attack_effect", None):
-                mgr.spawn_attack_effect("boss_aoe_circle", position=pos, radius=float(get_spec_param(hinst, "ranged_attack_range", 220.0)))
-            else:
-                hinst.set_blackboard("last_boss_range_effect", (pos, float(get_spec_param(hinst, "ranged_attack_range", 220.0))))
-        except Exception as e:
-            exception_print("BOSS RANGE ATTACK TICK", entity, f"effect spawn error: {e}")
-
-        hinst.set_blackboard("boss_range_last_at", now)
-    except Exception as e:
-        exception_print("BOSS RANGE ATTACK TICK", entity, str(e))
-
-@_register("stop_boss_range_attack_mode")
-def stop_boss_range_attack_mode(hinst, entity):
-    """
-    Descripción
-        ACCIÓN: Limpiar el modo de ataque a distancia y restaurar algoritmo previo.
-        - Limpia face target y borra claves relacionadas del blackboard.
-
-    Argumentos
-        - hinst (HSMInstance): instancia HSM.
-        - entity (Any): boss que sale del modo ranged.
-
-    Blackboard utilizado/modificado
-        - boss_prev_algorithm (read/remove): algoritmo previo restaurado.
-        - boss_range_last_at / boss_range_cooldown / last_boss_range_effect (remove): limpieza.
-
-    Parámetros esperados
-        - Ninguno
-    """
-    try:
-        prev = hinst.get_blackboard("boss_prev_algorithm", None)
-        if prev:
-            entity.algorithm = prev
-        else:
-            entity.algorithm = CONF.ALG.ALGORITHM.WANDER_DYNAMIC
-
-        entity.face.target = None
-        
-        for k in ("boss_range_last_at", "boss_range_cooldown", "boss_prev_algorithm", "last_boss_range_effect"):
-            if k in hinst.blackboard:
-                del hinst.blackboard[k]
-    except Exception as e:
-        exception_print("STOP BOSS RANGE ATTACK MODE", entity, str(e))
         
 # ----------------------------
 # Behavior flags / monitoring

@@ -11,6 +11,7 @@ ALGORITHM_USE_ROTATION = [
     CONF.ALG.ALGORITHM.WANDER_DYNAMIC,
     CONF.ALG.ALGORITHM.ALIGN,
     CONF.ALG.ALGORITHM.FACE,
+    CONF.ALG.ALGORITHM.PURSUE,
     CONF.ALG.ALGORITHM.LOOK_WHERE_YOURE_GOING,
     CONF.ALG.ALGORITHM.VELOCITY_MATCH,
     CONF.ALG.ALGORITHM.PATH_FOLLOWING,
@@ -99,20 +100,39 @@ class Kinematic:
         self.mana: float = self.max_mana
         self.max_armor: float = statistics.armor if statistics and statistics.armor is not None else 0.0
         self.armor: float = self.max_armor
-        self.max_mele_dmg: float = statistics.mele_dmg if statistics and statistics.mele_dmg is not None else 20.0
-        self.mele_dmg: float = self.max_mele_dmg
-        self.max_mele_cooldown: float = statistics.mele_cooldown if statistics and statistics.mele_cooldown is not None else 3.0
-        self.mele_cooldown: float = self.max_mele_cooldown
-        self.max_range_dmg: float = statistics.range_dmg if statistics and statistics.range_dmg is not None else 25.0
-        self.range_dmg: float = self.max_range_dmg
-        self.max_range_cooldown: float = statistics.range_cooldown if statistics and statistics.range_cooldown is not None else 3.5
-        self.range_cooldown: float = self.max_range_cooldown
+        
+        self.mele_dmg: float = statistics.mele_dmg if statistics and statistics.mele_dmg is not None else 20.0
+        self.max_mele_dmg: float = 2 * self.mele_dmg
+        self.mele_cooldown: float = statistics.mele_cooldown if statistics and statistics.mele_cooldown is not None else 1.2
+        self.curr_mele_cooldown: float = 0.0
+        
+        self.magic_dmg: float = statistics.magic_dmg if statistics and statistics.magic_dmg is not None else 25.0
+        self.max_magic_dmg: float = 2 * self.magic_dmg
+        self.magic_cooldown: float = statistics.magic_cooldown if statistics and statistics.magic_cooldown is not None else 1.2
+        self.curr_magic_cooldown: float = 0.0
 
         # 3. Metadatos de spawn (si aplica)
         self.spawn_meta: Optional[SpawnedEntityMeta] = spawn_meta
 
         # 4. Nodo del NavMesh donde se encuentra la entidad (puede permanecer None)
         self.node_location = None
+
+        # 5. Bandera para controlar si el efecto actual ya aplicó daño
+        self.effect_damage_applied: bool = False
+
+    def update_cooldowns(self, dt: float) -> None:
+        """
+        Descripción
+            MÉTODO: Actualiza los contadores de cooldown de habilidades.
+
+        Argumentos
+            - dt (float): delta time en segundos.
+        """
+        if self.curr_mele_cooldown > 0:
+            self.curr_mele_cooldown = max(0.0, self.curr_mele_cooldown - dt)
+        
+        if self.curr_magic_cooldown > 0:
+            self.curr_magic_cooldown = max(0.0, self.curr_magic_cooldown - dt)
 
     def take_damage(self, amount: float) -> float:
         """
@@ -132,14 +152,7 @@ class Kinematic:
         # 2. Reducir la vida y comprobar si alcanza 0
         self.health = max(0.0, self.health - float(amount))
         if self.health <= 0.0:
-            self.alive = False
-            try:
-                # 3. Llamada a hook para subclases que quieran extender comportamiento
-                self.die()
-            except Exception:
-                # 4. Ignorar errores en hooks de subclases para evitar romper el flujo
-                pass
-        return self.health
+            self.die()
 
     def is_alive(self) -> bool:
         """
@@ -382,3 +395,81 @@ class Kinematic:
         fill_w = int(bar_w * hp_ratio)
         pygame.draw.rect(surface, (0, 200, 0), (bar_x, bar_y, fill_w, bar_h))
         pygame.draw.rect(surface, (0, 0, 0), (bar_x, bar_y, bar_w, bar_h), 1)
+
+    def get_current_effect_center(self) -> Optional[Tuple[float, float]]:
+        """
+        Descripción
+            FUNCIÓN: Calcula la posición central (x, z) del efecto de ataque activo en coordenadas de mundo.
+            Reutiliza la lógica visual para asegurar que la hitbox coincida con el sprite.
+
+        Argumentos
+            - Ninguno
+
+        Retorno
+            - Optional[Tuple[float, float]]: Coordenadas (x, z) del centro del efecto, o None si no hay efecto activo.
+        """
+        # 1. Validar si hay efecto activo
+        if not self.current_effect or self.current_effect.is_finished:
+            return None
+
+        # 2. Calcular posición según el tipo de efecto
+        cx, cz = self.position[0], self.position[1]
+
+        if self.current_effect_type == "mele":
+            # 2.1 Mele: Offset fijo en la dirección de la orientación
+            offset_dist = 30.0
+            off_x = math.cos(self.orientation) * offset_dist
+            off_y = math.sin(self.orientation) * offset_dist
+            return (cx + off_x, cz + off_y)
+
+        elif self.current_effect_type == "magic":
+            # 2.2 Magic: Interpolación lineal (Lerp) basada en el progreso de la animación
+            anim = self.current_effect
+            total_duration = anim.frame_count * anim.frame_duration
+            elapsed = anim.current_frame * anim.frame_duration + anim.time_acc
+            progress = min(1.0, elapsed / total_duration) if total_duration > 0 else 0.0
+
+            start_x, start_z = self.magic_start_pos
+            target_x, target_z = self.magic_target_pos
+            
+            curr_x = start_x + (target_x - start_x) * progress
+            curr_z = start_z + (target_z - start_z) * progress
+            return (curr_x, curr_z)
+        
+        elif self.current_effect_type == "healing":
+            return (cx, cz)
+
+        elif self.current_effect_type == "invocation":
+            return (cx, cz)
+
+        # 2.3 Default: Sobre la entidad
+        return (cx, cz)
+
+    def draw_attack_effect(self, surface: pygame.Surface, camera_x: float, camera_z: float, deg: float) -> None:
+        """
+        Descripción
+            MÉTODO: Dibuja el efecto de ataque activo usando la posición calculada centralizada.
+        """
+        # 1. Obtener posición de mundo del efecto
+        world_pos = self.get_current_effect_center()
+        
+        if world_pos:
+            # 2. Convertir a coordenadas de pantalla
+            wx, wz = world_pos
+            effect_draw_pos = (wx - camera_x, wz - camera_z)
+            
+            # 3. Obtener frame y rotar
+            effect_frame = self.current_effect.get_frame()
+            
+            if self.current_effect_type == "mele":
+                rotated_effect = pygame.transform.rotate(effect_frame, deg + 90.0)
+            elif self.current_effect_type == "magic":
+                rotated_effect = pygame.transform.rotate(effect_frame, deg - 120.0)
+            elif self.current_effect_type == "invocation":
+                rotated_effect = pygame.transform.rotate(effect_frame, deg)
+            else:
+                rotated_effect = pygame.transform.rotate(effect_frame, deg)
+
+            # 4. Dibujar
+            effect_rect = rotated_effect.get_rect(center=effect_draw_pos)
+            surface.blit(rotated_effect, effect_rect)

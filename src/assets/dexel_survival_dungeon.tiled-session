@@ -67,11 +67,11 @@
             "expandedObjectLayers": [
                 25
             ],
-            "scale": 2,
+            "scale": 1.5,
             "selectedLayer": 3,
             "viewCenter": {
-                "x": 695.5,
-                "y": 504.75
+                "x": 366.99999999999994,
+                "y": 1075.6666666666665
             }
         },
         "maps/level_2.tmx#Dungeon_Tileset": {
@@ -125,6 +125,7 @@
         "Dungeon_Tileset.tsx",
         "map.tmx"
     ],
+    "resizeMap.removeObjects": true,
     "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)",
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {

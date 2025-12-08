@@ -11,9 +11,9 @@ class BehaviorsData:
         y curarse/esperar en un anchor seguro hasta recuperarse.
 
     Parámetros principales (params)
-        - vision_range (px): distancia máxima para ver al jugador.
+        - vision_radius (px): distancia máxima para ver al jugador.
         - vision_fov_deg (deg): ángulo del cono de visión.
-        - attack_range (px): distancia de melee/ataque.
+        - mele_dist (px): distancia de melee/ataque.
         - flee_threshold (0..1): fracción de vida para entrar en Huyendo.
         - restore_threshold (0..1): fracción de vida para salir de Curarse (restaurar historial).
         - heal_rate_per_sec: fracción de max_health curada por segundo durante Curarse.
@@ -61,18 +61,19 @@ class BehaviorsData:
         "name": "hunter",
         "debug": {"show_state_over_entity": True},
         "params": {
-            "vision_range": 300.0,
-            "vision_fov_deg": 120.0,
-            "attack_range": 48.0,
+            "vision_radius": 400.0,
+            "vision_fov_deg": 90.0,
+            "mele_dist": 48.0,
             "flee_threshold": 0.30,
             "restore_threshold": 0.70,
             "heal_rate_per_sec": 0.05,
-            "safe_distance": 450.0,
+            "safe_distance": 440.0,
             "player_lost_timeout": 2.0,
             "patrol_path_nodes": 20,
             "face_range_multiplier": 2,
+            "patrol_tick_throttle": 5.0,
             "check_los_throttle": 0.12,
-            "scan_duration": 6.0,
+            "scan_duration": 5.0,
             "arrival_threshold": 15.0
         },
         "root": "EstadoVida",
@@ -156,9 +157,9 @@ class BehaviorsData:
         con énfasis en mantener/volver al path protegido.
 
     Parámetros principales (params)
-        - vision_range (px): distancia máxima para ver al jugador.
+        - vision_radius (px): distancia máxima para ver al jugador.
         - vision_fov_deg (deg): ángulo del cono de visión.
-        - attack_range (px): distancia de melee/ataque.
+        - mele_dist (px): distancia de melee/ataque.
         - flee_threshold (0..1): fracción de vida para entrar en Huyendo.
         - restore_threshold (0..1): fracción de vida para salir de Curarse.
         - heal_rate_per_sec: fracción de max_health curada por segundo durante Curarse.
@@ -216,19 +217,19 @@ class BehaviorsData:
         "name": "guardian",
         "debug": {"show_state_over_entity": True},
         "params": {
-            "vision_range": 300.0,
-            "vision_fov_deg": 120.0,
-            "attack_range": 48.0,
+            "vision_radius": 400.0,
+            "vision_fov_deg": 90.0,
+            "mele_dist": 48.0,
             "flee_threshold": 0.30,
             "restore_threshold": 0.70,
             "heal_rate_per_sec": 0.05,
-            "safe_distance": 450.0,
+            "safe_distance": 440.0,
             "player_lost_timeout": 2.0,
             "face_range_multiplier": 2,
             "check_los_throttle": 0.25,
             "protection_margin": 40.0,
             "arrival_threshold": 40.0,
-            "scan_duration": 6.0,
+            "scan_duration": 5.0,
         },
         "root": "EstadoVida",
         "states": {
@@ -330,8 +331,11 @@ class BehaviorsData:
         - Reposicionarse a boss_position, invocar aliados y regenerarse manteniendo facing cuando aplica.
 
     Parámetros principales (params)
-        - vision_range (px): alcance máximo de detección visual del jugador.
-        - vision_fov_deg (deg): apertura del cono de visión.
+        - vision_radius (px): distancia máxima para ver al jugador.
+        - vision_fov_deg (deg): ángulo del cono de visión.
+        - mele_dist (px): distancia de melee/ataque.
+        - mele_radius (px): radio de distancia para iniciar ataque mele.
+        - magic_radius (px): radio de distancia para iniciar ataque mágico.
         - player_seen_memory (s): tiempo de "memoria" tras perder visión.
         - dist_for_mele (px): umbral de distancia para preferir melee frente a ranged.
         - boss_position (x,y): posición donde reposicionarse, invocar y regenerar.
@@ -364,7 +368,7 @@ class BehaviorsData:
 
       - AtacarRange (leaf)
           Modo a distancia: boss queda estático (FACE) y lanza efectos a distancia periódicos
-          (start_boss_range_attack_mode / boss_range_attack_tick). Vuelve a melee si el jugador se acerca.
+          (start_facing_player / try_magic_attack). Vuelve a melee si el jugador se acerca.
 
       - Reposicionar (leaf)
           Pathfinding hacia boss_position (start_return_to_boss_position / return_to_boss_tick).
@@ -392,11 +396,13 @@ class BehaviorsData:
         "name": "invoker boss",
         "debug": {"show_state_over_entity": True},
         "params": {
-            "vision_range": 500.0,
-            "vision_fov_deg": 120.0,
+            "vision_radius": 450.0,
+            "vision_fov_deg": 90.0,
+            "mele_dist": 48.0,
+            "mele_radius": 200.0,
+            "magic_radius": 400.0,
             "player_seen_memory": 0.5,
-            "dist_for_mele": 200.0,
-            "boss_position": (CONF.MAIN_WIN.RENDER_TILE_SIZE*55, CONF.MAIN_WIN.RENDER_TILE_SIZE*47),
+            "boss_position": (CONF.MAIN_WIN.RENDER_TILE_SIZE*48, CONF.MAIN_WIN.RENDER_TILE_SIZE*68),
             "allies_for_invocation": 4,
             "time_for_invocation": 6.0,
             "timeout_invocations": 14.0,
@@ -456,9 +462,9 @@ class BehaviorsData:
             # Nivel 0: EstadoVida.AtacarRange - ataques a distancia (lanza figura / AOE proyectil)
             "EstadoVida.AtacarRange": {
                 "type": "leaf",
-                "entry": ["start_boss_range_attack_mode"],
-                "update": ["record_health_tick", "boss_range_attack_tick", "throttle_check_player_visibility"],
-                "exit": ["stop_boss_range_attack_mode"],
+                "entry": ["start_facing_player"],
+                "update": ["record_health_tick", "try_magic_attack", "throttle_check_player_visibility"],
+                "exit": [],
                 "transitions": [
                     # si el player está visible y dentro de melee -> volver a melee
                     {"to": "EstadoVida.AtacarMele", "cond": "PlayerWithinMelee", "priority": 150},
@@ -493,7 +499,7 @@ class BehaviorsData:
             "Regenerar": {
                 "type": "leaf",
                 "entry": ["start_regeneration"],
-                "update": ["regen_tick", "face_towards_safe_anchor", "monitor_player_presence"],
+                "update": ["regen_tick", "monitor_player_presence"],
                 "exit": ["stop_regeneration", "reset_lost_health_accum"],
                 "transitions": [
                     # Al completar la regeneración, volver al EstadoVida (restaurando historia)

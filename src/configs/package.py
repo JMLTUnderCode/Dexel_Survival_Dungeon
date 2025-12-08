@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from . import ui as UI
 from . import main_window as MAIN_WIN
 from . import development as DEV
 from . import constants as CONST
@@ -9,6 +10,15 @@ from . import algorithms as ALG
 from . import algorithms_ui as ALG_UI
 from . import map_ui as MAP_UI
 from . import tactical as TACTICAL
+from . import audio as AUDIO
+
+@dataclass
+class UIConfig:
+    VERSION: str = UI.VERSION
+    BACKGROUND_COLOR: tuple[int, int, int] = UI.BACKGROUND_COLOR
+    FOLDER_UI: str = UI.FOLDER_UI
+    BUTTONS: dict = field(default_factory=lambda: dict(UI.BUTTONS))
+    ICONS: dict = field(default_factory=lambda: dict(UI.ICONS))
 
 @dataclass
 class MainWindowConfig:
@@ -44,25 +54,29 @@ class ConstantsConfig:
 
 @dataclass
 class PlayerConfig:
-    FOLDER: str = PLAYER.FOLDER
+    FOLDER_ANIM: str = PLAYER.FOLDER_ANIM
     TILE_WIDTH: int = PLAYER.TILE_WIDTH
     TILE_HEIGHT: int = PLAYER.TILE_HEIGHT
     COLLIDER_BOX_WIDTH: int = PLAYER.COLLIDER_BOX_WIDTH
     COLLIDER_BOX_HEIGHT: int = PLAYER.COLLIDER_BOX_HEIGHT
     ACTIONS: PLAYER.ACTIONS = PLAYER.ACTIONS
+    FOLDER_EFFECTS: str = PLAYER.FOLDER_EFFECTS
+    EFFECTS: dict = field(default_factory=lambda: dict(PLAYER.EFFECTS))
     PIVOT_MOVE_SPEED: float = PLAYER.PIVOT_MOVE_SPEED
     PIVOT_RETURN_SPEED: float = PLAYER.PIVOT_RETURN_SPEED
     PIVOT_EPS: float = PLAYER.PIVOT_EPS
 
 @dataclass
 class EnemyConfig:
-    FOLDER: str = ENEMY.FOLDER
+    FOLDER_ANIM: str = ENEMY.FOLDER_ANIM
     TILE_WIDTH: int = ENEMY.TILE_WIDTH
     TILE_HEIGHT: int = ENEMY.TILE_HEIGHT
     COLLIDER_BOX_WIDTH: int = ENEMY.COLLIDER_BOX_WIDTH
     COLLIDER_BOX_HEIGHT: int = ENEMY.COLLIDER_BOX_HEIGHT
     ACTIONS: ENEMY.ACTIONS = ENEMY.ACTIONS
-
+    FOLDER_EFFECTS: str = ENEMY.FOLDER_EFFECTS
+    EFFECTS: dict = field(default_factory=lambda: dict(ENEMY.EFFECTS))
+    
 @dataclass
 class MapConfig:
     LEVELS: dict = field(default_factory=lambda: dict(MAP.LEVELS))
@@ -114,7 +128,16 @@ class MapUIConfig:
     PARSING_BUTTONS: dict = field(default_factory=lambda: dict(MAP_UI.PARSING_BUTTONS))
     SELECTED = MAP_UI.SELECTED
 
+@dataclass
+class AudioConfig:
+    FOLDER_AUDIO: str = AUDIO.FOLDER_AUDIO
+    MUSIC: dict = field(default_factory=lambda: dict(AUDIO.MUSIC))
+    SFX: dict = field(default_factory=lambda: dict(AUDIO.SFX))
+    DEFAULT_MUSIC_VOLUME: float = AUDIO.DEFAULT_MUSIC_VOLUME
+    DEFAULT_SFX_VOLUME: float = AUDIO.DEFAULT_SFX_VOLUME
+
 class Config:
+    UI: UIConfig
     MAIN_WIN: MainWindowConfig
     DEV: DevelopmentConfig
     CONST: ConstantsConfig
@@ -125,8 +148,10 @@ class Config:
     ALG_UI: AlgorithmUIConfig
     MAP_UI: MapUIConfig
     TACTICAL: TacticalTypes
+    AUDIO: AudioConfig
 
     def __init__(self):
+        self.UI = UIConfig()
         self.MAIN_WIN = MainWindowConfig()
         self.DEV = DevelopmentConfig()
         self.CONST = ConstantsConfig()
@@ -137,5 +162,6 @@ class Config:
         self.ALG_UI = AlgorithmUIConfig()
         self.MAP_UI = MapUIConfig()
         self.TACTICAL = TacticalTypes()
+        self.AUDIO = AudioConfig()
 
 CONF = Config()

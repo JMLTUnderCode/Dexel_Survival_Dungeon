@@ -6,6 +6,7 @@ from map.pathfinder import Pathfinder
 from map.tactical_pathfinder import TacticalPathfinder
 from ui.enemy_set import EnemySet
 from ui.map_set import MapSet
+from ui.audio_manager import AudioManager
 from entity.entity_manager import EntityManager
 import helper.debugging  as DEBUG
 from configs.package import CONF
@@ -33,6 +34,7 @@ class Game:
         - map_set_ui (Optional[MapSet]): UI de selección de mapas.
         - camera_x (int): coordenada X de la cámara (esquina superior izquierda).
         - camera_z (int): coordenada Z de la cámara (esquina superior izquierda).
+        - audio_manager (AudioManager): gestor de audio para música y efectos.
 
     Métodos y Funciones
         - load_level: Carga y prepara un nivel completo (mapa, navmesh, entidades).
@@ -75,29 +77,33 @@ class Game:
         self.clock = pygame.time.Clock()
         self.dt = 0.0
         self.running = True
-
-        # 6. Inicializar mapa, pathfinder y gestor de entidades
+        
+        # 6. Inicializar Audio (o recibirlo como argumento si quieres persistencia)
+        self.audio_manager = AudioManager()
+        self.audio_manager.play_music("game_theme")
+        
+        # 7. Inicializar mapa, pathfinder y gestor de entidades
         self.game_map: Optional[Map] = None
         self.pathfinder: Optional[Pathfinder] = None
-        self.entity_manager = EntityManager()
+        self.entity_manager = EntityManager(audio_manager=self.audio_manager)
 
-        # 7. Preparar clave/grupo para creación de entidades según UI activa
+        # 8. Preparar clave/grupo para creación de entidades según UI activa
+        self.level = CONF.MAP_UI.SELECTED
         self.group_key = CONF.MAP_UI.SELECTED
         self.group_type = "map"
         if CONF.ALG_UI.ACTIVE:
             self.group_key = CONF.ALG_UI.SELECTED
             self.group_type = "alg"
-            self.load_level(level_number=0, g_key=self.group_key, g_type=self.group_type)
         if CONF.MAP_UI.ACTIVE:
             self.group_key = CONF.MAP_UI.SELECTED
             self.group_type = "map"
-            self.load_level(level_number=CONF.MAP_UI.SELECTED, g_key=self.group_key, g_type=self.group_type)
+        self.load_level(level_number=self.level, g_key=self.group_key, g_type=self.group_type)
 
-        # 8. Posición inicial de la cámara
+        # 9. Posición inicial de la cámara
         self.camera_x = 0
         self.camera_z = 0
 
-        # 9. Inicializar componentes de UI si están activos
+        # 10. Inicializar componentes de UI si están activos
         self.enemy_set_ui: Optional[EnemySet] = None
         self.map_set_ui: Optional[MapSet] = None
         if CONF.ALG_UI.ACTIVE:
@@ -227,9 +233,9 @@ class Game:
         # 3. Actualizar jugador y enemigos (fisica y animaciones)
         player.update(self.game_map.collision_rects, self.dt)
 
-        # 4. Procesar ataques del jugador (aplicar daño desde attack_waves)
+        # 4. Actualizar el estado del EntityManager (procesar ataques, resolver daños, limpiar)
         try:
-            self.entity_manager.process_player_attacks()
+            self.entity_manager.update(self.dt)
         except Exception:
             pass
 
@@ -243,12 +249,6 @@ class Game:
             enemy.update(self.game_map.collision_rects, self.dt)
             if self.game_map.navmesh:
                 enemy.node_location = self.game_map.navmesh.find_node_from(enemy.node_location, enemy.get_pos())
-
-        # 7. Limpiar enemigos muertos
-        try:
-            self.entity_manager.remove_dead_enemies()
-        except Exception:
-            pass
 
     def _render(self) -> None:
         """
@@ -279,18 +279,21 @@ class Game:
         if self.entity_manager.player:
             self.entity_manager.player.draw(self.game_surface, self.camera_x, self.camera_z)
 
-        # 5. Blit del game_surface en la pantalla principal (ajustando posición por panel UI)
+        # 5. Dibujar textos flotantes de daño (UI de Mundo)
+        self.entity_manager.draw_floating_texts(self.game_surface, self.camera_x, self.camera_z)
+
+        # 6. Blit del game_surface en la pantalla principal (ajustando posición por panel UI)
         self.screen.fill((0, 0, 0))
         blit_position = (self.ui_panel_width, 0)
         self.screen.blit(self.game_surface, blit_position)
 
-        # 6. Dibujar UI si está presente
+        # 7. Dibujar UI si está presente
         if self.enemy_set_ui:
             self.enemy_set_ui.draw(self.screen)
         if self.map_set_ui:
             self.map_set_ui.draw(self.screen)
 
-        # 7. Actualizar la pantalla
+        # 8. Actualizar la pantalla
         pygame.display.flip()
 
     def run(self) -> None:

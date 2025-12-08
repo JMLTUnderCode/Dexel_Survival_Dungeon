@@ -143,14 +143,14 @@ def PlayerVisible(hinst: HSMInstance, entity: Any) -> bool:
         - player_visible (update): flag booleano de visibilidad.
 
     Parámetros esperados
-        - vision_range (float): distancia máxima de detección en píxeles.
+        - vision_radius (float): distancia máxima de detección en píxeles.
         - vision_fov_deg (float): apertura del cono de visión en grados.
         - player_seen_memory (float): tiempo en segundos para considerar visible por memoria.
     """
     try:
         # 1) Parámetros
         params = hinst.blackboard.get("_spec_params", {})
-        max_dist = float(params.get("vision_range", 300.0))
+        max_dist = float(params.get("vision_radius", 300.0))
         fov_deg = float(params.get("vision_fov_deg", 120.0))
         memory = float(params.get("player_seen_memory", 0.5))
 
@@ -240,7 +240,7 @@ def PlayerFar(hinst: HSMInstance, entity: Any) -> bool:
 
     Parámetros esperados
         - safe_distance (float): distancia mínima requerida para considerar seguro.
-        - vision_range (float): usado para comprobar visibilidad estricta.
+        - vision_radius (float): usado para comprobar visibilidad estricta.
         - vision_fov_deg (float): usado para comprobación de FOV estricta.
     """
     try:
@@ -260,7 +260,7 @@ def PlayerFar(hinst: HSMInstance, entity: Any) -> bool:
             return False
 
         # 2) comprobar visibilidad estricta (si está dentro de vision y FOV -> no es seguro)
-        vision = float(get_spec_param(hinst, "vision_range", 300.0))
+        vision = float(get_spec_param(hinst, "vision_radius", 300.0))
         fov_deg = float(get_spec_param(hinst, "vision_fov_deg", 120.0))
         try:
             angle_to_player = math.atan2(pz - ez, px - ex)
@@ -408,7 +408,7 @@ def PlayerNotVisibleAndAtProtectionZone(hinst: HSMInstance, entity: Any) -> bool
 def PlayerBeyondMelee(hinst: HSMInstance, entity: Any) -> bool:
     """
     Descripción
-        CONDICIÓN: True si el jugador está visible y su distancia es mayor que dist_for_mele.
+        CONDICIÓN: True si el jugador está visible y su distancia es mayor que mele_radius.
 
     Argumentos
         - hinst (HSMInstance): instancia de la HSM.
@@ -418,7 +418,7 @@ def PlayerBeyondMelee(hinst: HSMInstance, entity: Any) -> bool:
         - Ninguno
 
     Parámetros esperados
-        - dist_for_mele (float): umbral de distancia para preferir ataques melee.
+        - mele_radius (float): umbral de distancia para preferir ataques melee.
     """
     try:
         player = get_player(hinst)
@@ -427,7 +427,7 @@ def PlayerBeyondMelee(hinst: HSMInstance, entity: Any) -> bool:
         ex, ez = entity.get_pos()
         px, pz = player.get_pos()
         dist = math.hypot(px - ex, pz - ez)
-        thresh = float(get_spec_param(hinst, "dist_for_mele", 120.0))
+        thresh = float(get_spec_param(hinst, "mele_radius", 120.0))
         # además requiere que PlayerVisible sea True para coherencia con la HSM
         if not CONDITIONS.get("PlayerVisible")(hinst, entity):
             return False
@@ -439,7 +439,7 @@ def PlayerBeyondMelee(hinst: HSMInstance, entity: Any) -> bool:
 def PlayerWithinMelee(hinst: HSMInstance, entity: Any) -> bool:
     """
     Descripción
-        CONDICIÓN: True si el jugador está visible y su distancia es menor o igual que dist_for_mele.
+        CONDICIÓN: True si el jugador está visible y su distancia es menor o igual que mele_radius.
 
     Argumentos
         - hinst (HSMInstance): instancia de la HSM.
@@ -449,7 +449,7 @@ def PlayerWithinMelee(hinst: HSMInstance, entity: Any) -> bool:
         - Ninguno
 
     Parámetros esperados
-        - dist_for_mele (float): umbral de distancia para considerar melee.
+        - mele_radius (float): umbral de distancia para considerar melee.
     """
     try:
         player = get_player(hinst)
@@ -458,7 +458,7 @@ def PlayerWithinMelee(hinst: HSMInstance, entity: Any) -> bool:
         ex, ez = entity.get_pos()
         px, pz = player.get_pos()
         dist = math.hypot(px - ex, pz - ez)
-        thresh = float(get_spec_param(hinst, "dist_for_mele", 120.0))
+        thresh = float(get_spec_param(hinst, "mele_radius", 120.0))
         if not CONDITIONS.get("PlayerVisible")(hinst, entity):
             return False
         return dist <= thresh
@@ -516,8 +516,7 @@ def IsAtBossPosition(hinst: HSMInstance, entity: Any) -> bool:
         - arrival_threshold (float): umbral en píxeles para considerar llegada.
     """
     try:
-        boss_pos = hinst.blackboard.get("_spec_params", {}).get("boss_position", None) \
-                   or get_spec_param(hinst, "boss_position", None)
+        boss_pos = get_spec_param(hinst, "boss_position", None)
         if not boss_pos:
             return True
         ex, ez = entity.get_pos()

@@ -1,10 +1,8 @@
 from __future__ import annotations
 import math
 import time
-import importlib
-import traceback
+import pygame
 from typing import Optional, List, Dict, Any
-
 from entity.kinematic import Kinematic
 from entity.entity_spec import EntitySpec, Stats, Sprite, SpawnedEntityMeta
 from entity.player import Player
@@ -13,9 +11,10 @@ from map.paths import Path
 from map.pathfinder import Pathfinder
 from map.tactical_pathfinder import TacticalPathfinder
 import algorithms.algorithms_configs as ALG_CONF
-from ai.behavior import Behavior
+from entity.floating_text import FloatingText
 from data.map_enemies import MAP_ENEMIES_DATA
 from data.algorithm_enemies import ALGORITHM_ENEMIES_DATA
+from ui.audio_manager import AudioManager
 from configs.package import CONF
 
 class EntityManager:
@@ -28,10 +27,28 @@ class EntityManager:
         - player (Optional[Player]): Referencia al jugador principal.
         - enemies (List[Enemy]): Lista de enemigos activos en el mundo.
         - pathfinder (Optional[Pathfinder]): Pathfinding auxiliar para recalcular rutas.
+        - tactical_pathfinder (Optional[TacticalPathfinder]): Pathfinding táctico para nodos estratégicos.
         - kills (int): Contador de enemigos eliminados.
         - attack_effects (List[Dict[str, Any]]): Efectos visuales/lógicos (AOE/VFX) activos.
+        - floating_texts (List[FloatingText]): Lista de textos de daño flotantes activos.
+        - audio_manager (Optional[AudioManager]): Referencia al gestor de audio para reproducir sonidos.
+
+    Métodos y Funciones
+        - create_player: Crea y registra la instancia del jugador principal.
+        - create_enemy_from_data: Fabrica un enemigo basado en una especificación de datos.
+        - remove_dead_enemies: Elimina enemigos muertos y gestiona expiración por tiempo.
+        - clear_all: Resetea todo el estado del gestor.
+        - create_enemy_group: Genera un grupo de enemigos desde configuraciones predefinidas.
+        - update_enemy_paths_to: Recalcula rutas de enemigos hacia un objetivo.
+        - spawn_damage_text: Genera un efecto visual de texto de daño.
+        - resolve_attack_damage: Calcula colisiones y aplica daño de ataques activos.
+        - update: Ciclo principal de actualización del gestor.
+        - draw_floating_texts: Renderiza los textos flotantes en pantalla.
+
+    Propósito
+        - Centralizar la lógica de ciclo de vida, interacción y actualización de todas las entidades dinámicas del juego.
     """
-    def __init__(self) -> None:
+    def __init__(self, audio_manager: Optional[AudioManager] = None) -> None:
         # 1. Inicializar contenedores y estado
         self.player: Optional[Player] = None
         self.enemies: List[Enemy] = []
@@ -39,6 +56,8 @@ class EntityManager:
         self.tactical_pathfinder: Optional[TacticalPathfinder] = None
         self.kills: int = 0
         self.attack_effects: List[Dict[str, Any]] = []
+        self.floating_texts: List[FloatingText] = []
+        self.audio_manager = audio_manager
 
     def create_player(self) -> Player:
         """
@@ -51,11 +70,11 @@ class EntityManager:
         Retorno
             - Player: instancia creada y registrada.
         """
-        # 1. Preparar datos del player
+        # 1. Preparar datos de configuración del player
         player_data = EntitySpec(
             id=1,
-            sprite=Sprite(name="oldman"),
-            initial_position=(CONF.MAIN_WIN.RENDER_TILE_SIZE * 34, CONF.MAIN_WIN.RENDER_TILE_SIZE * 36),
+            sprite=Sprite(name="oldman", frame_duration=0.0592),
+            initial_position=(CONF.MAIN_WIN.RENDER_TILE_SIZE * 4, CONF.MAIN_WIN.RENDER_TILE_SIZE * 6),
             collider_box=(CONF.PLAYER.COLLIDER_BOX_WIDTH, CONF.PLAYER.COLLIDER_BOX_HEIGHT),
             initial_algorithm=CONF.ALG.ALGORITHM.FACE,
             alg_configs={
@@ -74,11 +93,16 @@ class EntityManager:
                     max_angular_accel=35.0
                 ),
             },
-            statistics=Stats(alive=True, health=100.0,)
+            statistics=Stats(alive=True, health=300.0, mele_dmg=15.0, mele_cooldown=0.8, magic_cooldown=2.0, magic_dmg=20.0)
         )
 
         # 2. Crear la instancia del player y guardarla en el manager
         self.player = Player(player_data)
+
+        # 3. Asignar audio manager al jugador para sus inputs
+        if self.audio_manager:
+            self.player.audio_manager = self.audio_manager
+
         return self.player
 
     def create_enemy_from_data(self, spec: EntitySpec, target: Optional[Kinematic] = None) -> Enemy:
@@ -93,103 +117,21 @@ class EntityManager:
         Retorno
             - Enemy: instancia creada y añadida a self.enemies.
         """
-        # 1. Resolver target por defecto (player)
+        # 1. Resolver target por defecto (player) si no se especifica
         if target is None:
             target = self.player
-
-        # 2. Instanciar Enemy pasando la spec
-        enemy = Enemy(target=target, spec=spec)
-
-        # 3. Resolver y enlazar behavior si la spec lo define
-        behavior_spec = spec.behavior
-        if behavior_spec:
-            try:
-                # 3.1 Construir Behavior usando el builder central
-                enemy.behavior = Behavior.from_spec(behavior_spec, enemy, self)
-                if enemy.behavior is None:
-                    print(f"[EntityManager] Behavior.from_spec returned None for enemy '{getattr(enemy, 'type', 'unknown')}'")
-            except Exception as exc:
-                # 3.2 Capturar errores para no romper loop de creación
-                print(f"[EntityManager] Error building behavior for enemy '{getattr(enemy, 'type', 'unknown')}': {exc}")
-                print(traceback.format_exc())
-                enemy.behavior = None
-
-        # 4. Registrar la entidad en la lista y retornar
-        self.enemies.append(enemy)
-        return enemy
-
-    def spawn_attack_effect(self, effect_name: str, *, position: tuple[float, float], radius: float = 0.0, **kwargs) -> Dict[str, Any]:
-        """
-        Descripción
-            MÉTODO: Registrar y retornar un efecto de ataque (AOE / VFX).
-
-        Argumentos
-            - effect_name (str): Identificador del efecto.
-            - position (tuple[float, float]): Posición (x,z) donde se crea el efecto.
-            - radius (float): Radio del efecto.
-            - kwargs: Parámetros adicionales guardados en el efecto.
-
-        Retorno
-            - dict: Representación del efecto creado.
-        """
-        # 1. Construir la estructura del efecto con marca de tiempo
+        
+        enemy = None
         try:
-            effect = {
-                "name": effect_name,
-                "position": (float(position[0]), float(position[1])),
-                "radius": float(radius),
-                "created_at": time.time(),
-                **kwargs
-            }
+            # 2. Instanciar Enemy pasando la especificación
+            enemy = Enemy(target=target, spec=spec, entity_manager=self)
 
-            # 2. Registrar y devolver
-            self.attack_effects.append(effect)
-            return effect
+            # 3. Registrar la entidad en la lista y retornar
+            self.enemies.append(enemy)
         except Exception as exc:
-            # 3. Manejo de error defensivo
-            print(f"[EntityManager.spawn_attack_effect] Error: {exc}")
-            return {}
-
-    def process_player_attacks(self) -> None:
-        """
-        Descripción
-            MÉTODO: Procesa las ondas de ataque del jugador y aplica daño a enemigos dentro del radio.
-
-        Argumentos
-            - Ninguno
-
-        Blackboard utilizado/modificado
-            - player.attack_waves (read): colección de ondas pendientes del jugador.
-        """
-        # 1. Validaciones rápidas: requiere player y enemigos
-        if not self.player:
-            return
-        if not self.enemies:
-            return
-
-        # 2. Iterar sobre las ondas activas y aplicar daño por proximidad
-        for wave in list(self.player.attack_waves):
-            if not getattr(wave, "applied", False):
-                wx, wz = wave.x, wave.z
-                r = wave.max_radius
-                for enemy in list(self.enemies):
-                    if not getattr(enemy, "alive", True):
-                        continue
-                    ex, ez = enemy.get_pos()
-                    dist = math.hypot(ex - wx, ez - wz)
-                    if dist <= r:
-                        # 2.1 Calcular daño y aplicarlo (defensivo ante excepciones)
-                        dmg = 0.20 * getattr(enemy, "max_health", 100.0)
-                        try:
-                            enemy.take_damage(dmg)
-                        except Exception:
-                            enemy.health = max(0.0, getattr(enemy, "health", 0.0) - dmg)
-
-                # 2.2 Marcar onda como aplicada
-                try:
-                    wave.mark_applied()
-                except Exception:
-                    wave.applied = True
+            print(f"[EntityManager.create_enemy_from_data] Error: {exc}")
+        
+        return enemy
 
     def remove_dead_enemies(self) -> None:
         """
@@ -198,10 +140,6 @@ class EntityManager:
 
         Argumentos
             - Ninguno
-
-        Detalle
-            - Recorre self.enemies, invoca die() si un invocado excede su lifetime y elimina
-              las entidades no vivas, incrementando contador de kills.
         """
         try:
             now = time.time()
@@ -212,18 +150,21 @@ class EntityManager:
                 if spawn_meta:
                     lifetime = getattr(spawn_meta, "lifetime", 0.0)
                     spawned_at = getattr(spawn_meta, "spawned_at", 0.0)
+                    
+                    # 1.1 Verificar si ha excedido su tiempo de vida
                     if lifetime and lifetime > 0.0 and (now - spawned_at) >= lifetime:
                         try:
                             enemy.die()
                         except Exception:
                             enemy.alive = False
 
-            # 2. Filtrar la lista de enemigos, actualizar contador de bajas
+            # 2. Filtrar la lista de enemigos manteniendo solo los vivos
             alive_list: List[Enemy] = []
             for e in self.enemies:
                 if getattr(e, "alive", True):
                     alive_list.append(e)
                 else:
+                    # 2.1 Incrementar contador de bajas si la entidad murió
                     self.kills += 1
             self.enemies = alive_list
         except Exception as exc:
@@ -277,16 +218,142 @@ class EntityManager:
         Argumentos
             - target_pos (tuple[float,float]): posición objetivo (x,z).
         """
-        # 1. Para cada enemigo sin behavior, recalcular path hacia target_pos usando pathfinder
+        # 1. Iterar sobre cada enemigo para actualizar su ruta
         for enemy in list(self.enemies):
+            # 1.1 Solo actualizar si no tiene un behavior complejo (IA simple)
             if getattr(enemy, "behavior", None) is None:
                 start = enemy.get_pos()
                 if not self.pathfinder:
                     continue
+                
+                # 1.2 Calcular ruta usando pathfinder
                 pts = self.pathfinder.find_path(start, target_pos)
                 if not pts:
                     continue
-                # 2. Crear objeto Path y asignarlo a la instancia follow_path si existe
+                
+                # 1.3 Crear objeto Path y asignarlo a la instancia follow_path si existe
                 poly = Path(pts, closed=False)
                 if getattr(enemy, "follow_path", None):
                     enemy.follow_path.path = poly
+
+    def spawn_damage_text(self, position: tuple[float, float], damage: float) -> None:
+        """
+        Descripción
+            MÉTODO: Crea un nuevo texto flotante de daño en la posición indicada.
+
+        Argumentos
+            - position (tuple): Coordenadas (x, z) donde aparece el texto.
+            - damage (float): Valor del daño a mostrar.
+        """
+        # 1. Crear instancia de texto flotante y añadir a la lista activa
+        ft = FloatingText(position, int(damage))
+        self.floating_texts.append(ft)
+
+    def resolve_attack_damage(self) -> None:
+        """
+        Descripción
+            MÉTODO: Resuelve el daño de los ataques activos (Mele y Magic) basándose en la posición
+            visual de los efectos. Se ejecuta frame a frame.
+        
+        Argumentos
+            - Ninguno
+        """
+        # 1. Recopilar todas las entidades vivas (Player + Enemigos)
+        all_entities: List[Kinematic] = []
+        if self.player and self.player.is_alive():
+            all_entities.append(self.player)
+        all_entities.extend([e for e in self.enemies if e.is_alive()])
+
+        # 2. Iterar sobre cada entidad para verificar si está atacando
+        for attacker in all_entities:
+            # 2.1 Verificar si tiene un efecto activo y si NO ha aplicado daño aún
+            if getattr(attacker, "current_effect", None) and not getattr(attacker, "current_effect", None).is_finished:
+                if not attacker.effect_damage_applied:
+                    
+                    # 3. Obtener posición del "hitbox" del efecto
+                    hit_pos = attacker.get_current_effect_center()
+                    if not hit_pos:
+                        continue
+                    
+                    # 4. Definir objetivos (Player ataca Enemigos, Enemigos atacan Player)
+                    targets = []
+                    if isinstance(attacker, Player):
+                        targets = [e for e in self.enemies if e.is_alive()]
+                    elif isinstance(attacker, Enemy) and self.player and self.player.is_alive():
+                        targets = [self.player]
+                    
+                    # 5. Definir radio de colisión del efecto
+                    effect_radius = 24.0 
+
+                    # 6. Verificar colisión contra objetivos
+                    hit_occurred = False
+                    for target in targets:
+                        tx, tz = target.get_pos()
+                        hx, hz = hit_pos
+                        dist = math.hypot(tx - hx, tz - hz)
+                        
+                        target_radius = 24.0
+                        
+                        # 6.1 Comprobar intersección de radios
+                        if dist < (effect_radius + target_radius):
+                            # 7. ¡IMPACTO! Aplicar daño según tipo de ataque
+                            dmg = 0.0
+                            if attacker.current_effect_type == "mele":
+                                dmg = getattr(attacker, "mele_dmg", 10.0)
+                            elif attacker.current_effect_type == "magic":
+                                dmg = getattr(attacker, "magic_dmg", 15.0)
+                            
+                            target.take_damage(dmg)
+                            
+                            # 7.1 Generar texto flotante de daño
+                            self.spawn_damage_text(target.get_pos(), dmg)
+                            
+                            # 7.2 REPRODUCIR SONIDO DE DOLOR (PAIN)
+                            # Si el objetivo es el jugador, reproducir sonido de dolor aleatorio
+                            if isinstance(target, Player) and self.audio_manager:
+                                self.audio_manager.play_random_sfx("pain", 6)
+                                
+                            hit_occurred = True
+                            
+                    # 8. Si hubo al menos un impacto, marcar el efecto como "gastado"
+                    if hit_occurred:
+                        attacker.effect_damage_applied = True
+                        # 8.1 Si es magia, finalizar visualmente el proyectil al impactar
+                        if attacker.current_effect_type == "magic":
+                            attacker.current_effect.finished = True
+
+    def update(self, dt: float) -> None:
+        """
+        Descripción
+            MÉTODO: Actualización centralizada del manager. Ejecuta la resolución de daños,
+            procesamiento de ataques, limpieza de entidades y actualización de UI de mundo.
+
+        Argumentos
+            - dt (float): Delta time en segundos.
+        """
+        # 1. Resolver daños por colisión de efectos visuales (Hitbox activa)
+        self.resolve_attack_damage()
+
+        # 2. Eliminar enemigos muertos o expirados
+        self.remove_dead_enemies()
+
+        # 3. Actualizar textos flotantes
+        for ft in self.floating_texts:
+            ft.update(dt)
+        
+        # 4. Limpiar textos expirados de la lista
+        self.floating_texts = [ft for ft in self.floating_texts if ft.is_alive()]
+
+    def draw_floating_texts(self, surface: pygame.Surface, camera_x: float, camera_z: float) -> None:
+        """
+        Descripción
+            MÉTODO: Dibuja todos los textos flotantes activos.
+
+        Argumentos
+            - surface (pygame.Surface): Superficie de destino.
+            - camera_x (float): Posición X de la cámara.
+            - camera_z (float): Posición Z de la cámara.
+        """
+        # 1. Iterar y dibujar cada texto flotante
+        for ft in self.floating_texts:
+            ft.draw(surface, camera_x, camera_z)
