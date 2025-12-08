@@ -74,7 +74,7 @@ class EntityManager:
         player_data = EntitySpec(
             id=1,
             sprite=Sprite(name="oldman", frame_duration=0.0592),
-            initial_position=(CONF.MAIN_WIN.RENDER_TILE_SIZE * 34, CONF.MAIN_WIN.RENDER_TILE_SIZE * 36),
+            initial_position=(CONF.MAIN_WIN.RENDER_TILE_SIZE * 4, CONF.MAIN_WIN.RENDER_TILE_SIZE * 6),
             collider_box=(CONF.PLAYER.COLLIDER_BOX_WIDTH, CONF.PLAYER.COLLIDER_BOX_HEIGHT),
             initial_algorithm=CONF.ALG.ALGORITHM.FACE,
             alg_configs={
@@ -93,7 +93,7 @@ class EntityManager:
                     max_angular_accel=35.0
                 ),
             },
-            statistics=Stats(alive=True, health=300.0, mele_dmg=15.0, mele_cooldown=0.8, magic_cooldown=1.0, magic_dmg=20.0)
+            statistics=Stats(alive=True, health=300.0, mele_dmg=15.0, mele_cooldown=0.8, magic_cooldown=2.0, magic_dmg=20.0)
         )
 
         # 2. Crear la instancia del player y guardarla en el manager
