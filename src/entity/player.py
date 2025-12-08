@@ -123,6 +123,9 @@ class Player(Kinematic):
         # 6. Bandera para comunicar lógica de ataque al EntityManager
         self.pending_attack: Optional[str] = None # "mele" | "magic"
 
+        # 7. Audio manager para manejar efectos
+        self.audio_manager = None
+
     def handle_event(self, event: pygame.event.Event) -> None:
         """
         Descripción
@@ -147,6 +150,10 @@ class Player(Kinematic):
                         self.current_effect.reset()
                         # Resetear bandera de daño
                         self.effect_damage_applied = False
+
+                        # REPRODUCIR SONIDO MELE ALEATORIO
+                        if hasattr(self, "audio_manager") and self.audio_manager:
+                            self.audio_manager.play_random_sfx("mele", 5)
             
             # 2. Click Derecho -> Ataque Mágico
             elif event.button == 3:
@@ -166,6 +173,10 @@ class Player(Kinematic):
                         # Calcular posiciones para el proyectil
                         self.magic_target_pos = self.pivot_point_mouse.position
                         self.magic_start_pos = self.position
+
+                        # REPRODUCIR SONIDO MAGIC CAST
+                        if hasattr(self, "audio_manager") and self.audio_manager:
+                            self.audio_manager.play_sfx("magic_cast")
 
     def _clamp_pivot_move_distance(self, pivot_x: float, pivot_y: float) -> Tuple[float, float]:
         """

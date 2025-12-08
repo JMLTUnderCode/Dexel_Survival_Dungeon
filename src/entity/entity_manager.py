@@ -14,6 +14,7 @@ import algorithms.algorithms_configs as ALG_CONF
 from entity.floating_text import FloatingText
 from data.map_enemies import MAP_ENEMIES_DATA
 from data.algorithm_enemies import ALGORITHM_ENEMIES_DATA
+from ui.audio_manager import AudioManager
 from configs.package import CONF
 
 class EntityManager:
@@ -30,6 +31,7 @@ class EntityManager:
         - kills (int): Contador de enemigos eliminados.
         - attack_effects (List[Dict[str, Any]]): Efectos visuales/lógicos (AOE/VFX) activos.
         - floating_texts (List[FloatingText]): Lista de textos de daño flotantes activos.
+        - audio_manager (Optional[AudioManager]): Referencia al gestor de audio para reproducir sonidos.
 
     Métodos y Funciones
         - create_player: Crea y registra la instancia del jugador principal.
@@ -46,7 +48,7 @@ class EntityManager:
     Propósito
         - Centralizar la lógica de ciclo de vida, interacción y actualización de todas las entidades dinámicas del juego.
     """
-    def __init__(self) -> None:
+    def __init__(self, audio_manager: Optional[AudioManager] = None) -> None:
         # 1. Inicializar contenedores y estado
         self.player: Optional[Player] = None
         self.enemies: List[Enemy] = []
@@ -55,6 +57,7 @@ class EntityManager:
         self.kills: int = 0
         self.attack_effects: List[Dict[str, Any]] = []
         self.floating_texts: List[FloatingText] = []
+        self.audio_manager = audio_manager
 
     def create_player(self) -> Player:
         """
@@ -95,6 +98,11 @@ class EntityManager:
 
         # 2. Crear la instancia del player y guardarla en el manager
         self.player = Player(player_data)
+
+        # 3. Asignar audio manager al jugador para sus inputs
+        if self.audio_manager:
+            self.player.audio_manager = self.audio_manager
+
         return self.player
 
     def create_enemy_from_data(self, spec: EntitySpec, target: Optional[Kinematic] = None) -> Enemy:
@@ -300,6 +308,11 @@ class EntityManager:
                             # 7.1 Generar texto flotante de daño
                             self.spawn_damage_text(target.get_pos(), dmg)
                             
+                            # 7.2 REPRODUCIR SONIDO DE DOLOR (PAIN)
+                            # Si el objetivo es el jugador, reproducir sonido de dolor aleatorio
+                            if isinstance(target, Player) and self.audio_manager:
+                                self.audio_manager.play_random_sfx("pain", 6)
+                                
                             hit_occurred = True
                             
                     # 8. Si hubo al menos un impacto, marcar el efecto como "gastado"

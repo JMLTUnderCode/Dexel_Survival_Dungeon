@@ -1207,6 +1207,10 @@ def start_heal_tick(hinst, entity):
             entity.current_effect = entity.effects["healing"]
             entity.current_effect_type = "healing"
             entity.current_effect.reset()
+            manager = get_manager(hinst)
+            if manager and manager.audio_manager:
+                manager.audio_manager.play_sfx("healing", loops=-1)
+
     except Exception as e:
         exception_print("START HEAL TICK", entity, str(e))
 
@@ -1284,6 +1288,9 @@ def stop_heal_tick(hinst, entity):
             del hinst.blackboard["heal_started_at"]
         # conservar last_heal_at para diagnósticos, pero es opcional quitarlo
         entity.current_effect.finished = True
+        manager = get_manager(hinst)
+        if manager and manager.audio_manager:
+            manager.audio_manager.stop_sfx("healing")
     except Exception as e:
         exception_print("STOP HEAL TICK", entity, str(e))
 
@@ -1804,6 +1811,9 @@ def start_invocation(hinst, entity):
                 entity.current_effect = entity.effects["invocation"]
                 entity.current_effect_type = "invocation"
                 entity.current_effect.reset()
+                manager = get_manager(hinst)
+                if manager and manager.audio_manager:
+                    manager.audio_manager.play_sfx("invocation", loops=-1)
 
         except Exception as e:
             exception_print("START INVOCATION", entity, f"Setting face target: {e}")
@@ -1938,6 +1948,9 @@ def stop_invocation(hinst, entity):
 
         entity.face.target = None
         entity.current_effect.finished = True
+        manager = get_manager(hinst)
+        if manager and manager.audio_manager:
+            manager.audio_manager.stop_sfx("invocation")
         
         for k in ("invocation_started_at", "invocation_spawned_count", "invocation_last_spawn_at"):
             if k in hinst.blackboard:
@@ -1995,6 +2008,9 @@ def start_regeneration(hinst, entity):
                 entity.current_effect = entity.effects["healing"]
                 entity.current_effect_type = "healing"
                 entity.current_effect.reset()
+                manager = get_manager(hinst)
+                if manager and manager.audio_manager:
+                    manager.audio_manager.play_sfx("healing", loops=-1)
 
         except Exception as e:
             exception_print("START REGENERATION", entity, f"Setting face target: {e}")
@@ -2073,6 +2089,9 @@ def stop_regeneration(hinst, entity):
         if "regen_accum" in hinst.blackboard:
             del hinst.blackboard["regen_accum"]
         entity.current_effect.finished = True
+        manager = get_manager(hinst)
+        if manager and manager.audio_manager:
+            manager.audio_manager.stop_sfx("healing")
     except Exception as e:
         exception_print("STOP REGENERATION", entity, str(e))
 

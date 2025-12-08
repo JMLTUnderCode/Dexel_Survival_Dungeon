@@ -6,6 +6,7 @@ from map.pathfinder import Pathfinder
 from map.tactical_pathfinder import TacticalPathfinder
 from ui.enemy_set import EnemySet
 from ui.map_set import MapSet
+from ui.audio_manager import AudioManager
 from entity.entity_manager import EntityManager
 import helper.debugging  as DEBUG
 from configs.package import CONF
@@ -33,6 +34,7 @@ class Game:
         - map_set_ui (Optional[MapSet]): UI de selección de mapas.
         - camera_x (int): coordenada X de la cámara (esquina superior izquierda).
         - camera_z (int): coordenada Z de la cámara (esquina superior izquierda).
+        - audio_manager (AudioManager): gestor de audio para música y efectos.
 
     Métodos y Funciones
         - load_level: Carga y prepara un nivel completo (mapa, navmesh, entidades).
@@ -75,13 +77,17 @@ class Game:
         self.clock = pygame.time.Clock()
         self.dt = 0.0
         self.running = True
-
-        # 6. Inicializar mapa, pathfinder y gestor de entidades
+        
+        # 6. Inicializar Audio (o recibirlo como argumento si quieres persistencia)
+        self.audio_manager = AudioManager()
+        self.audio_manager.play_music("game_theme")
+        
+        # 7. Inicializar mapa, pathfinder y gestor de entidades
         self.game_map: Optional[Map] = None
         self.pathfinder: Optional[Pathfinder] = None
-        self.entity_manager = EntityManager()
+        self.entity_manager = EntityManager(audio_manager=self.audio_manager)
 
-        # 7. Preparar clave/grupo para creación de entidades según UI activa
+        # 8. Preparar clave/grupo para creación de entidades según UI activa
         self.level = CONF.MAP_UI.SELECTED
         self.group_key = CONF.MAP_UI.SELECTED
         self.group_type = "map"
@@ -93,11 +99,11 @@ class Game:
             self.group_type = "map"
         self.load_level(level_number=self.level, g_key=self.group_key, g_type=self.group_type)
 
-        # 8. Posición inicial de la cámara
+        # 9. Posición inicial de la cámara
         self.camera_x = 0
         self.camera_z = 0
 
-        # 9. Inicializar componentes de UI si están activos
+        # 10. Inicializar componentes de UI si están activos
         self.enemy_set_ui: Optional[EnemySet] = None
         self.map_set_ui: Optional[MapSet] = None
         if CONF.ALG_UI.ACTIVE:
