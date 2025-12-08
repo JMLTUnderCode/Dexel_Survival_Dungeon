@@ -318,7 +318,7 @@ class EntityManager:
                         attacker.effect_damage_applied = True
                         # 8.1 Si es magia, finalizar visualmente el proyectil al impactar
                         if attacker.current_effect_type == "magic":
-                             attacker.current_effect.finished = True
+                            attacker.current_effect.finished = True
 
     def update(self, dt: float) -> None:
         """
