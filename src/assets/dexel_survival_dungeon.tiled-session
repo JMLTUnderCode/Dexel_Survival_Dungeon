@@ -125,6 +125,7 @@
         "Dungeon_Tileset.tsx",
         "map.tmx"
     ],
+    "resizeMap.removeObjects": true,
     "tileset.lastUsedFilter": "Tiled tileset files (*.tsx *.xml)",
     "tileset.lastUsedFormat": "tsx",
     "tileset.tileSize": {
