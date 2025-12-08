@@ -28,8 +28,25 @@ class EntityManager:
         - player (Optional[Player]): Referencia al jugador principal.
         - enemies (List[Enemy]): Lista de enemigos activos en el mundo.
         - pathfinder (Optional[Pathfinder]): Pathfinding auxiliar para recalcular rutas.
+        - tactical_pathfinder (Optional[TacticalPathfinder]): Pathfinding táctico para nodos estratégicos.
         - kills (int): Contador de enemigos eliminados.
         - attack_effects (List[Dict[str, Any]]): Efectos visuales/lógicos (AOE/VFX) activos.
+        - floating_texts (List[FloatingText]): Lista de textos de daño flotantes activos.
+
+    Métodos y Funciones
+        - create_player: Crea y registra la instancia del jugador principal.
+        - create_enemy_from_data: Fabrica un enemigo basado en una especificación de datos.
+        - remove_dead_enemies: Elimina enemigos muertos y gestiona expiración por tiempo.
+        - clear_all: Resetea todo el estado del gestor.
+        - create_enemy_group: Genera un grupo de enemigos desde configuraciones predefinidas.
+        - update_enemy_paths_to: Recalcula rutas de enemigos hacia un objetivo.
+        - spawn_damage_text: Genera un efecto visual de texto de daño.
+        - resolve_attack_damage: Calcula colisiones y aplica daño de ataques activos.
+        - update: Ciclo principal de actualización del gestor.
+        - draw_floating_texts: Renderiza los textos flotantes en pantalla.
+
+    Propósito
+        - Centralizar la lógica de ciclo de vida, interacción y actualización de todas las entidades dinámicas del juego.
     """
     def __init__(self) -> None:
         # 1. Inicializar contenedores y estado
@@ -52,7 +69,7 @@ class EntityManager:
         Retorno
             - Player: instancia creada y registrada.
         """
-        # 1. Preparar datos del player
+        # 1. Preparar datos de configuración del player
         player_data = EntitySpec(
             id=1,
             sprite=Sprite(name="oldman", frame_duration=0.0592),
@@ -94,11 +111,11 @@ class EntityManager:
         Retorno
             - Enemy: instancia creada y añadida a self.enemies.
         """
-        # 1. Resolver target por defecto (player)
+        # 1. Resolver target por defecto (player) si no se especifica
         if target is None:
             target = self.player
 
-        # 2. Instanciar Enemy pasando la spec
+        # 2. Instanciar Enemy pasando la especificación
         enemy = Enemy(target=target, spec=spec)
 
         # 3. Resolver y enlazar behavior si la spec lo define
@@ -126,10 +143,6 @@ class EntityManager:
 
         Argumentos
             - Ninguno
-
-        Detalle
-            - Recorre self.enemies, invoca die() si un invocado excede su lifetime y elimina
-              las entidades no vivas, incrementando contador de kills.
         """
         try:
             now = time.time()
@@ -140,18 +153,21 @@ class EntityManager:
                 if spawn_meta:
                     lifetime = getattr(spawn_meta, "lifetime", 0.0)
                     spawned_at = getattr(spawn_meta, "spawned_at", 0.0)
+                    
+                    # 1.1 Verificar si ha excedido su tiempo de vida
                     if lifetime and lifetime > 0.0 and (now - spawned_at) >= lifetime:
                         try:
                             enemy.die()
                         except Exception:
                             enemy.alive = False
 
-            # 2. Filtrar la lista de enemigos, actualizar contador de bajas
+            # 2. Filtrar la lista de enemigos manteniendo solo los vivos
             alive_list: List[Enemy] = []
             for e in self.enemies:
                 if getattr(e, "alive", True):
                     alive_list.append(e)
                 else:
+                    # 2.1 Incrementar contador de bajas si la entidad murió
                     self.kills += 1
             self.enemies = alive_list
         except Exception as exc:
@@ -205,16 +221,20 @@ class EntityManager:
         Argumentos
             - target_pos (tuple[float,float]): posición objetivo (x,z).
         """
-        # 1. Para cada enemigo sin behavior, recalcular path hacia target_pos usando pathfinder
+        # 1. Iterar sobre cada enemigo para actualizar su ruta
         for enemy in list(self.enemies):
+            # 1.1 Solo actualizar si no tiene un behavior complejo (IA simple)
             if getattr(enemy, "behavior", None) is None:
                 start = enemy.get_pos()
                 if not self.pathfinder:
                     continue
+                
+                # 1.2 Calcular ruta usando pathfinder
                 pts = self.pathfinder.find_path(start, target_pos)
                 if not pts:
                     continue
-                # 2. Crear objeto Path y asignarlo a la instancia follow_path si existe
+                
+                # 1.3 Crear objeto Path y asignarlo a la instancia follow_path si existe
                 poly = Path(pts, closed=False)
                 if getattr(enemy, "follow_path", None):
                     enemy.follow_path.path = poly
@@ -228,7 +248,7 @@ class EntityManager:
             - position (tuple): Coordenadas (x, z) donde aparece el texto.
             - damage (float): Valor del daño a mostrar.
         """
-        # 1. Crear instancia y añadir a la lista
+        # 1. Crear instancia de texto flotante y añadir a la lista activa
         ft = FloatingText(position, int(damage))
         self.floating_texts.append(ft)
 
@@ -277,8 +297,9 @@ class EntityManager:
                         
                         target_radius = 24.0
                         
+                        # 6.1 Comprobar intersección de radios
                         if dist < (effect_radius + target_radius):
-                            # 7. ¡IMPACTO! Aplicar daño
+                            # 7. ¡IMPACTO! Aplicar daño según tipo de ataque
                             dmg = 0.0
                             if attacker.current_effect_type == "mele":
                                 dmg = getattr(attacker, "mele_dmg", 10.0)
@@ -287,7 +308,7 @@ class EntityManager:
                             
                             target.take_damage(dmg)
                             
-                            # 7.1 SPAWN DAMAGE TEXT
+                            # 7.1 Generar texto flotante de daño
                             self.spawn_damage_text(target.get_pos(), dmg)
                             
                             hit_occurred = True
@@ -295,6 +316,7 @@ class EntityManager:
                     # 8. Si hubo al menos un impacto, marcar el efecto como "gastado"
                     if hit_occurred:
                         attacker.effect_damage_applied = True
+                        # 8.1 Si es magia, finalizar visualmente el proyectil al impactar
                         if attacker.current_effect_type == "magic":
                              attacker.current_effect.finished = True
 
@@ -316,7 +338,8 @@ class EntityManager:
         # 3. Actualizar textos flotantes
         for ft in self.floating_texts:
             ft.update(dt)
-        # Limpiar textos expirados
+        
+        # 4. Limpiar textos expirados de la lista
         self.floating_texts = [ft for ft in self.floating_texts if ft.is_alive()]
 
     def draw_floating_texts(self, surface: pygame.Surface, camera_x: float, camera_z: float) -> None:
@@ -329,5 +352,6 @@ class EntityManager:
             - camera_x (float): Posición X de la cámara.
             - camera_z (float): Posición Z de la cámara.
         """
+        # 1. Iterar y dibujar cada texto flotante
         for ft in self.floating_texts:
             ft.draw(surface, camera_x, camera_z)
