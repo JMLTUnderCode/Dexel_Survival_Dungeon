@@ -2,7 +2,6 @@ import os
 import pygame
 from enum import Enum
 from typing import List, Optional, Tuple, Type, Dict
-from ai.utils import get_spec_param
 from utils.resource_path_dir import resource_path_dir
 
 __all__ = ["Animation", "load_animations", "set_animation_state", "load_attack_effects"]
