@@ -56,7 +56,7 @@ def draw_tactical_nodes(game_surface: pygame.Surface, game_map, entity_manager, 
             nx, nz = node.center
             dist_to_player = math.hypot(nx - px, nz - pz)
             
-            if dist_to_player > 450.0:
+            if dist_to_player >= 440.0:
                 color = (0, 255, 0)  # Verde: Válido
             else:
                 color = (255, 0, 0)  # Rojo: No válido
