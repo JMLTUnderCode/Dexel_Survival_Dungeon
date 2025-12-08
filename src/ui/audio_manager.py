@@ -1,7 +1,6 @@
 import pygame
 import os
 import random
-from typing import Dict, Optional
 from configs.package import CONF
 from helper.asset_loader import load_sfx_assets
 from utils.resource_path_dir import resource_path_dir
