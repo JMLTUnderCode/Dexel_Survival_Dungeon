@@ -435,6 +435,12 @@ class Kinematic:
             curr_x = start_x + (target_x - start_x) * progress
             curr_z = start_z + (target_z - start_z) * progress
             return (curr_x, curr_z)
+        
+        elif self.current_effect_type == "healing":
+            return (cx, cz)
+
+        elif self.current_effect_type == "invocation":
+            return (cx, cz)
 
         # 2.3 Default: Sobre la entidad
         return (cx, cz)
@@ -459,6 +465,8 @@ class Kinematic:
                 rotated_effect = pygame.transform.rotate(effect_frame, deg + 90.0)
             elif self.current_effect_type == "magic":
                 rotated_effect = pygame.transform.rotate(effect_frame, deg - 120.0)
+            elif self.current_effect_type == "invocation":
+                rotated_effect = pygame.transform.rotate(effect_frame, deg)
             else:
                 rotated_effect = pygame.transform.rotate(effect_frame, deg)
 

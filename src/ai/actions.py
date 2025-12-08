@@ -1201,6 +1201,12 @@ def start_heal_tick(hinst, entity):
         now = time.time()
         hinst.set_blackboard("last_heal_at", now)
         hinst.set_blackboard("heal_started_at", now)
+
+        # 2) Iniciar efecto de invocación
+        if "healing" in getattr(entity, "effects", {}):
+            entity.current_effect = entity.effects["healing"]
+            entity.current_effect_type = "healing"
+            entity.current_effect.reset()
     except Exception as e:
         exception_print("START HEAL TICK", entity, str(e))
 
@@ -1277,6 +1283,7 @@ def stop_heal_tick(hinst, entity):
         if "heal_started_at" in hinst.blackboard:
             del hinst.blackboard["heal_started_at"]
         # conservar last_heal_at para diagnósticos, pero es opcional quitarlo
+        entity.current_effect.finished = True
     except Exception as e:
         exception_print("STOP HEAL TICK", entity, str(e))
 
@@ -1792,6 +1799,12 @@ def start_invocation(hinst, entity):
                 if last:
                     tgt = Kinematic(position=tuple(last), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
                     entity.face.target = tgt
+            # 2.1) Iniciar efecto de invocación
+            if "invocation" in getattr(entity, "effects", {}):
+                entity.current_effect = entity.effects["invocation"]
+                entity.current_effect_type = "invocation"
+                entity.current_effect.reset()
+
         except Exception as e:
             exception_print("START INVOCATION", entity, f"Setting face target: {e}")
     except Exception as e:
@@ -1924,6 +1937,7 @@ def stop_invocation(hinst, entity):
                 exception_print("STOP INVOCATION", entity, str(e))
 
         entity.face.target = None
+        entity.current_effect.finished = True
         
         for k in ("invocation_started_at", "invocation_spawned_count", "invocation_last_spawn_at"):
             if k in hinst.blackboard:
@@ -1975,6 +1989,13 @@ def start_regeneration(hinst, entity):
                 if boss_pos:
                     tgt = Kinematic(position=(float(boss_pos[0]), float(boss_pos[1])), orientation=0.0, velocity=(0.0, 0.0), rotation=0.0)
                     entity.face.target = tgt
+            
+            # 2.1) Iniciar efecto de invocación
+            if "healing" in getattr(entity, "effects", {}):
+                entity.current_effect = entity.effects["healing"]
+                entity.current_effect_type = "healing"
+                entity.current_effect.reset()
+
         except Exception as e:
             exception_print("START REGENERATION", entity, f"Setting face target: {e}")
 
@@ -2051,6 +2072,7 @@ def stop_regeneration(hinst, entity):
             del hinst.blackboard["regen_total_amount"]
         if "regen_accum" in hinst.blackboard:
             del hinst.blackboard["regen_accum"]
+        entity.current_effect.finished = True
     except Exception as e:
         exception_print("STOP REGENERATION", entity, str(e))
 

@@ -1,13 +1,11 @@
 import math
-import os
 import pygame
 from typing import Tuple, List, Dict, Optional
 from algorithms.dynamic_arrive import DynamicArrive
 from algorithms.face import Face
 from entity.kinematic import Kinematic, SteeringOutput
 from entity.entity_spec import EntitySpec
-from entity.animation import Animation, load_animations, load_attack_effects, set_animation_state
-from utils.resource_path_dir import resource_path_dir
+from entity.animation import Animation, load_animations, load_effects, set_animation_state
 import helper.debugging as DEBUG
 from configs.package import CONF
 
@@ -74,7 +72,7 @@ class Player(Kinematic):
             self.animations[CONF.PLAYER.ACTIONS.ATTACK].loop = False
         
         # 3. Cargar efectos visuales
-        self.effects: Dict[str, Animation] = load_attack_effects(
+        self.effects: Dict[str, Animation] = load_effects(
             entity=self,
             dir=CONF.PLAYER.FOLDER_EFFECTS,
             effects=CONF.PLAYER.EFFECTS,

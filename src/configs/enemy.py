@@ -13,18 +13,30 @@ class ACTIONS(str, enum.Enum):
     ATTACK_WOUNDED = "attack-wounded"
     DEATH_0 = "death-0"
     DEATH_1 = "death-1"
-FOLDER_EFFECTS = "attacks"
+FOLDER_EFFECTS = "effects"
 EFFECTS = {
     "mele": {
-        "file": "mele-2.png",
+        "file": "mele-strike-2.png",
         "frames": 11,
-        "w": TILE_WIDTH,
-        "h": TILE_HEIGHT,
+        "w": 64,
+        "h": 64,
     },
     "magic": {
-        "file": "magic.png",
-        "frames": 11,
-        "w": TILE_WIDTH,
-        "h": TILE_HEIGHT,
+        "file": "water-explosion.png",
+        "frames": 5,
+        "w": 128,
+        "h": 128,
+    },
+    "healing": {
+        "file": "gas-healing.png",
+        "frames": 10,
+        "w": 128,
+        "h": 128,
+    },
+    "invocation": {
+        "file": "invocation.png",
+        "frames": 8,
+        "w": 72,
+        "h": 72,
     }
 }

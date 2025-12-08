@@ -9,20 +9,26 @@ class ACTIONS(str, enum.Enum):
     IDLE = "idle"
     MOVE = "move"
     ATTACK = "attack"
-FOLDER_EFFECTS = "attacks"
+FOLDER_EFFECTS = "effects"
 EFFECTS = {
     "mele": {
-        "file": "mele-1.png",
+        "file": "mele-strike-1.png",
         "frames": 11,
-        "w": TILE_WIDTH,
-        "h": TILE_HEIGHT,
+        "w": 64,
+        "h": 64,
     },
     "magic": {
-        "file": "magic.png",
-        "frames": 11,
-        "w": TILE_WIDTH,
-        "h": TILE_HEIGHT,
-    }
+        "file": "water-explosion.png",
+        "frames": 5,
+        "w": 128,
+        "h": 128,
+    },
+    "healing": {
+        "file": "gas-healing.png",
+        "frames": 10,
+        "w": 128,
+        "h": 128,
+    },
 }
 PIVOT_MOVE_SPEED = 700.0
 PIVOT_RETURN_SPEED = 700.0

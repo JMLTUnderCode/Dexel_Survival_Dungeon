@@ -19,7 +19,7 @@ from algorithms.evade import Evade
 from algorithms.face import Face
 from algorithms.look_where_youre_going import LookWhereYoureGoing
 from algorithms.path_following import FollowPath
-from entity.animation import Animation, load_animations, load_attack_effects, set_animation_state
+from entity.animation import Animation, load_animations, load_effects, set_animation_state
 from ai.behavior import Behavior
 import helper.debugging  as DEBUG
 from configs.package import CONF
@@ -52,7 +52,7 @@ class Enemy(Kinematic):
           cambie el algoritmo en tiempo de ejecución y que la entidad tenga instancias
           específicas por algoritmo con sus propias configuraciones.
     """
-    def __init__(self, target: Kinematic, spec: EntitySpec) -> None:
+    def __init__(self, target: Kinematic, spec: EntitySpec, entity_manager = None) -> None:
         # 1. Inicializar la parte kinemática base usando la spec
         super().__init__(
             position=spec.initial_position,
@@ -62,9 +62,9 @@ class Enemy(Kinematic):
             statistics=spec.statistics,
             spawn_meta=spec.spawn_meta,
         )
-
-        # 2. Guardar referencias y carga de recursos visuales
         self.target: Kinematic = target
+        
+        # 2. Cargar animaciones
         self.state = CONF.ENEMY.ACTIONS.IDLE
         self.animations: Dict[str, Animation] = load_animations(
             dir=CONF.ENEMY.FOLDER_ANIM,
@@ -82,28 +82,11 @@ class Enemy(Kinematic):
         if CONF.ENEMY.ACTIONS.ATTACK in self.animations:
             self.animations[CONF.ENEMY.ACTIONS.ATTACK].loop = False
 
-        # 2.2 Cargar efectos visuales
-        self.effects: Dict[str, Animation] = load_attack_effects(
-            entity=self,
-            dir=CONF.ENEMY.FOLDER_EFFECTS,
-            effects=CONF.ENEMY.EFFECTS,
-            scale=spec.sprite.scale
-        )
-        self.current_effect: Optional[Animation] = None
-        self.current_effect_type: Optional[str] = None
-        
-        # 2.3 Variables para efectos proyectiles (Magic)
-        self.magic_start_pos: Tuple[float, float] = (0.0, 0.0)
-        self.magic_target_pos: Tuple[float, float] = (0.0, 0.0)
-
-        # 3. Preparar HSM/Behavior (se asignará tras la creación por EntityManager si aplica)
-        self.behavior: Behavior | None = None
-
-        # 4. Preparar estructura para máximas por algoritmo y registrar algoritmo inicial
+        # 3. Preparar estructura para máximas por algoritmo y registrar algoritmo inicial
         self.max_speeds_for_alg: Dict[str, float] = {}
         self.algorithm = spec.initial_algorithm
 
-        # 5. Instanciar únicamente los algoritmos configurados en la spec
+        # 4. Instanciar únicamente los algoritmos configurados en la spec
         for alg_name, alg_config in spec.alg_configs.items():
             match alg_name:
                 case CONF.ALG.ALGORITHM.SEEK_KINEMATIC:
@@ -244,6 +227,24 @@ class Enemy(Kinematic):
                 case CONF.ALG.ALGORITHM.TEMP_PATH_FOLLOWING:
                     self.path_offset = alg_config.path_offset
                     self.temp_follow_path: FollowPath | None = None         # Para caminos temporales y mantener original.
+
+        # 5. Preparar HSM/Behavior (se asignará tras la creación por EntityManager si aplica)
+        self.behavior: Behavior | None = Behavior.from_spec(spec.behavior, self, entity_manager) if spec.behavior else None
+        
+        # 6. Cargar efectos visuales
+        self.effects: Dict[str, Animation] = load_effects(
+            entity=self,
+            dir=CONF.ENEMY.FOLDER_EFFECTS,
+            effects=CONF.ENEMY.EFFECTS,
+            scale=spec.sprite.scale
+        )
+        self.current_effect: Optional[Animation] = None
+        self.current_effect_type: Optional[str] = None
+        
+        # 6.1. Variables para efectos proyectiles (Magic)
+        self.magic_start_pos: Tuple[float, float] = (0.0, 0.0)
+        self.magic_target_pos: Tuple[float, float] = (0.0, 0.0)
+
 
     def draw(self, surface: pygame.Surface, camera_x: float, camera_z: float) -> None:
         """

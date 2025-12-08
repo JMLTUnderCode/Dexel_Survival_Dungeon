@@ -2,7 +2,6 @@ from __future__ import annotations
 import math
 import time
 import pygame
-import traceback
 from typing import Optional, List, Dict, Any
 from entity.kinematic import Kinematic
 from entity.entity_spec import EntitySpec, Stats, Sprite, SpawnedEntityMeta
@@ -12,7 +11,6 @@ from map.paths import Path
 from map.pathfinder import Pathfinder
 from map.tactical_pathfinder import TacticalPathfinder
 import algorithms.algorithms_configs as ALG_CONF
-from ai.behavior import Behavior
 from entity.floating_text import FloatingText
 from data.map_enemies import MAP_ENEMIES_DATA
 from data.algorithm_enemies import ALGORITHM_ENEMIES_DATA
@@ -114,26 +112,17 @@ class EntityManager:
         # 1. Resolver target por defecto (player) si no se especifica
         if target is None:
             target = self.player
+        
+        enemy = None
+        try:
+            # 2. Instanciar Enemy pasando la especificación
+            enemy = Enemy(target=target, spec=spec, entity_manager=self)
 
-        # 2. Instanciar Enemy pasando la especificación
-        enemy = Enemy(target=target, spec=spec)
-
-        # 3. Resolver y enlazar behavior si la spec lo define
-        behavior_spec = spec.behavior
-        if behavior_spec:
-            try:
-                # 3.1 Construir Behavior usando el builder central
-                enemy.behavior = Behavior.from_spec(behavior_spec, enemy, self)
-                if enemy.behavior is None:
-                    print(f"[EntityManager] Behavior.from_spec returned None for enemy '{getattr(enemy, 'type', 'unknown')}'")
-            except Exception as exc:
-                # 3.2 Capturar errores para no romper loop de creación
-                print(f"[EntityManager] Error building behavior for enemy '{getattr(enemy, 'type', 'unknown')}': {exc}")
-                print(traceback.format_exc())
-                enemy.behavior = None
-
-        # 4. Registrar la entidad en la lista y retornar
-        self.enemies.append(enemy)
+            # 3. Registrar la entidad en la lista y retornar
+            self.enemies.append(enemy)
+        except Exception as exc:
+            print(f"[EntityManager.create_enemy_from_data] Error: {exc}")
+        
         return enemy
 
     def remove_dead_enemies(self) -> None:

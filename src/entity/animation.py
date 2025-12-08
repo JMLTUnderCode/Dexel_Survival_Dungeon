@@ -2,6 +2,7 @@ import os
 import pygame
 from enum import Enum
 from typing import List, Optional, Tuple, Type, Dict
+from ai.utils import get_spec_param
 from utils.resource_path_dir import resource_path_dir
 
 __all__ = ["Animation", "load_animations", "set_animation_state", "load_attack_effects"]
@@ -205,7 +206,7 @@ def load_animations(
     # 4. Devolver el diccionario de animaciones cargadas
     return anims
 
-def load_attack_effects(entity, dir: str, effects: dict, scale: float) -> Dict[str, Animation]:
+def load_effects(entity, dir: str, effects: dict, scale: float) -> Dict[str, Animation]:
     """
     Descripción
         FUNCIÓN: Carga las animaciones de efectos de ataque para un personaje.
@@ -234,7 +235,21 @@ def load_attack_effects(entity, dir: str, effects: dict, scale: float) -> Dict[s
             h_tile = effect_data["h"]
             frame_count = effect_data["frames"]
             scale_to = (int(w_tile * scale), int(h_tile * scale))
-            duration = entity.magic_cooldown/frame_count if effect_name == "magic" else entity.mele_cooldown/frame_count
+            duration = None
+            loop=False
+            if effect_name == "magic":
+                duration = entity.magic_cooldown/frame_count
+            elif effect_name == "mele":
+                duration = entity.mele_cooldown/frame_count
+            elif effect_name == "invocation":
+                allies_for_invocation = getattr(entity.behavior.spec['params'], "time_for_invocation", 6.0)
+                total_invocations = getattr(entity.behavior.spec['params'], "allies_for_invocation", 1)
+                duration = allies_for_invocation / total_invocations / frame_count
+                scale_to = (int(w_tile * scale * 1.5), int(h_tile * scale * 1.5))
+                loop = True
+            elif effect_name == "healing":
+                duration = 1.0 / frame_count
+                loop = True
 
             loaded_effects[effect_name] = Animation(
                 image_path=path,
@@ -243,7 +258,7 @@ def load_attack_effects(entity, dir: str, effects: dict, scale: float) -> Dict[s
                 frame_count=frame_count,
                 frame_duration=duration,
                 scale_to=scale_to,
-                loop=False
+                loop=loop
             )
         else:
             raise RuntimeError(f"No se encontró el efecto '{effect_name}' para '{entity.type}'. Verifica que exista el archivo '{path}'.")
