@@ -242,9 +242,9 @@ def load_effects(entity, dir: str, effects: dict, scale: float) -> Dict[str, Ani
             elif effect_name == "mele":
                 duration = entity.mele_cooldown/frame_count
             elif effect_name == "invocation":
-                allies_for_invocation = getattr(entity.behavior.spec['params'], "time_for_invocation", 6.0)
-                total_invocations = getattr(entity.behavior.spec['params'], "allies_for_invocation", 1)
-                duration = allies_for_invocation / total_invocations / frame_count
+                time_for_invocation = entity.behavior.spec['params']["time_for_invocation"] if "time_for_invocation" in entity.behavior.spec['params'] else 6.0
+                allies_for_invocation = entity.behavior.spec['params']["allies_for_invocation"] if "allies_for_invocation" in entity.behavior.spec['params'] else 1
+                duration = time_for_invocation / allies_for_invocation / frame_count
                 scale_to = (int(w_tile * scale * 1.5), int(h_tile * scale * 1.5))
                 loop = True
             elif effect_name == "healing":
