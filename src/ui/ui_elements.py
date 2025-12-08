@@ -43,7 +43,7 @@ class UIButton:
             - mouse_pos (Tuple[int, int]) : Coordenadas (x, y) del mouse.
         """
         curr = self.is_hovered
-        # 1. Verificar colisiónaudio_manager.play_sfx("hover")
+        # 1. Verificar colisión
         self.is_hovered = self.rect.collidepoint(mouse_pos)
 
         if (curr == False) and (self.is_hovered == True):
