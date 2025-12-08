@@ -67,11 +67,11 @@
             "expandedObjectLayers": [
                 25
             ],
-            "scale": 2,
+            "scale": 1.5,
             "selectedLayer": 3,
             "viewCenter": {
-                "x": 565.75,
-                "y": 801.25
+                "x": 366.99999999999994,
+                "y": 1075.6666666666665
             }
         },
         "maps/level_2.tmx#Dungeon_Tileset": {
