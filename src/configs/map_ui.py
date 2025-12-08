@@ -3,7 +3,7 @@ import pygame
 if not pygame.get_init():
     pygame.init()
 
-ACTIVE = True
+ACTIVE = False
 PANEL_WIDTH = 200
 PADDING = 12
 BUTTON_HEIGHT = 36

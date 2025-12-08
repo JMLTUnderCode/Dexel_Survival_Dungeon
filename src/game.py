@@ -82,16 +82,16 @@ class Game:
         self.entity_manager = EntityManager()
 
         # 7. Preparar clave/grupo para creación de entidades según UI activa
+        self.level = CONF.MAP_UI.SELECTED
         self.group_key = CONF.MAP_UI.SELECTED
         self.group_type = "map"
         if CONF.ALG_UI.ACTIVE:
             self.group_key = CONF.ALG_UI.SELECTED
             self.group_type = "alg"
-            self.load_level(level_number=0, g_key=self.group_key, g_type=self.group_type)
         if CONF.MAP_UI.ACTIVE:
             self.group_key = CONF.MAP_UI.SELECTED
             self.group_type = "map"
-            self.load_level(level_number=CONF.MAP_UI.SELECTED, g_key=self.group_key, g_type=self.group_type)
+        self.load_level(level_number=self.level, g_key=self.group_key, g_type=self.group_type)
 
         # 8. Posición inicial de la cámara
         self.camera_x = 0
@@ -273,18 +273,21 @@ class Game:
         if self.entity_manager.player:
             self.entity_manager.player.draw(self.game_surface, self.camera_x, self.camera_z)
 
-        # 5. Blit del game_surface en la pantalla principal (ajustando posición por panel UI)
+        # 5. Dibujar textos flotantes de daño (UI de Mundo)
+        self.entity_manager.draw_floating_texts(self.game_surface, self.camera_x, self.camera_z)
+
+        # 6. Blit del game_surface en la pantalla principal (ajustando posición por panel UI)
         self.screen.fill((0, 0, 0))
         blit_position = (self.ui_panel_width, 0)
         self.screen.blit(self.game_surface, blit_position)
 
-        # 6. Dibujar UI si está presente
+        # 7. Dibujar UI si está presente
         if self.enemy_set_ui:
             self.enemy_set_ui.draw(self.screen)
         if self.map_set_ui:
             self.map_set_ui.draw(self.screen)
 
-        # 7. Actualizar la pantalla
+        # 8. Actualizar la pantalla
         pygame.display.flip()
 
     def run(self) -> None:

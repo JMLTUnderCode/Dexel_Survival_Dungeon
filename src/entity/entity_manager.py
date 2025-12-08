@@ -1,6 +1,7 @@
 from __future__ import annotations
 import math
 import time
+import pygame
 import traceback
 from typing import Optional, List, Dict, Any
 from entity.kinematic import Kinematic
@@ -12,6 +13,7 @@ from map.pathfinder import Pathfinder
 from map.tactical_pathfinder import TacticalPathfinder
 import algorithms.algorithms_configs as ALG_CONF
 from ai.behavior import Behavior
+from entity.floating_text import FloatingText
 from data.map_enemies import MAP_ENEMIES_DATA
 from data.algorithm_enemies import ALGORITHM_ENEMIES_DATA
 from configs.package import CONF
@@ -37,6 +39,7 @@ class EntityManager:
         self.tactical_pathfinder: Optional[TacticalPathfinder] = None
         self.kills: int = 0
         self.attack_effects: List[Dict[str, Any]] = []
+        self.floating_texts: List[FloatingText] = []
 
     def create_player(self) -> Player:
         """
@@ -216,6 +219,19 @@ class EntityManager:
                 if getattr(enemy, "follow_path", None):
                     enemy.follow_path.path = poly
 
+    def spawn_damage_text(self, position: tuple[float, float], damage: float) -> None:
+        """
+        Descripción
+            MÉTODO: Crea un nuevo texto flotante de daño en la posición indicada.
+
+        Argumentos
+            - position (tuple): Coordenadas (x, z) donde aparece el texto.
+            - damage (float): Valor del daño a mostrar.
+        """
+        # 1. Crear instancia y añadir a la lista
+        ft = FloatingText(position, int(damage))
+        self.floating_texts.append(ft)
+
     def resolve_attack_damage(self) -> None:
         """
         Descripción
@@ -234,8 +250,6 @@ class EntityManager:
         # 2. Iterar sobre cada entidad para verificar si está atacando
         for attacker in all_entities:
             # 2.1 Verificar si tiene un efecto activo y si NO ha aplicado daño aún
-            # NOTA: Para proyectiles mágicos, podríamos querer que golpeen a múltiples objetivos o se destruyan.
-            # Aquí asumimos un golpe único por activación de efecto para simplificar.
             if getattr(attacker, "current_effect", None) and not getattr(attacker, "current_effect", None).is_finished:
                 if not attacker.effect_damage_applied:
                     
@@ -251,7 +265,7 @@ class EntityManager:
                     elif isinstance(attacker, Enemy) and self.player and self.player.is_alive():
                         targets = [self.player]
                     
-                    # 5. Definir radio de colisión del efecto (aprox. mitad de un tile o ajustado)
+                    # 5. Definir radio de colisión del efecto
                     effect_radius = 24.0 
 
                     # 6. Verificar colisión contra objetivos
@@ -261,7 +275,6 @@ class EntityManager:
                         hx, hz = hit_pos
                         dist = math.hypot(tx - hx, tz - hz)
                         
-                        # Radio del objetivo (aprox)
                         target_radius = 24.0
                         
                         if dist < (effect_radius + target_radius):
@@ -273,16 +286,15 @@ class EntityManager:
                                 dmg = getattr(attacker, "magic_dmg", 15.0)
                             
                             target.take_damage(dmg)
-                            hit_occurred = True
                             
-                            # Si es magia (proyectil), visualmente podría detenerse aquí, 
-                            # pero por ahora solo marcamos el daño.
+                            # 7.1 SPAWN DAMAGE TEXT
+                            self.spawn_damage_text(target.get_pos(), dmg)
+                            
+                            hit_occurred = True
                             
                     # 8. Si hubo al menos un impacto, marcar el efecto como "gastado"
                     if hit_occurred:
                         attacker.effect_damage_applied = True
-                        
-                        # Opcional: Si es magia, forzar finalización visual al impactar
                         if attacker.current_effect_type == "magic":
                              attacker.current_effect.finished = True
 
@@ -290,7 +302,7 @@ class EntityManager:
         """
         Descripción
             MÉTODO: Actualización centralizada del manager. Ejecuta la resolución de daños,
-            procesamiento de ataques y limpieza de entidades.
+            procesamiento de ataques, limpieza de entidades y actualización de UI de mundo.
 
         Argumentos
             - dt (float): Delta time en segundos.
@@ -300,3 +312,22 @@ class EntityManager:
 
         # 2. Eliminar enemigos muertos o expirados
         self.remove_dead_enemies()
+
+        # 3. Actualizar textos flotantes
+        for ft in self.floating_texts:
+            ft.update(dt)
+        # Limpiar textos expirados
+        self.floating_texts = [ft for ft in self.floating_texts if ft.is_alive()]
+
+    def draw_floating_texts(self, surface: pygame.Surface, camera_x: float, camera_z: float) -> None:
+        """
+        Descripción
+            MÉTODO: Dibuja todos los textos flotantes activos.
+
+        Argumentos
+            - surface (pygame.Surface): Superficie de destino.
+            - camera_x (float): Posición X de la cámara.
+            - camera_z (float): Posición Z de la cámara.
+        """
+        for ft in self.floating_texts:
+            ft.draw(surface, camera_x, camera_z)
