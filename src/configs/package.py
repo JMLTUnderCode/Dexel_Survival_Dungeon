@@ -1,4 +1,5 @@
 from dataclasses import dataclass, field
+from . import ui as UI
 from . import main_window as MAIN_WIN
 from . import development as DEV
 from . import constants as CONST
@@ -9,6 +10,15 @@ from . import algorithms as ALG
 from . import algorithms_ui as ALG_UI
 from . import map_ui as MAP_UI
 from . import tactical as TACTICAL
+from . import audio as AUDIO
+
+@dataclass
+class UIConfig:
+    VERSION: str = UI.VERSION
+    BACKGROUND_COLOR: tuple[int, int, int] = UI.BACKGROUND_COLOR
+    FOLDER_UI: str = UI.FOLDER_UI
+    BUTTONS: dict = field(default_factory=lambda: dict(UI.BUTTONS))
+    ICONS: dict = field(default_factory=lambda: dict(UI.ICONS))
 
 @dataclass
 class MainWindowConfig:
@@ -118,7 +128,16 @@ class MapUIConfig:
     PARSING_BUTTONS: dict = field(default_factory=lambda: dict(MAP_UI.PARSING_BUTTONS))
     SELECTED = MAP_UI.SELECTED
 
+@dataclass
+class AudioConfig:
+    FOLDER_AUDIO: str = AUDIO.FOLDER_AUDIO
+    MUSIC: dict = field(default_factory=lambda: dict(AUDIO.MUSIC))
+    SFX: dict = field(default_factory=lambda: dict(AUDIO.SFX))
+    DEFAULT_MUSIC_VOLUME: float = AUDIO.DEFAULT_MUSIC_VOLUME
+    DEFAULT_SFX_VOLUME: float = AUDIO.DEFAULT_SFX_VOLUME
+
 class Config:
+    UI: UIConfig
     MAIN_WIN: MainWindowConfig
     DEV: DevelopmentConfig
     CONST: ConstantsConfig
@@ -129,8 +148,10 @@ class Config:
     ALG_UI: AlgorithmUIConfig
     MAP_UI: MapUIConfig
     TACTICAL: TacticalTypes
+    AUDIO: AudioConfig
 
     def __init__(self):
+        self.UI = UIConfig()
         self.MAIN_WIN = MainWindowConfig()
         self.DEV = DevelopmentConfig()
         self.CONST = ConstantsConfig()
@@ -141,5 +162,6 @@ class Config:
         self.ALG_UI = AlgorithmUIConfig()
         self.MAP_UI = MapUIConfig()
         self.TACTICAL = TacticalTypes()
+        self.AUDIO = AudioConfig()
 
 CONF = Config()
