@@ -5,8 +5,8 @@
     },
     "activeFile": "maps/level_2.tmx",
     "expandedProjectPaths": [
-        ".",
-        "maps"
+        "maps",
+        "."
     ],
     "file.lastUsedOpenFilter": "All Files (*)",
     "fileStates": {
@@ -67,11 +67,11 @@
             "expandedObjectLayers": [
                 25
             ],
-            "scale": 0.75,
+            "scale": 3,
             "selectedLayer": 3,
             "viewCenter": {
-                "x": 583.3333333333333,
-                "y": 621.9999999999999
+                "x": 884.1666666666666,
+                "y": 492.8333333333333
             }
         },
         "maps/level_2.tmx#Dungeon_Tileset": {
