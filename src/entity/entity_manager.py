@@ -79,7 +79,7 @@ class EntityManager:
             initial_algorithm=CONF.ALG.ALGORITHM.FACE,
             alg_configs={
                 CONF.ALG.ALGORITHM.ARRIVE_DYNAMIC: ALG_CONF.DynamicArriveConfig(
-                    max_speed=220.0,
+                    max_speed=140.0,
                     target_radius_dist=40.0,
                     slow_radius_dist=160.0,
                     time_to_target=0.1,
